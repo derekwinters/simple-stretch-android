@@ -2,29 +2,23 @@ package com.derekwinters.stretch.ui.stretches
 
 import android.app.Application
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
@@ -75,7 +68,7 @@ fun StretchesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Stretch library") },
+                title = { Text("My stretches") }, // LIB-006
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -93,6 +86,15 @@ fun StretchesScreen(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(bottom = 88.dp),
         ) {
+            // LIB-006: say how to add one, so the + button is not the only clue.
+            item {
+                Text(
+                    "Add your own stretches with +",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
             items(stretches, key = { it.id }) { s ->
                 ListItem(
                     modifier = Modifier.clickable { editing = s },
@@ -131,77 +133,4 @@ fun StretchesScreen(
             },
         )
     }
-}
-
-@Composable
-private fun StretchEditDialog(
-    initial: Stretch,
-    onDismiss: () -> Unit,
-    onSave: (Stretch) -> Unit,
-    onDelete: (() -> Unit)?,
-) {
-    var name by remember { mutableStateOf(initial.name) }
-    var description by remember { mutableStateOf(initial.description) }
-    var duration by remember { mutableStateOf(initial.durationSeconds?.toString() ?: "") }
-    var confirmDelete by remember { mutableStateOf(false) }
-
-    if (confirmDelete && onDelete != null) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete \"${initial.name}\"?") },
-            text = { Text("It will also be removed from any reminder times that use it.") },
-            confirmButton = { TextButton(onClick = onDelete) { Text("Delete") } },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
-        )
-        return
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (initial.id == 0L) "New stretch" else "Edit stretch") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Instructions (optional)") },
-                    minLines = 2,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = duration,
-                    onValueChange = { v -> duration = v.filter { it.isDigit() }.take(4) },
-                    label = { Text("Duration in seconds (optional)") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (onDelete != null) {
-                    TextButton(onClick = { confirmDelete = true }) { Text("Delete stretch") }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = name.isNotBlank(),
-                onClick = {
-                    onSave(
-                        initial.copy(
-                            name = name.trim(),
-                            description = description.trim(),
-                            durationSeconds = duration.toIntOrNull()?.takeIf { it > 0 },
-                        ),
-                    )
-                },
-            ) { Text("Save") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
 }
