@@ -32,3 +32,5 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
   `VERSION_NAME`). APKs are named `simple-stretch-<versionName>-<buildType>.apk`.
 - Release builds are debug-signed for now (docs/adr/0001).
 - Room schemas are exported to `app/schemas/`; commit changes to them with the entity change.
+
+@.ai-sdlc/house-rules.md

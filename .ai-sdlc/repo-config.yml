@@ -1,0 +1,88 @@
+# This repository's ai-sdlc configuration. Hand-written; the only file under
+# `.ai-sdlc/` that ai-sdlc reads and never rewrites (it appends `skills:` once,
+# on first adoption, and then leaves this file alone).
+#
+# Schema: docs/spec/configuration.md in ai-sdlc, at the commit recorded in
+# `ai-sdlc.pin`.
+
+# The whole pipeline. `substrate` is implied. `pipeline` depends on every
+# capability above it, so all five are listed rather than relying on inference.
+capabilities:
+  - hygiene       # Conventional Commit titles, one closing keyword per PR
+  - consistency   # spec <-> test traceability gate
+  - labels        # label taxonomy applied from .github/labels.core.yml
+  - release       # release-please, driven by the squash-merge titles
+  - pipeline      # issue triage, approval, dashboard
+
+profiles:
+  - kotlin
+
+# The humans whose approval moves an issue from pending-approval to
+# ready-for-work. A list, even when it is one person.
+owners:
+  - derekwinters
+
+# Dashboard issue #8 was opened for adoption (the repository had no issues
+# before it); the dashboard workflow renders into it.
+dashboard_issue: 8
+
+# Milestones are named after versions, so they sort as semver.
+milestone_ordering: semver
+
+# The *names* of the repository secrets holding the triage routine's endpoint
+# and token — never the values. Triage does not run without both, and neither
+# exists yet: they come from the triage routine's API trigger, which only the
+# web UI can create.
+fire:
+  endpoint_secret: ROUTINE_FIRE_URL
+  token_secret: ROUTINE_FIRE_TOKEN
+
+commands:
+  # Unit tests only (JVM, no emulator). pr.yml also runs assembleDebug and
+  # remains the build gate where Google Maven is unreachable.
+  test: ./gradlew test
+
+# Claude Code routines rendered from ai-sdlc's definitions, created by the
+# `routines` skill from a cloud session in this repository. Having one is a
+# decision this repository makes; adopt never seeds this key.
+#
+# `triage`     — fired by the gatekeeper through the `fire` secrets above.
+# `dependabot` — the weekly Monday sweep of Dependabot pull requests. It needs
+#   only `hygiene`, not a `.github/dependabot.yml`. This repository has none
+#   yet, so until one is added the sweep sees only security-update pull
+#   requests (if those are enabled) and usually finds nothing to do.
+routines:
+  - triage
+  - dependabot
+
+# Deliberately absent:
+#
+# `labels:` — no pre-existing pipeline-state labels to map; the canonical
+#   vocabulary is created as-is.
+#
+# `bot:` — the default `github-actions` identity.
+#
+# `commands.spec_validator` — docs/spec/ does use requirement IDs (SCHED-,
+#   SKIP-, NOTIF-, LIB-, GOAL-, SESS-, TREND-, HOME-), but ai-sdlc's
+#   `lib.validators.specs` is internal to ai-sdlc, not shipped to consumers,
+#   and expects `# Specification — Thing (`AREA`)` page titles and Python
+#   tests. Pages here are titled plainly and the IDs are cited from Kotlin
+#   unit tests, so there is no validator to name until one is written for
+#   this layout.
+
+# Which ai-sdlc skills this repository installs. `skills-update` opens a
+# pull request when one of them changes upstream, and a name removed here
+# is uninstalled on the next run.
+#
+# Seeded once by `adopt` from the capabilities above, and never touched
+# again: this list is yours. Add to it, prune it, or set it to `[]` to
+# install none — whatever is here is what a later adoption will honour.
+skills:
+  - github-api
+  - routines
+  - release-flow
+  - triage-issue
+  - pipeline-dev
+  - issue-blockers
+  - ci-watch
+  - milestone-ops
