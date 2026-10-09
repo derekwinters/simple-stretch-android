@@ -14,6 +14,9 @@ interface StretchDao {
     @Query("SELECT * FROM stretches ORDER BY name COLLATE NOCASE")
     fun observeAll(): Flow<List<Stretch>>
 
+    @Query("SELECT * FROM stretches ORDER BY name COLLATE NOCASE")
+    suspend fun getAll(): List<Stretch>
+
     @Insert
     suspend fun insert(stretch: Stretch): Long
 
@@ -105,4 +108,38 @@ interface SkipDao {
 
     @Query("DELETE FROM skipped_dates WHERE epochDay < :epochDay")
     suspend fun deleteBefore(epochDay: Long)
+}
+
+@Dao
+interface GoalDao {
+    @Query("SELECT * FROM goals")
+    fun observeAll(): Flow<List<Goal>>
+
+    @Query("SELECT * FROM goals")
+    suspend fun getAll(): List<Goal>
+
+    /** Inserts, or replaces the goal for the same stretch (unique index on stretchId). */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(goal: Goal): Long
+
+    @Query("DELETE FROM goals WHERE stretchId = :stretchId")
+    suspend fun deleteForStretch(stretchId: Long)
+}
+
+@Dao
+interface CompletionDao {
+    @Insert
+    suspend fun insertAll(completions: List<Completion>)
+
+    @Query(
+        "SELECT stretchId, COUNT(*) AS count FROM completions " +
+            "WHERE completedAt >= :fromMillis AND completedAt < :toMillis GROUP BY stretchId",
+    )
+    fun observeCountsBetween(fromMillis: Long, toMillis: Long): Flow<List<StretchCount>>
+
+    @Query(
+        "SELECT stretchId, COUNT(*) AS count FROM completions " +
+            "WHERE completedAt >= :fromMillis AND completedAt < :toMillis GROUP BY stretchId",
+    )
+    suspend fun countsBetween(fromMillis: Long, toMillis: Long): List<StretchCount>
 }

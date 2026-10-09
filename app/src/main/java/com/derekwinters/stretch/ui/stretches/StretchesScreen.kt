@@ -149,7 +149,7 @@ private fun StretchEditDialog(
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
             title = { Text("Delete \"${initial.name}\"?") },
-            text = { Text("It will also be removed from any reminder times that use it.") },
+            text = { Text("It will also be removed from any reminder times that use it, and its goal and completion history will be deleted.") },
             confirmButton = { TextButton(onClick = onDelete) { Text("Delete") } },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
         )

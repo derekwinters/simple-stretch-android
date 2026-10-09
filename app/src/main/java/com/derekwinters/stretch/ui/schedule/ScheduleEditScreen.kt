@@ -28,6 +28,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import com.derekwinters.stretch.scheduling.RepeatRule
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -61,6 +64,7 @@ fun ScheduleEditScreen(
     val stretches by viewModel.allStretches.collectAsStateWithLifecycle()
 
     // Which dialog is open: time picker for a reminder (key) or for a new one (-1), stretch picker.
+    // Special keys for the repeating window's start and end times.
     var timeDialogFor by remember { mutableStateOf<Long?>(null) }
     var stretchDialogFor by remember { mutableStateOf<Long?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
@@ -130,6 +134,33 @@ fun ScheduleEditScreen(
                 }
             }
             item {
+                // SCHED-001: set times or repeating.
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Reminders", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = !viewModel.repeating,
+                            onClick = { viewModel.repeating = false },
+                            label = { Text("Set times") },
+                        )
+                        FilterChip(
+                            selected = viewModel.repeating,
+                            onClick = { viewModel.repeating = true },
+                            label = { Text("Repeating") },
+                        )
+                    }
+                }
+            }
+            if (viewModel.repeating) {
+                item {
+                    RepeatingSection(
+                        viewModel = viewModel,
+                        onPickStart = { timeDialogFor = KEY_WINDOW_START },
+                        onPickEnd = { timeDialogFor = KEY_WINDOW_END },
+                    )
+                }
+            }
+            if (!viewModel.repeating) item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "Reminder times",
@@ -143,7 +174,7 @@ fun ScheduleEditScreen(
                     }
                 }
             }
-            if (viewModel.reminders.isEmpty()) {
+            if (!viewModel.repeating && viewModel.reminders.isEmpty()) {
                 item {
                     Text(
                         "No reminder times yet.",
@@ -152,7 +183,7 @@ fun ScheduleEditScreen(
                     )
                 }
             }
-            items(viewModel.reminders, key = { it.key }) { r ->
+            if (!viewModel.repeating) items(viewModel.reminders, key = { it.key }) { r ->
                 val names = stretches.filter { it.id in r.stretchIds }.map { it.name }
                 Card(Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -163,7 +194,7 @@ fun ScheduleEditScreen(
                                 modifier = Modifier.clickable { timeDialogFor = r.key },
                             )
                             Text(
-                                if (names.isEmpty()) "Any stretch (tap to choose)" else names.joinToString(", "),
+                                if (names.isEmpty()) "No set stretches (optional, tap to choose)" else names.joinToString(", "),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.clickable { stretchDialogFor = r.key }.padding(vertical = 4.dp),
@@ -179,16 +210,31 @@ fun ScheduleEditScreen(
     }
 
     timeDialogFor?.let { key ->
-        val existing = viewModel.reminders.firstOrNull { it.key == key }
-        TimePickerDialog(
-            initial = existing?.time ?: LocalTime.of(10, 0),
-            is24Hour = DateFormat.is24HourFormat(context),
-            onDismiss = { timeDialogFor = null },
-            onConfirm = { time ->
-                if (existing == null) viewModel.addReminder(time) else viewModel.updateTime(key, time)
-                timeDialogFor = null
-            },
-        )
+        if (key == KEY_WINDOW_START || key == KEY_WINDOW_END) {
+            val isStart = key == KEY_WINDOW_START
+            TimePickerDialog(
+                title = if (isStart) "From" else "Until",
+                initial = if (isStart) viewModel.windowStart else viewModel.windowEnd,
+                is24Hour = DateFormat.is24HourFormat(context),
+                onDismiss = { timeDialogFor = null },
+                onConfirm = { time ->
+                    if (isStart) viewModel.windowStart = time else viewModel.windowEnd = time
+                    timeDialogFor = null
+                },
+            )
+        } else {
+            val existing = viewModel.reminders.firstOrNull { it.key == key }
+            TimePickerDialog(
+                title = "Reminder time",
+                initial = existing?.time ?: LocalTime.of(10, 0),
+                is24Hour = DateFormat.is24HourFormat(context),
+                onDismiss = { timeDialogFor = null },
+                onConfirm = { time ->
+                    if (existing == null) viewModel.addReminder(time) else viewModel.updateTime(key, time)
+                    timeDialogFor = null
+                },
+            )
+        }
     }
 
     stretchDialogFor?.let { key ->
@@ -225,6 +271,7 @@ fun ScheduleEditScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimePickerDialog(
+    title: String,
     initial: LocalTime,
     is24Hour: Boolean,
     onDismiss: () -> Unit,
@@ -237,7 +284,7 @@ private fun TimePickerDialog(
     )
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Reminder time") },
+        title = { Text(title) },
         text = { TimePicker(state = state) },
         confirmButton = {
             TextButton(onClick = { onConfirm(LocalTime.of(state.hour, state.minute)) }) { Text("OK") }
@@ -286,4 +333,72 @@ private fun StretchPickerDialog(
         confirmButton = { TextButton(onClick = { onConfirm(selected) }) { Text("OK") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
+}
+
+private const val KEY_WINDOW_START = -2L
+private const val KEY_WINDOW_END = -3L
+
+private val INTERVAL_CHOICES = listOf(15, 20, 30, 45, 60, 90, 120)
+
+/** SCHED-011 / SCHED-012: interval, minute past the hour, window, and a preview of the slots. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RepeatingSection(
+    viewModel: ScheduleEditViewModel,
+    onPickStart: () -> Unit,
+    onPickEnd: () -> Unit,
+) {
+    val context = LocalContext.current
+    var minuteText by remember { mutableStateOf(viewModel.minutePastHour.toString()) }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Every", style = MaterialTheme.typography.titleSmall)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val choices = (INTERVAL_CHOICES + viewModel.intervalMinutes).distinct().sorted()
+            choices.forEach { minutes ->
+                FilterChip(
+                    selected = viewModel.intervalMinutes == minutes,
+                    onClick = { viewModel.intervalMinutes = minutes },
+                    label = { Text(if (minutes % 60 == 0) "${minutes / 60} h" else "$minutes min") },
+                )
+            }
+        }
+        OutlinedTextField(
+            value = minuteText,
+            onValueChange = { v ->
+                val digits = v.filter { it.isDigit() }.take(2)
+                minuteText = digits
+                digits.toIntOrNull()?.takeIf { it in 0..59 }?.let { viewModel.minutePastHour = it }
+            },
+            label = { Text("At minute past the hour (0-59)") },
+            singleLine = true,
+            isError = minuteText.toIntOrNull()?.let { it !in 0..59 } ?: true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("From", style = MaterialTheme.typography.titleSmall)
+            OutlinedButton(onClick = onPickStart) { Text(Formatting.time(context, viewModel.windowStart)) }
+            Text("until", style = MaterialTheme.typography.titleSmall)
+            OutlinedButton(onClick = onPickEnd) { Text(Formatting.time(context, viewModel.windowEnd)) }
+        }
+        val slots = viewModel.previewSlots
+        Text(
+            when {
+                viewModel.windowEnd.isBefore(viewModel.windowStart) -> "The end time must be after the start time."
+                slots.isEmpty() -> "No reminder fits between these times."
+                else -> "${slots.size} a day: " + slots.joinToString(", ") { Formatting.time(context, it) }
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = if (slots.isEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            "Reminders include the end time. Repeating reminders don't pick stretches; the stretch " +
+                "session suggests your unmet goals instead.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (viewModel.intervalMinutes !in RepeatRule.MIN_INTERVAL..RepeatRule.MAX_INTERVAL) {
+            Text("Pick an interval.", color = MaterialTheme.colorScheme.error)
+        }
+    }
 }

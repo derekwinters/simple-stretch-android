@@ -3,6 +3,7 @@ package com.derekwinters.stretch.ui.common
 import android.content.Context
 import android.text.format.DateFormat
 import com.derekwinters.stretch.scheduling.DaysOfWeek
+import com.derekwinters.stretch.scheduling.RepeatRule
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
@@ -16,6 +17,17 @@ object Formatting {
     fun time(context: Context, time: LocalTime): String {
         val pattern = if (DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm a"
         return time.format(DateTimeFormatter.ofPattern(pattern, Locale.getDefault()))
+    }
+
+    fun minuteOfDay(context: Context, minute: Int): String =
+        time(context, LocalTime.of(minute / 60, minute % 60))
+
+    /** HOME-003: e.g. "Every 60 min at :50, 8:00 AM - 5:00 PM". */
+    fun repeatSummary(context: Context, rule: RepeatRule): String {
+        val minute = rule.minutePastHour.toString().padStart(2, '0')
+        val anchor = if (rule.intervalMinutes % 60 == 0) "at" else "from"
+        return "Every ${rule.intervalMinutes} min $anchor :$minute, " +
+            "${minuteOfDay(context, rule.windowStartMinute)} - ${minuteOfDay(context, rule.windowEndMinute)}"
     }
 
     fun date(date: LocalDate): String =

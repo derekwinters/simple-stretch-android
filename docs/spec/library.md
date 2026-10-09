@@ -11,8 +11,11 @@
   times themselves remain.
 - **LIB-004** Editing a stretch changes what future notifications say; it does not change any
   schedule's timing.
+- **LIB-005** Deleting a stretch also deletes its goal (GOAL-001) and its completion history
+  (SESS-004).
 
 ## Build checklist
 
 - [x] Seed lives in `RoomDatabase.Callback.onCreate` (LIB-002 invariant).
 - [x] Cross-reference table cascades on stretch delete (LIB-003).
+- [x] `goals` and `completions` foreign keys cascade on stretch delete (LIB-005).

@@ -6,13 +6,21 @@ A small Android app that reminds you to stretch during the day, on your own sche
 
 - **Stretch library**: add, edit and delete stretches (name, instructions, optional duration).
   Ten common stretches are added on first run.
-- **Schedules**: as many as you like, each with a name, an on/off switch, the days of the week it
-  runs, and a list of reminder times. Every time picks its own stretches, e.g. a "Workday"
-  schedule Mon-Fri with neck rolls at 10:00, hip flexors at 14:00 and wrist stretches at 16:30.
+- **Schedules**: as many as you like, each with a name, an on/off switch and the days of the
+  week it runs. A schedule either has **set times**, each optionally with its own stretches
+  (e.g. neck rolls at 10:00, hip flexors at 14:00), or **repeats**: every N minutes at a minute
+  past the hour between two times, e.g. every hour at :50 from 8:00 to 17:00 (8:50 ... 16:50;
+  the end time is inclusive).
+- **Daily goals**: e.g. 3 hamstring stretches and 3 calf stretches a day. The home screen shows
+  today's progress ("Hamstring stretch 2/3"); goals never silence reminders.
+- **Stretch sessions**: from a reminder or the home screen's **Stretch now**, tick the stretches
+  you did and save. Stretches still short of today's goal are listed first.
 - **Skip a day**: one tap on "Skip today" silences every reminder for the rest of the day.
   Future days can be skipped from the calendar screen, and skipped days can be removed again.
-- **Notifications** show the stretch and its instructions, with **Done** and **Skip rest of
-  today** buttons. Tapping opens the app.
+  The skip card can be closed for the day (X); "Skip today" is then in the top bar's menu.
+- **Notifications** show the stretches (or today's unmet goals), with **Start** (opens the
+  stretch session), **Snooze 5 min** and **Skip today** buttons; swipe to dismiss just this one.
+  Tapping also opens the session.
 - Reminders survive reboots and time or time-zone changes, and use exact alarms when Android
   allows them (falling back to slightly-less-punctual alarms when it doesn't).
 
@@ -51,11 +59,14 @@ Release APKs are currently debug-signed; see
 
 ```
 app/src/main/java/com/derekwinters/stretch/
-  data/           Room entities, DAOs, database (+ seed), repository
-  scheduling/     next-occurrence maths, AlarmManager scheduling, alarm + reschedule receivers
-  notifications/  notification channel/content and the Done / Skip actions
-  ui/             Compose screens: home, schedule editor, stretch library, skipped days
-app/src/test/     JVM unit tests (next-occurrence calculation)
+  data/           Room entities, DAOs, database (+ seed, migrations), repository
+  goals/          goal progress and session ordering maths (pure Kotlin)
+  scheduling/     next-occurrence and repeating-slot maths, AlarmManager scheduling, snooze,
+                  alarm + reschedule receivers
+  notifications/  notification channel/content and the Snooze / Skip actions
+  ui/             Compose screens: home, schedule editor, stretch session, goals, stretch
+                  library, skipped days
+app/src/test/     JVM unit tests (next occurrence, repeating slots, goal maths)
 app/schemas/      exported Room schemas
 docs/spec/        requirements with IDs; docs/adr/ decisions
 ```

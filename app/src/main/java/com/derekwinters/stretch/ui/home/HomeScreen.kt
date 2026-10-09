@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,15 +23,22 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -56,7 +64,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.derekwinters.stretch.data.ScheduleWithReminders
 import com.derekwinters.stretch.data.days
+import com.derekwinters.stretch.data.isRepeating
+import com.derekwinters.stretch.data.repeatRule
 import com.derekwinters.stretch.data.time
+import com.derekwinters.stretch.goals.GoalProgress
 import com.derekwinters.stretch.notifications.Notifications
 import com.derekwinters.stretch.scheduling.ReminderScheduler
 import com.derekwinters.stretch.ui.common.Formatting
@@ -68,6 +79,8 @@ fun HomeScreen(
     onNewSchedule: () -> Unit,
     onOpenStretches: () -> Unit,
     onOpenSkips: () -> Unit,
+    onOpenGoals: () -> Unit,
+    onStretchNow: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -96,11 +109,37 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("Stretch") },
                 actions = {
+                    IconButton(onClick = onOpenGoals) {
+                        Icon(Icons.Filled.Star, contentDescription = "Daily goals")
+                    }
                     IconButton(onClick = onOpenSkips) {
                         Icon(Icons.Filled.DateRange, contentDescription = "Skipped days")
                     }
                     IconButton(onClick = onOpenStretches) {
                         Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Stretch library")
+                    }
+                    // HOME-008: "Skip today" stays reachable while the skip card is closed.
+                    var menuOpen by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(onClick = { menuOpen = true }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                        }
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(
+                                text = { Text(if (state.todaySkipped) "Resume today" else "Skip today") },
+                                onClick = {
+                                    menuOpen = false
+                                    viewModel.setTodaySkipped(!state.todaySkipped)
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Skip other days") },
+                                onClick = {
+                                    menuOpen = false
+                                    onOpenSkips()
+                                },
+                            )
+                        }
                     }
                 },
             )
@@ -149,12 +188,25 @@ fun HomeScreen(
                 }
             }
 
+            // HOME-008 invariant: a skipped day always shows the card ("Resume today").
+            if (state.todaySkipped || !state.skipCardClosedToday) {
+                item {
+                    SkipTodayCard(
+                        state = state,
+                        onSkip = { viewModel.setTodaySkipped(true) },
+                        onUnskip = { viewModel.setTodaySkipped(false) },
+                        onOpenSkips = onOpenSkips,
+                        onClose = { viewModel.closeSkipCard() },
+                    )
+                }
+            }
+
             item {
-                SkipTodayCard(
-                    state = state,
-                    onSkip = { viewModel.setTodaySkipped(true) },
-                    onUnskip = { viewModel.setTodaySkipped(false) },
-                    onOpenSkips = onOpenSkips,
+                GoalsCard(
+                    goals = state.goals,
+                    loaded = state.loaded,
+                    onStretchNow = onStretchNow,
+                    onOpenGoals = onOpenGoals,
                 )
             }
 
@@ -168,7 +220,7 @@ fun HomeScreen(
                     )
                 }
             }
-            items(state.todayReminders, key = { "today-${it.reminderId}" }) { r ->
+            items(state.todayReminders, key = { "today-${it.key}" }) { r ->
                 TodayReminderRow(r, dimmed = r.isPast || state.todaySkipped)
             }
 
@@ -227,6 +279,7 @@ private fun SkipTodayCard(
     onSkip: () -> Unit,
     onUnskip: () -> Unit,
     onOpenSkips: () -> Unit,
+    onClose: () -> Unit,
 ) {
     val skipped = state.todaySkipped
     Card(
@@ -240,7 +293,19 @@ private fun SkipTodayCard(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(Formatting.date(state.today), style = MaterialTheme.typography.labelLarge)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    Formatting.date(state.today),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                // HOME-008: closable for today only; never while today is skipped.
+                if (!skipped) {
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Filled.Close, contentDescription = "Hide until tomorrow")
+                    }
+                }
+            }
             Text(
                 if (skipped) "Today is skipped. No stretch reminders today." else "Can't stretch today?",
                 style = MaterialTheme.typography.titleMedium,
@@ -274,9 +339,21 @@ private fun TodayReminderRow(r: TodayReminder, dimmed: Boolean) {
             Text(Formatting.time(context, r.time), style = MaterialTheme.typography.titleMedium, color = color)
         },
         headlineContent = {
-            Text(r.stretchNames.ifEmpty { listOf("Stretch break") }.joinToString(", "), color = color)
+            val rule = r.repeatRule
+            val text = when {
+                rule == null -> r.stretchNames.ifEmpty { listOf("Stretch break") }.joinToString(", ")
+                r.isPast -> "Stretch break · none left today"
+                else -> "Stretch break · ${r.slotsLeft} left today"
+            }
+            Text(text, color = color)
         },
-        supportingContent = { Text(r.scheduleName, color = color) },
+        supportingContent = {
+            val rule = r.repeatRule
+            Text(
+                if (rule == null) r.scheduleName else "${r.scheduleName} · ${Formatting.repeatSummary(context, rule)}",
+                color = color,
+            )
+        },
     )
 }
 
@@ -298,12 +375,63 @@ private fun ScheduleCard(
                 )
                 val times = item.reminders.map { it.reminder.time }.sorted()
                 Text(
-                    if (times.isEmpty()) "No reminder times" else times.joinToString("  ·  ") { Formatting.time(context, it) },
+                    when {
+                        item.schedule.isRepeating -> Formatting.repeatSummary(context, item.schedule.repeatRule)
+                        times.isEmpty() -> "No reminder times"
+                        else -> times.joinToString("  ·  ") { Formatting.time(context, it) }
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Switch(checked = item.schedule.enabled, onCheckedChange = onToggle)
+        }
+    }
+}
+
+/** HOME-006 / HOME-007: today's progress per goal, "Stretch now" and a link to the goals screen. */
+@Composable
+private fun GoalsCard(
+    goals: List<GoalProgress>,
+    loaded: Boolean,
+    onStretchNow: () -> Unit,
+    onOpenGoals: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Today's goals", style = MaterialTheme.typography.titleMedium)
+            if (loaded && goals.isEmpty()) {
+                Text(
+                    "Set daily goals, e.g. 3 hamstring stretches a day.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            goals.forEach { g ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(g.stretchName, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "${g.done}/${g.target}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (g.met) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (g.met) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { g.fraction },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onStretchNow) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Stretch now")
+                }
+                TextButton(onClick = onOpenGoals) { Text(if (goals.isEmpty()) "Set goals" else "Edit goals") }
+            }
         }
     }
 }

@@ -4,9 +4,9 @@ name: pr
 # also where the Android build is verified at all: the Android SDK and the Android Gradle Plugin
 # come from Google's servers, which not every development environment can reach.
 
+# Every pull request, whatever its base branch, so stacked PRs are built too.
 on:
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read

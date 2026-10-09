@@ -5,6 +5,8 @@
     <string name="channel_description">Reminders to do your scheduled stretches</string>
     <string name="notification_generic_title">Time to stretch</string>
     <string name="notification_generic_body">Take a minute to stand up and stretch.</string>
-    <string name="action_done">Done</string>
-    <string name="action_skip_today">Skip rest of today</string>
+    <string name="notification_goals_header">Still to do today:</string>
+    <string name="action_start">Start</string>
+    <string name="action_snooze">Snooze 5 min</string>
+    <string name="action_skip_today">Skip today</string>
 </resources>

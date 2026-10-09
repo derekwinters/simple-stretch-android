@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
@@ -13,20 +14,61 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         Reminder::class,
         ReminderStretchCrossRef::class,
         SkippedDate::class,
+        Goal::class,
+        Completion::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun stretchDao(): StretchDao
     abstract fun scheduleDao(): ScheduleDao
     abstract fun skipDao(): SkipDao
+    abstract fun goalDao(): GoalDao
+    abstract fun completionDao(): CompletionDao
 
     companion object {
         fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "stretch.db")
+                .addMigrations(MIGRATION_1_2)
                 .addCallback(SeedCallback)
                 .build()
+    }
+
+    /**
+     * GOAL-007: v1 -> v2 keeps every row. New `schedules` columns get defaults that make each
+     * existing schedule a set-times schedule; `goals` and `completions` are created exactly as
+     * Room would create them (column order, affinities, foreign keys and index names), so Room's
+     * post-migration schema validation passes. Default literals must match the entities'
+     * `@ColumnInfo(defaultValue)`.
+     */
+    object MIGRATION_1_2 : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `schedules` ADD COLUMN `mode` INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE `schedules` ADD COLUMN `windowStartMinute` INTEGER NOT NULL DEFAULT 480")
+            db.execSQL("ALTER TABLE `schedules` ADD COLUMN `windowEndMinute` INTEGER NOT NULL DEFAULT 1020")
+            db.execSQL("ALTER TABLE `schedules` ADD COLUMN `intervalMinutes` INTEGER NOT NULL DEFAULT 60")
+            db.execSQL("ALTER TABLE `schedules` ADD COLUMN `minutePastHour` INTEGER NOT NULL DEFAULT 0")
+
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `goals` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`stretchId` INTEGER NOT NULL, " +
+                    "`timesPerDay` INTEGER NOT NULL, " +
+                    "FOREIGN KEY(`stretchId`) REFERENCES `stretches`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+            )
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_goals_stretchId` ON `goals` (`stretchId`)")
+
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `completions` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`stretchId` INTEGER NOT NULL, " +
+                    "`completedAt` INTEGER NOT NULL, " +
+                    "FOREIGN KEY(`stretchId`) REFERENCES `stretches`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_completions_stretchId` ON `completions` (`stretchId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_completions_completedAt` ON `completions` (`completedAt`)")
+        }
     }
 
     /** Seeds the stretch library the first time the database is created (LIB-002). */
