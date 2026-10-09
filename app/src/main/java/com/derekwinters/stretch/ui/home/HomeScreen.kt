@@ -1,0 +1,309 @@
+package com.derekwinters.stretch.ui.home
+
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.derekwinters.stretch.data.ScheduleWithReminders
+import com.derekwinters.stretch.data.days
+import com.derekwinters.stretch.data.time
+import com.derekwinters.stretch.notifications.Notifications
+import com.derekwinters.stretch.scheduling.ReminderScheduler
+import com.derekwinters.stretch.ui.common.Formatting
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(
+    onEditSchedule: (Long) -> Unit,
+    onNewSchedule: () -> Unit,
+    onOpenStretches: () -> Unit,
+    onOpenSkips: () -> Unit,
+    viewModel: HomeViewModel = viewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    var canNotify by remember { mutableStateOf(Notifications.canPost(context)) }
+    var canExact by remember { mutableStateOf(ReminderScheduler.canScheduleExact(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        canNotify = Notifications.canPost(context)
+        canExact = ReminderScheduler.canScheduleExact(context)
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { canNotify = Notifications.canPost(context) }
+
+    // NOTIF-005: ask for the notification permission once, on first launch, on Android 13+.
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !canNotify) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Stretch") },
+                actions = {
+                    IconButton(onClick = onOpenSkips) {
+                        Icon(Icons.Filled.DateRange, contentDescription = "Skipped days")
+                    }
+                    IconButton(onClick = onOpenStretches) {
+                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Stretch library")
+                    }
+                },
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onNewSchedule,
+                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                text = { Text("New schedule") },
+            )
+        },
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (!canNotify) {
+                item {
+                    WarningCard(
+                        text = "Notifications are off, so reminders can't be shown.",
+                        action = "Enable",
+                        onAction = {
+                            context.startActivity(
+                                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                    .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+                            )
+                        },
+                    )
+                }
+            }
+            if (!canExact && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                item {
+                    WarningCard(
+                        text = "Exact alarms aren't allowed, so reminders may arrive a few minutes late.",
+                        action = "Allow",
+                        onAction = {
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                    Uri.parse("package:${context.packageName}"),
+                                ),
+                            )
+                        },
+                    )
+                }
+            }
+
+            item {
+                SkipTodayCard(
+                    state = state,
+                    onSkip = { viewModel.setTodaySkipped(true) },
+                    onUnskip = { viewModel.setTodaySkipped(false) },
+                    onOpenSkips = onOpenSkips,
+                )
+            }
+
+            item { SectionTitle("Today") }
+            if (state.loaded && state.todayReminders.isEmpty()) {
+                item {
+                    Text(
+                        "No reminders scheduled for today.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            items(state.todayReminders, key = { "today-${it.reminderId}" }) { r ->
+                TodayReminderRow(r, dimmed = r.isPast || state.todaySkipped)
+            }
+
+            item { SectionTitle("Schedules") }
+            if (state.loaded && state.schedules.isEmpty()) {
+                item {
+                    Text(
+                        "No schedules yet. Tap \"New schedule\" to set up your first reminders.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            items(state.schedules, key = { "schedule-${it.schedule.id}" }) { s ->
+                ScheduleCard(
+                    item = s,
+                    onClick = { onEditSchedule(s.schedule.id) },
+                    onToggle = { viewModel.setScheduleEnabled(s.schedule.id, it) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(top = 8.dp),
+    )
+}
+
+@Composable
+private fun WarningCard(text: String, action: String, onAction: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Filled.Warning, contentDescription = null)
+            Spacer(Modifier.width(12.dp))
+            Text(text, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            TextButton(onClick = onAction) { Text(action) }
+        }
+    }
+}
+
+@Composable
+private fun SkipTodayCard(
+    state: HomeState,
+    onSkip: () -> Unit,
+    onUnskip: () -> Unit,
+    onOpenSkips: () -> Unit,
+) {
+    val skipped = state.todaySkipped
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = if (skipped) {
+                MaterialTheme.colorScheme.tertiaryContainer
+            } else {
+                MaterialTheme.colorScheme.primaryContainer
+            },
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(Formatting.date(state.today), style = MaterialTheme.typography.labelLarge)
+            Text(
+                if (skipped) "Today is skipped. No stretch reminders today." else "Can't stretch today?",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (skipped) {
+                    OutlinedButton(onClick = onUnskip) { Text("Resume today") }
+                } else {
+                    Button(onClick = onSkip) { Text("Skip today") }
+                }
+                TextButton(onClick = onOpenSkips) {
+                    Text(
+                        if (state.upcomingSkipCount > 0) {
+                            "Skip other days (${state.upcomingSkipCount} planned)"
+                        } else {
+                            "Skip other days"
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TodayReminderRow(r: TodayReminder, dimmed: Boolean) {
+    val context = LocalContext.current
+    val color = if (dimmed) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface
+    ListItem(
+        leadingContent = {
+            Text(Formatting.time(context, r.time), style = MaterialTheme.typography.titleMedium, color = color)
+        },
+        headlineContent = {
+            Text(r.stretchNames.ifEmpty { listOf("Stretch break") }.joinToString(", "), color = color)
+        },
+        supportingContent = { Text(r.scheduleName, color = color) },
+    )
+}
+
+@Composable
+private fun ScheduleCard(
+    item: ScheduleWithReminders,
+    onClick: () -> Unit,
+    onToggle: (Boolean) -> Unit,
+) {
+    val context = LocalContext.current
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(item.schedule.name, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    Formatting.daysSummary(item.schedule.days),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                val times = item.reminders.map { it.reminder.time }.sorted()
+                Text(
+                    if (times.isEmpty()) "No reminder times" else times.joinToString("  ·  ") { Formatting.time(context, it) },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = item.schedule.enabled, onCheckedChange = onToggle)
+        }
+    }
+}
