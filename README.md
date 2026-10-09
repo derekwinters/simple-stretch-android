@@ -51,7 +51,10 @@ adb install -r app/build/outputs/apk/debug/simple-stretch-*-debug.apk
 Or copy the APK to the phone and open it (allow installs from that source when asked).
 
 Every pull request's CI run also uploads its debug APK as the `simple-stretch-debug-apk`
-workflow artifact (kept for 14 days), so a PR can be installed and tried before it is released.
+workflow artifact (kept for 14 days). Pull requests from branches of this repository also upload
+`simple-stretch-release-apk`, signed with the release key, which installs over the released app in
+place, so a PR can be tried before it is released without losing data. A debug APK and a
+release-signed APK cannot be installed over each other.
 
 On first launch, allow notifications. On Android 12/12L, also allow "Alarms & reminders" if the
 app shows the banner, so reminders arrive on the minute.
@@ -60,8 +63,13 @@ app shows the banner, so reminders arrive on the minute.
 
 Merging to `main` runs release-please, which keeps a release PR up to date from Conventional
 Commit titles. Merging that PR tags a release and attaches `simple-stretch-<version>-release.apk`.
-Release APKs are currently debug-signed; see
-[docs/adr/0001](docs/adr/0001-debug-signing-until-release-keystore.md).
+Release APKs are signed with a stable release key
+([docs/adr/0002](docs/adr/0002-release-signing-with-a-stable-keystore.md)), so each release
+upgrades the installed app in place and keeps its data.
+
+**One-time step:** builds made before release signing (debug-signed releases, CI or local debug
+APKs) use a different key. Uninstall those once before installing the first release-signed build;
+after that, upgrades are in place.
 
 ## Project layout
 

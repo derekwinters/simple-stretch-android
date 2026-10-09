@@ -20,6 +20,22 @@ val versionCodeProperty = (project.findProperty("VERSION_CODE") as String)
     .trim()
     .toInt()
 
+// Release signing comes from environment variables only, never a committed file or a Gradle
+// property (docs/adr/0002). ANDROID_KEYSTORE_PATH is the path of the keystore a workflow decodes
+// from the ANDROID_KEYSTORE_BASE64 secret; the other three are secrets of the same names. When any
+// of the four is missing (a local build, a fork PR, a mis-wired workflow) no `release` signing
+// config is created and the release build type is left UNSIGNED, never debug-signed: an unsigned
+// APK cannot be installed and so cannot be mistaken for a release, while a debug-signed one would
+// install and only fail at the next upgrade.
+val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+val releaseKeystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+val releaseKeyAliasPassword = System.getenv("ANDROID_KEY_ALIAS_PASSWORD")
+val hasReleaseSigningConfig = !releaseKeystorePath.isNullOrBlank() &&
+    !releaseKeystorePassword.isNullOrBlank() &&
+    !releaseKeyAlias.isNullOrBlank() &&
+    !releaseKeyAliasPassword.isNullOrBlank()
+
 android {
     namespace = "com.derekwinters.stretch"
     compileSdk = 35
@@ -32,6 +48,25 @@ android {
         versionName = versionNameProperty
     }
 
+    signingConfigs {
+        if (hasReleaseSigningConfig) {
+            create("release") {
+                storeFile = file(releaseKeystorePath!!)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyAliasPassword
+
+                // Every signature scheme stated rather than defaulted, as in the sibling repos:
+                // AGP would drop v1 for minSdk >= 24, and a scheme set nothing states is one a
+                // toolchain upgrade can change silently. The app is sideloaded, through installers
+                // AGP knows nothing about.
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -39,8 +74,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Debug-signed until a release keystore exists (docs/adr/0001).
-            signingConfig = signingConfigs.getByName("debug")
+            // Signed with the stable release key when its inputs are present; otherwise left
+            // unsigned on purpose, never debug-signed (docs/adr/0002).
+            if (hasReleaseSigningConfig) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
