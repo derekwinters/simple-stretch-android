@@ -82,12 +82,14 @@ class AlarmReceiver : BroadcastReceiver() {
         // NOTIF-006: don't nag about something that was due hours ago (e.g. delayed by Doze).
         if (System.currentTimeMillis() - triggerAt > STALE_AFTER_MILLIS) return
 
+        // NOTIF-010: once every goal for the day is met, no reminder (set time, repeating or
+        // snoozed) is shown. The caller still re-arms the next alarm, so the schedule keeps
+        // running. With no goals, allGoalsMet is false and reminders behave as before.
+        val progress = app.repository.goalProgressOn(date, zone)
+        if (GoalMath.allGoalsMet(progress)) return
+
         // NOTIF-001: a reminder without stretches lists today's unmet goals.
-        val goalLines = if (stretches.isEmpty()) {
-            GoalMath.reminderSummary(app.repository.goalProgressOn(date, zone))
-        } else {
-            null
-        }
+        val goalLines = if (stretches.isEmpty()) GoalMath.reminderSummary(progress) else null
         Notifications.showReminder(app, key, schedule.name, stretches, goalLines)
     }
 

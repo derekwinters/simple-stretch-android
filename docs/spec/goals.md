@@ -14,8 +14,10 @@
 - **GOAL-004** **Invariant — Progress is always derived from the completion log, never stored.**
   There is no counter to reset: a new day starts at 0 because no completions fall in it yet, and
   changing or removing a goal never changes the history.
-- **GOAL-005** Goals never suppress reminders: reminders keep firing after every goal is met
-  (NOTIF-010). Goals only decide what the session suggests (SESS-002) and what a reminder
+- **GOAL-005** Once every goal for the day is met, reminders are not shown for the rest of that
+  day (NOTIF-010); the schedule keeps running and reminders return the next day, or as soon as a
+  goal is short again (e.g. after a goal's count is raised). With no goals, goals never suppress
+  a reminder. Goals also decide what the session suggests (SESS-002) and what a reminder
   without stretches lists (NOTIF-001).
 - **GOAL-006** Removing a goal keeps its stretch's completion history. Deleting the stretch
   removes both (LIB-005).
@@ -31,6 +33,7 @@
 - [x] `goals.stretchId` has a unique index and a cascading foreign key (GOAL-001, LIB-005).
 - [x] `MIGRATION_1_2` SQL matches the entities, including `@ColumnInfo(defaultValue)` on the
       new `schedules` columns, so Room's schema validation passes (GOAL-007).
+- [x] `GoalMath.allGoalsMet` is false for an empty goal list (GOAL-005, NOTIF-010).
 - [x] Count is clamped to at least 1 in the repository, not only in the UI (GOAL-001).
 - [ ] Instrumented migration test with `MigrationTestHelper` (needs an emulator and the
       committed `1.json` schema).

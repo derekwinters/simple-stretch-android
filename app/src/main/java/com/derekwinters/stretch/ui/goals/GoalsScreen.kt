@@ -139,8 +139,8 @@ fun GoalsScreen(
         ) {
             item {
                 Text(
-                    "Set how many times a day you want to do a stretch. Reminders keep coming " +
-                        "even after a goal is met.",
+                    "Set how many times a day you want to do a stretch. Once every goal is met " +
+                        "for the day, reminders stay quiet until tomorrow.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp),

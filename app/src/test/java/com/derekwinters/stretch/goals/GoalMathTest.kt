@@ -87,4 +87,17 @@ class GoalMathTest {
         assertEquals(listOf(GoalMath.ALL_DONE), GoalMath.reminderSummary(allMet))
         assertNull(GoalMath.reminderSummary(emptyList()))
     }
+
+    // NOTIF-010 / GOAL-005: reminders are suppressed only when goals exist and all are met.
+    @Test
+    fun allGoalsMet() {
+        assertFalse(GoalMath.allGoalsMet(emptyList()))
+        val oneShort = GoalMath.progress(stretches, goals, mapOf(1L to 3, 2L to 3))
+        assertFalse(GoalMath.allGoalsMet(oneShort))
+        val allMet = GoalMath.progress(stretches, goals, mapOf(1L to 3, 2L to 5, 4L to 1))
+        assertTrue(GoalMath.allGoalsMet(allMet))
+        // A stretch with completions but no goal doesn't matter either way.
+        val withExtras = GoalMath.progress(stretches, goals, mapOf(1L to 3, 2L to 3, 3L to 9, 4L to 1))
+        assertTrue(GoalMath.allGoalsMet(withExtras))
+    }
 }

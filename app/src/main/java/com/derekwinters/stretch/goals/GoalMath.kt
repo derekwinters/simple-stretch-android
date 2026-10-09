@@ -90,5 +90,14 @@ object GoalMath {
         return unmet.map { "${it.stretchName} ${it.done} of ${it.target}" }
     }
 
+    /**
+     * NOTIF-010 / GOAL-005: true when at least one goal exists and every goal is met, i.e. a
+     * reminder should not be shown. With no goals this is false, so reminders behave as if goals
+     * did not exist.
+     */
+    fun allGoalsMet(progress: List<GoalProgress>): Boolean =
+        progress.isNotEmpty() && progress.all { it.met }
+
+    /** Fallback text only: reminders are not shown at all once every goal is met (NOTIF-010). */
     const val ALL_DONE = "All of today's goals are done. Stretch anyway?"
 }

@@ -13,7 +13,8 @@ A small Android app that reminds you to stretch during the day, on your own sche
   past the hour between two times, e.g. every hour at :50 from 8:00 to 17:00 (8:50 ... 16:50;
   the end time is inclusive).
 - **Daily goals**: e.g. 3 hamstring stretches and 3 calf stretches a day. The home screen shows
-  today's progress ("Hamstring stretch 2/3"); goals never silence reminders.
+  today's progress ("Hamstring stretch 2/3"). Once every goal for the day is met, reminders
+  stay quiet for the rest of the day.
 - **Stretch sessions**: from a reminder or the home screen's **Stretch now**, tick the stretches
   you did and save. Stretches still short of today's goal are listed first.
 - **Skip a day**: one tap on "Skip today" silences every reminder for the rest of the day.
