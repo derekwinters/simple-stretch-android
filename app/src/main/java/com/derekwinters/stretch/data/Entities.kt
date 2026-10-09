@@ -92,7 +92,12 @@ data class SkippedDate(
     @PrimaryKey val epochDay: Long,
 )
 
-/** A daily goal for one stretch (GOAL-001). At most one per stretch. */
+/**
+ * One version of a daily goal for one stretch (GOAL-001, GOAL-008). The row is in force from
+ * [effectiveFromEpochDay] (inclusive) to [effectiveToEpochDay] (exclusive); a null end means it
+ * is the stretch's current goal. Each stretch has at most one current row (kept so by
+ * [GoalDao.setGoal] / [GoalDao.removeGoal]); closed rows are history for trends (TREND-001).
+ */
 @Entity(
     tableName = "goals",
     foreignKeys = [
@@ -103,12 +108,16 @@ data class SkippedDate(
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index(value = ["stretchId"], unique = true)],
+    indices = [Index("stretchId")],
 )
 data class Goal(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val stretchId: Long,
     val timesPerDay: Int,
+    /** [java.time.LocalDate.toEpochDay] of the first day this count applies. */
+    val effectiveFromEpochDay: Long,
+    /** First day this count no longer applies, or null while it is the current goal. */
+    val effectiveToEpochDay: Long? = null,
 )
 
 /** One logged completion of a stretch (SESS-004). */

@@ -6,6 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.derekwinters.stretch.goals.GoalHistory
+import java.time.LocalDate
+import java.time.ZoneId
 
 @Database(
     entities = [
@@ -17,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         Goal::class,
         Completion::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -30,7 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "stretch.db")
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .addCallback(SeedCallback)
                 .build()
     }
@@ -68,6 +71,41 @@ abstract class AppDatabase : RoomDatabase() {
             )
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_completions_stretchId` ON `completions` (`stretchId`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_completions_completedAt` ON `completions` (`completedAt`)")
+        }
+    }
+
+    /**
+     * GOAL-010: v2 -> v3 makes goals versioned (GOAL-008). SQLite cannot add NOT NULL columns
+     * without a default or turn a unique index into a plain one, so the table is rebuilt: create
+     * `goals_new` exactly as Room would create the v3 `goals` table, copy every goal across as a
+     * current row (same id, stretch and count) in force from [GoalHistory.migratedStartDay], drop
+     * the old table (and with it the unique index), rename, and create the plain
+     * `index_goals_stretchId`. Nothing references `goals`, so dropping it touches no other table.
+     */
+    object MIGRATION_2_3 : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            val earliest: Long? = db.query("SELECT MIN(`completedAt`) FROM `completions`").use { c ->
+                if (c.moveToFirst() && !c.isNull(0)) c.getLong(0) else null
+            }
+            val fromDay = GoalHistory.migratedStartDay(earliest, LocalDate.now(), ZoneId.systemDefault())
+
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `goals_new` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`stretchId` INTEGER NOT NULL, " +
+                    "`timesPerDay` INTEGER NOT NULL, " +
+                    "`effectiveFromEpochDay` INTEGER NOT NULL, " +
+                    "`effectiveToEpochDay` INTEGER, " +
+                    "FOREIGN KEY(`stretchId`) REFERENCES `stretches`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+            )
+            db.execSQL(
+                "INSERT INTO `goals_new` (`id`, `stretchId`, `timesPerDay`, `effectiveFromEpochDay`, `effectiveToEpochDay`) " +
+                    "SELECT `id`, `stretchId`, `timesPerDay`, ?, NULL FROM `goals`",
+                arrayOf<Any?>(fromDay),
+            )
+            db.execSQL("DROP TABLE `goals`")
+            db.execSQL("ALTER TABLE `goals_new` RENAME TO `goals`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_goals_stretchId` ON `goals` (`stretchId`)")
         }
     }
 

@@ -12,8 +12,8 @@
   editor; a button creates a new one.
 - **HOME-004** The top bar has at most two icon actions plus an overflow menu. The goals screen
   is an icon ("Daily goals"); the overflow menu holds labelled text items "Skip today" (or
-  "Resume today"), "Skip other days" (the skipped-days screen) and "My stretches" (the stretch
-  library, LIB-006).
+  "Resume today"), "Skip other days" (the skipped-days screen), "My stretches" (the stretch
+  library, LIB-006) and "Trends" (TREND-004).
 
   **Invariant — The stretch library is reached by a labelled item**, never only by an
   unlabelled icon.
@@ -24,8 +24,9 @@
   is no separate save step for it.
 
 - **HOME-006** A "Today's goals" card, below the skip card, shows each goal's progress today
-  (e.g. "Hamstring stretch 2/3" with a progress bar) and links to the goals screen. With no
-  goals it invites the user to set one.
+  (e.g. "Hamstring stretch 2/3" with a progress bar) and links to the goals screen and, in
+  its header while goals exist, to the Trends screen (TREND-009). With no goals it invites the
+  user to set one.
 - **HOME-007** A "Stretch now" button on the goals card opens the stretch session screen
   (SESS-001) without waiting for a reminder.
 - **HOME-008** The "Skip today" card has a close (X) button in its top-right corner. Closing it
@@ -43,7 +44,7 @@
 - [x] Banners re-check permissions on resume (HOME-005).
 - [x] The closed date is stored per device (SharedPreferences, as an epoch day) and compared
       with today, so it expires on its own (HOME-008).
-- [x] Top bar: one icon (goals) + overflow with Skip today, Skip other days, My stretches
-      (HOME-004).
+- [x] Top bar: one icon (goals) + overflow with Skip today, Skip other days, My stretches,
+      Trends (HOME-004).
 - [x] Goal progress re-queries when the date changes (the clock tick drives the day bounds)
       (HOME-006).

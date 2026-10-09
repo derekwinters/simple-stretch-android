@@ -15,6 +15,12 @@ A small Android app that reminds you to stretch during the day, on your own sche
 - **Daily goals**: e.g. 3 hamstring stretches and 3 calf stretches a day. The home screen shows
   today's progress ("Hamstring stretch 2/3"). Once every goal for the day is met, reminders
   stay quiet for the rest of the day.
+- **Trends** ("Trends" in the home screen's menu, or on the goals card): a week or month bar
+  chart of each day's score (goal stretches done, up to each target, out of the day's total
+  target), the period's average, how many days met every goal, and your current streak. Tap a
+  day to see its goals, the score climbing through the day, and every stretch logged with its
+  time. Skipped days and days without goals are gaps, not 0%; changing a goal never rewrites
+  past days.
 - **Stretch sessions**: from a reminder or the home screen's **Stretch now**, tick the stretches
   you did and save. Stretches still short of today's goal are listed first.
 - **Skip a day**: one tap on "Skip today" silences every reminder for the rest of the day.
@@ -62,13 +68,15 @@ Release APKs are currently debug-signed; see
 ```
 app/src/main/java/com/derekwinters/stretch/
   data/           Room entities, DAOs, database (+ seed, migrations), repository
-  goals/          goal progress and session ordering maths (pure Kotlin)
+  goals/          goal progress, goal history and session ordering maths (pure Kotlin)
+  trends/         daily score, periods, streak and intraday series maths (pure Kotlin)
   scheduling/     next-occurrence and repeating-slot maths, AlarmManager scheduling, snooze,
                   alarm + reschedule receivers
   notifications/  notification channel/content and the Snooze / Skip actions
-  ui/             Compose screens: home, schedule editor, stretch session, goals, stretch
-                  library, skipped days
-app/src/test/     JVM unit tests (next occurrence, repeating slots, goal maths)
+  ui/             Compose screens: home, schedule editor, stretch session, goals, trends
+                  (Canvas charts) and day detail, stretch library, skipped days
+app/src/test/     JVM unit tests (next occurrence, repeating slots, goal maths, goal history,
+                  trends)
 app/schemas/      exported Room schemas
 docs/spec/        requirements with IDs; docs/adr/ decisions
 ```

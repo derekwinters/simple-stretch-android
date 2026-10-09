@@ -65,10 +65,8 @@ object ReminderScheduler {
         val zone = ZoneId.systemDefault()
         val nowMillis = System.currentTimeMillis()
         val now = LocalDateTime.ofInstant(Instant.ofEpochMilli(nowMillis), zone)
-        val today = now.toLocalDate()
 
-        // Old skip entries are useless; keep yesterday so a late alarm can still be checked.
-        db.skipDao().deleteBefore(today.minusDays(1).toEpochDay())
+        // SKIP-007: past skipped dates are kept; trends leave skipped days out (TREND-003).
         val skipped: Set<LocalDate> = db.skipDao().getAll()
             .map { LocalDate.ofEpochDay(it.epochDay) }
             .toSet()
