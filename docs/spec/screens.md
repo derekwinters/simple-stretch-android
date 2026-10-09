@@ -10,8 +10,13 @@
 - **HOME-003** Below that, every schedule with its days, its times (or repeat summary, e.g.
   "Every 60 min at :50, 8:00 AM - 5:00 PM") and an enabled switch. Tapping a schedule opens its
   editor; a button creates a new one.
-- **HOME-004** The top bar links to the goals screen, the stretch library and the
-  skipped-days screen.
+- **HOME-004** The top bar has at most two icon actions plus an overflow menu. The goals screen
+  is an icon ("Daily goals"); the overflow menu holds labelled text items "Skip today" (or
+  "Resume today"), "Skip other days" (the skipped-days screen) and "My stretches" (the stretch
+  library, LIB-006).
+
+  **Invariant — The stretch library is reached by a labelled item**, never only by an
+  unlabelled icon.
 - **HOME-005** Banners appear when notifications are blocked (NOTIF-005) or exact alarms are not
   allowed (SCHED-007).
 
@@ -38,5 +43,7 @@
 - [x] Banners re-check permissions on resume (HOME-005).
 - [x] The closed date is stored per device (SharedPreferences, as an epoch day) and compared
       with today, so it expires on its own (HOME-008).
+- [x] Top bar: one icon (goals) + overflow with Skip today, Skip other days, My stretches
+      (HOME-004).
 - [x] Goal progress re-queries when the date changes (the clock tick drives the day bounds)
       (HOME-006).

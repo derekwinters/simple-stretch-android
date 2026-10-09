@@ -48,6 +48,7 @@ import com.derekwinters.stretch.goals.GoalMath
 import com.derekwinters.stretch.goals.GoalProgress
 import com.derekwinters.stretch.goals.GoalRef
 import com.derekwinters.stretch.goals.StretchRef
+import com.derekwinters.stretch.ui.stretches.StretchEditDialog
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -86,6 +87,11 @@ class GoalsViewModel(application: Application) : AndroidViewModel(application) {
     fun removeGoal(stretchId: Long) {
         viewModelScope.launch { repo.removeGoal(stretchId) }
     }
+
+    /** LIB-007: adds [stretch] to the library, then reports its new id (on the main thread). */
+    fun createStretch(stretch: Stretch, onCreated: (Long) -> Unit) {
+        viewModelScope.launch { onCreated(repo.saveStretch(stretch)) }
+    }
 }
 
 /** What the goal dialog is editing: a new goal (stretch not chosen yet) or an existing one. */
@@ -117,7 +123,8 @@ fun GoalsScreen(
             )
         },
         floatingActionButton = {
-            if (state.available.isNotEmpty()) {
+            // Shown even when every stretch has a goal: the picker can create one (LIB-007).
+            if (state.loaded) {
                 ExtendedFloatingActionButton(
                     onClick = { dialog = GoalDialog.New },
                     icon = { Icon(Icons.Filled.Add, contentDescription = null) },
@@ -173,6 +180,7 @@ fun GoalsScreen(
                 dialog = null
             },
             onRemove = null,
+            onCreateStretch = viewModel::createStretch,
         )
         is GoalDialog.Edit -> GoalEditDialog(
             title = d.goal.stretchName,
@@ -188,12 +196,15 @@ fun GoalsScreen(
                 viewModel.removeGoal(d.goal.stretchId)
                 dialog = null
             },
+            onCreateStretch = null,
         )
     }
 }
 
 /**
  * GOAL-002: pick a stretch (only when [initialStretchId] is null) and a count of 1 to 20.
+ * LIB-007: [onCreateStretch] saves a new stretch and calls back with its id, which is then
+ * selected; null hides the "New stretch…" entry.
  */
 @Composable
 private fun GoalEditDialog(
@@ -204,9 +215,25 @@ private fun GoalEditDialog(
     onDismiss: () -> Unit,
     onSave: (Long, Int) -> Unit,
     onRemove: (() -> Unit)?,
+    onCreateStretch: ((Stretch, (Long) -> Unit) -> Unit)?,
 ) {
     var stretchId by remember { mutableStateOf(initialStretchId) }
     var count by remember { mutableIntStateOf(initialCount.coerceIn(1, MAX_TIMES_PER_DAY)) }
+    var creating by remember { mutableStateOf(false) }
+
+    // LIB-007: the library's editor replaces this dialog until saved or cancelled; the choices
+    // above are remembered here, so they survive the round trip.
+    if (creating && onCreateStretch != null) {
+        StretchEditDialog(
+            initial = Stretch(name = ""),
+            onDismiss = { creating = false },
+            onSave = { newStretch ->
+                creating = false
+                onCreateStretch(newStretch) { newId -> stretchId = newId }
+            },
+        )
+        return
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -224,6 +251,12 @@ private fun GoalEditDialog(
                                 RadioButton(selected = stretchId == s.id, onClick = { stretchId = s.id })
                                 Text(s.name)
                             }
+                        }
+                    }
+                    if (onCreateStretch != null) {
+                        TextButton(onClick = { creating = true }) {
+                            Icon(Icons.Filled.Add, contentDescription = null)
+                            Text("New stretch…")
                         }
                     }
                 }

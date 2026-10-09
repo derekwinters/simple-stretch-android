@@ -78,8 +78,13 @@ class StretchRepository(
 
     suspend fun getSchedule(id: Long): ScheduleWithReminders? = db.scheduleDao().getWithReminders(id)
 
-    suspend fun saveStretch(stretch: Stretch) {
-        if (stretch.id == 0L) db.stretchDao().insert(stretch) else db.stretchDao().update(stretch)
+    /** Inserts (id 0) or updates [stretch]; returns its id, so a picker can select a new one (LIB-007). */
+    suspend fun saveStretch(stretch: Stretch): Long {
+        if (stretch.id != 0L) {
+            db.stretchDao().update(stretch)
+            return stretch.id
+        }
+        return db.stretchDao().insert(stretch)
     }
 
     suspend fun deleteStretch(stretch: Stretch) {

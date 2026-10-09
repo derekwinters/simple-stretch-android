@@ -118,6 +118,11 @@ class ScheduleEditViewModel(
         if (i >= 0) reminders[i] = reminders[i].copy(stretchIds = ids)
     }
 
+    /** LIB-007: adds [stretch] to the library, then reports its new id (on the main thread). */
+    fun createStretch(stretch: Stretch, onCreated: (Long) -> Unit) {
+        viewModelScope.launch { onCreated(repo.saveStretch(stretch)) }
+    }
+
     fun removeReminder(key: Long) {
         reminders.removeAll { it.key == key }
     }

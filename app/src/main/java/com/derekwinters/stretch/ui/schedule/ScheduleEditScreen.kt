@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.derekwinters.stretch.data.Stretch
 import com.derekwinters.stretch.ui.common.Formatting
+import com.derekwinters.stretch.ui.stretches.StretchEditDialog
 import java.time.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -248,6 +249,7 @@ fun ScheduleEditScreen(
                     viewModel.updateStretches(key, ids)
                     stretchDialogFor = null
                 },
+                onCreateStretch = viewModel::createStretch,
             )
         }
     }
@@ -299,34 +301,57 @@ private fun StretchPickerDialog(
     initial: Set<Long>,
     onDismiss: () -> Unit,
     onConfirm: (Set<Long>) -> Unit,
+    onCreateStretch: (Stretch, (Long) -> Unit) -> Unit,
 ) {
     var selected by remember { mutableStateOf(initial) }
+    var creating by remember { mutableStateOf(false) }
+
+    // LIB-007: the library's editor replaces the picker until saved or cancelled; the ticks are
+    // remembered here, and the new stretch is ticked once it has its id.
+    if (creating) {
+        StretchEditDialog(
+            initial = Stretch(name = ""),
+            onDismiss = { creating = false },
+            onSave = { newStretch ->
+                creating = false
+                onCreateStretch(newStretch) { newId -> selected = selected + newId }
+            },
+        )
+        return
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Stretches for this time") },
         text = {
-            if (stretches.isEmpty()) {
-                Text("Your stretch library is empty. Add stretches from the library screen.")
-            } else {
-                LazyColumn(Modifier.heightIn(max = 400.dp)) {
-                    items(stretches, key = { it.id }) { s ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    selected = if (s.id in selected) selected - s.id else selected + s.id
-                                },
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Checkbox(
-                                checked = s.id in selected,
-                                onCheckedChange = { checked ->
-                                    selected = if (checked) selected + s.id else selected - s.id
-                                },
-                            )
-                            Text(s.name)
+            Column {
+                if (stretches.isEmpty()) {
+                    Text("Your stretch library is empty. Add one below.")
+                } else {
+                    LazyColumn(Modifier.heightIn(max = 360.dp)) {
+                        items(stretches, key = { it.id }) { s ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selected = if (s.id in selected) selected - s.id else selected + s.id
+                                    },
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Checkbox(
+                                    checked = s.id in selected,
+                                    onCheckedChange = { checked ->
+                                        selected = if (checked) selected + s.id else selected - s.id
+                                    },
+                                )
+                                Text(s.name)
+                            }
                         }
                     }
+                }
+                TextButton(onClick = { creating = true }) {
+                    Icon(Icons.Filled.Add, contentDescription = null)
+                    Text("New stretch…")
                 }
             }
         },

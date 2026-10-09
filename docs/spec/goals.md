@@ -4,7 +4,8 @@
   hamstring stretches a day. It has a stretch and a count of at least 1 (the editor allows 1 to
   20). A stretch has at most one goal.
 - **GOAL-002** The goals screen lists every goal with today's progress. The user can add a goal
-  (pick a stretch that has no goal yet, set the count), change a goal's count, and remove a
+  (pick a stretch that has no goal yet, or create one with "New stretch…" (LIB-007), and set
+  the count), change a goal's count, and remove a
   goal. It is reached from the home screen's top bar and its goals card (HOME-004, HOME-006).
 - **GOAL-003** A goal's progress on a day is the number of completions of its stretch (SESS-004)
   whose time falls within that local calendar day, from midnight inclusive to the next midnight

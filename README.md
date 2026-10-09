@@ -4,8 +4,9 @@ A small Android app that reminds you to stretch during the day, on your own sche
 
 ## Features
 
-- **Stretch library**: add, edit and delete stretches (name, instructions, optional duration).
-  Ten common stretches are added on first run.
+- **Stretch library** ("My stretches" in the home screen's menu): add, edit and delete stretches
+  (name, instructions, optional duration). Ten common stretches are added on first run. You can
+  also create a stretch straight from the goal and reminder-time pickers with "New stretch…".
 - **Schedules**: as many as you like, each with a name, an on/off switch and the days of the
   week it runs. A schedule either has **set times**, each optionally with its own stretches
   (e.g. neck rolls at 10:00, hip flexors at 14:00), or **repeats**: every N minutes at a minute

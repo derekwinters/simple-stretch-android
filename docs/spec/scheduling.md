@@ -4,8 +4,9 @@
   enabled toggle, a set of days of the week (picked with chips), and a mode: **set times** (a
   list of reminder times) or **repeating** (SCHED-011).
 - **SCHED-002** In a set-times schedule each reminder time has its own set of stretches (zero or
-  more; picking stretches is optional). A time with no stretches still reminds, with a generic
-  "Time to stretch" message and today's unmet goals (NOTIF-001).
+  more; picking stretches is optional, and the picker can create a new stretch, LIB-007). A
+  time with no stretches still reminds, with a generic "Time to stretch" message and today's
+  unmet goals (NOTIF-001).
 - **SCHED-003** A reminder's next occurrence is the first date-time strictly after *now*, at the
   reminder's time, on a day the schedule selects, and not on a skipped date (SKIP-004).
 

@@ -21,10 +21,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
@@ -112,13 +110,8 @@ fun HomeScreen(
                     IconButton(onClick = onOpenGoals) {
                         Icon(Icons.Filled.Star, contentDescription = "Daily goals")
                     }
-                    IconButton(onClick = onOpenSkips) {
-                        Icon(Icons.Filled.DateRange, contentDescription = "Skipped days")
-                    }
-                    IconButton(onClick = onOpenStretches) {
-                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Stretch library")
-                    }
-                    // HOME-008: "Skip today" stays reachable while the skip card is closed.
+                    // HOME-004: one icon plus a labelled overflow menu. HOME-008: "Skip today"
+                    // stays reachable here while the skip card is closed.
                     var menuOpen by remember { mutableStateOf(false) }
                     Box {
                         IconButton(onClick = { menuOpen = true }) {
@@ -137,6 +130,13 @@ fun HomeScreen(
                                 onClick = {
                                     menuOpen = false
                                     onOpenSkips()
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("My stretches") },
+                                onClick = {
+                                    menuOpen = false
+                                    onOpenStretches()
                                 },
                             )
                         }
