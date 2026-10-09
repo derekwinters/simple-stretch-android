@@ -7,12 +7,23 @@ name: release-please
 # run. A separate tag-triggered workflow would never fire: release-please pushes its tag with the
 # default GITHUB_TOKEN, and GitHub does not start workflow runs from events that token initiated.
 #
-# The release APK is debug-signed (docs/adr/0001-debug-signing-until-release-keystore.md), so no
-# secrets are referenced anywhere in this workflow.
+# The release APK is signed with the stable release keystore (docs/adr/0002). The four keystore
+# secrets are required; the job fails before building if any is missing, and refuses to attach an
+# APK that is unsigned, debug-signed, or (when ANDROID_KEYSTORE_SHA256 is set) signed by any
+# certificate other than the pinned one.
+#
+# workflow_dispatch with `backfill_tag` rebuilds and re-attaches the APK for an existing release
+# tag (for example one published before signing was wired up); release-please itself is skipped.
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      backfill_tag:
+        description: Existing release tag to rebuild, sign and (re)attach the APK for.
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -20,6 +31,7 @@ permissions:
 
 jobs:
   release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
@@ -35,14 +47,49 @@ jobs:
   build-and-attach:
     name: build and attach the release APK
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    # always() so a manual backfill still runs when release-please was skipped.
+    if: >-
+      always() && !cancelled() &&
+      ((github.event_name == 'push' && needs.release-please.outputs.release_created == 'true') ||
+       (github.event_name == 'workflow_dispatch' && inputs.backfill_tag != ''))
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.release-please.outputs.tag_name || inputs.backfill_tag }}
     steps:
+      # Fail before anything is built if a required signing secret is missing. Names only, never
+      # values. ANDROID_KEYSTORE_SHA256 is optional and checked by the signature gate below.
+      - name: Check the release signing secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
+        run: |
+          missing=0
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD \
+                      ANDROID_KEY_ALIAS ANDROID_KEY_ALIAS_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Release signing::Repository secret $name is missing or empty."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Refusing to build a release without the stable release keystore (docs/adr/0002)."
+            exit 1
+          fi
+
       # The exact commit release-please tagged, with its own version bump already applied.
       - name: Check out the release tag
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
+
+      # The signature gate runs from main, so backfilling an older tag still runs the current gate.
+      - name: Check out main for the release-signature gate
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: main
+          path: verification-gate
 
       - name: Set up the JDK
         uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
@@ -50,6 +97,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # build-tools also provides apksigner for the signature gate.
       - name: Set up the Android SDK
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
         with:
@@ -58,15 +106,46 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
-      # Debug-signed via signingConfig = debug in app/build.gradle.kts (ADR 0001).
-      - name: Assemble the release APK
+      # Gradle needs a keystore file, not the base64 secret. The decoded file lives only in the
+      # runner temp directory, readable by this user alone, is never logged, and is removed below.
+      - name: Decode the release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          keystore_path="$RUNNER_TEMP/release.keystore"
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          echo "ANDROID_KEYSTORE_PATH=$keystore_path" >> "$GITHUB_ENV"
+
+      # app/build.gradle.kts signs release from these env vars plus ANDROID_KEYSTORE_PATH, with
+      # v1/v2/v3 stated, and never falls back to the debug key.
+      - name: Assemble the signed release APK
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      # Uses the runner's pre-installed gh CLI rather than another pinned action.
+      - name: Remove the decoded keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.keystore"
+
+      # Refuses anything unsigned, debug-signed, multi-signed, or (when the optional pin secret is
+      # set) signed by a certificate other than the pinned one. Runs before the upload.
+      - name: Verify the release signature
+        env:
+          ANDROID_KEYSTORE_SHA256: ${{ secrets.ANDROID_KEYSTORE_SHA256 }}
+        run: >-
+          python3 verification-gate/.github/scripts/verify_release_signature.py
+          app/build/outputs/apk/release/*.apk
+
+      # Uses the runner's pre-installed gh CLI rather than another pinned action. --clobber lets a
+      # backfill replace an earlier (debug-signed) asset of the same name.
       - name: Attach the release APK to the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ needs.release-please.outputs.tag_name }}" \
+          gh release upload "$RELEASE_TAG" \
             app/build/outputs/apk/release/*.apk \
+            --clobber \
             --repo "${{ github.repository }}"

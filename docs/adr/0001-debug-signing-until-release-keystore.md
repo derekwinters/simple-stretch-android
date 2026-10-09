@@ -1,6 +1,9 @@
 # 0001: Debug-sign release builds until a release keystore exists
 
-Status: accepted
+Status: superseded by [0002](0002-release-signing-with-a-stable-keystore.md)
+
+> **Superseded.** Release builds are now signed with the stable release keystore; see
+> [ADR 0002](0002-release-signing-with-a-stable-keystore.md). This record is kept for history.
 
 The `release` build type uses `signingConfig = signingConfigs.debug`, and the release-please
 workflow builds and attaches that APK to each GitHub Release without referencing any secrets.

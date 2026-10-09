@@ -15,3 +15,10 @@ captures/
 # Locally built APKs
 dist/
 *.apk
+
+# Signing material: never committed (docs/adr/0002)
+*.jks
+*.keystore
+
+# Python
+__pycache__/
