@@ -7,6 +7,8 @@ import com.derekwinters.stretch.goals.GoalProgress
 import com.derekwinters.stretch.goals.GoalRef
 import com.derekwinters.stretch.goals.SessionEntry
 import com.derekwinters.stretch.goals.StretchRef
+import com.derekwinters.stretch.trends.CompletionRef
+import com.derekwinters.stretch.trends.GoalPeriod
 import com.derekwinters.stretch.scheduling.ReminderScheduler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -28,7 +30,24 @@ class StretchRepository(
     val skippedDates: Flow<Set<LocalDate>> = db.skipDao().observeAll()
         .map { list -> list.map { LocalDate.ofEpochDay(it.epochDay) }.toSet() }
 
-    val goals: Flow<List<Goal>> = db.goalDao().observeAll()
+    /** Current goals (GOAL-008): one per stretch at most. */
+    val goals: Flow<List<Goal>> = db.goalDao().observeCurrent()
+
+    /** Every goal version, current and closed, for trends (TREND-001). */
+    val goalHistory: Flow<List<GoalPeriod>> = db.goalDao().observeHistory()
+        .map { rows -> rows.map { GoalPeriod(it.stretchId, it.timesPerDay, it.effectiveFromEpochDay, it.effectiveToEpochDay) } }
+
+    /** Every completion on [date], oldest first (TREND-007, TREND-008). */
+    fun completionsOn(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Flow<List<CompletionRef>> {
+        val (from, to) = GoalMath.dayBounds(date, zone)
+        return db.completionDao().observeBetween(from, to).map { rows -> rows.map { CompletionRef(it.stretchId, it.completedAt) } }
+    }
+
+    /** Every completion from the start of [date] on, oldest first (TREND-005, TREND-006). */
+    fun completionsSince(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Flow<List<CompletionRef>> {
+        val (from, _) = GoalMath.dayBounds(date, zone)
+        return db.completionDao().observeSince(from).map { rows -> rows.map { CompletionRef(it.stretchId, it.completedAt) } }
+    }
 
     /** Completions per stretch id on [date] (GOAL-003). */
     fun countsOn(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Flow<Map<Long, Int>> {
@@ -46,7 +65,7 @@ class StretchRepository(
     suspend fun goalProgressOn(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): List<GoalProgress> =
         GoalMath.progress(
             db.stretchDao().getAll().map { StretchRef(it.id, it.name) },
-            db.goalDao().getAll().map { GoalRef(it.stretchId, it.timesPerDay) },
+            db.goalDao().getCurrent().map { GoalRef(it.stretchId, it.timesPerDay) },
             countsOnce(date, zone),
         )
 
@@ -54,18 +73,22 @@ class StretchRepository(
     suspend fun sessionEntries(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): List<SessionEntry> =
         GoalMath.sessionOrder(
             db.stretchDao().getAll().map { StretchRef(it.id, it.name) },
-            db.goalDao().getAll().map { GoalRef(it.stretchId, it.timesPerDay) },
+            db.goalDao().getCurrent().map { GoalRef(it.stretchId, it.timesPerDay) },
             countsOnce(date, zone),
         )
 
-    /** GOAL-001: one goal per stretch; the count is clamped to at least 1 here, not only in the UI. */
-    suspend fun setGoal(stretchId: Long, timesPerDay: Int) {
-        db.goalDao().upsert(Goal(stretchId = stretchId, timesPerDay = timesPerDay.coerceAtLeast(1)))
+    /**
+     * GOAL-001/009: one current goal per stretch; the count is clamped to at least 1 (in
+     * `GoalHistory.planSet`, not only in the UI). The new count applies from today; earlier days
+     * keep theirs.
+     */
+    suspend fun setGoal(stretchId: Long, timesPerDay: Int, today: LocalDate = LocalDate.now()) {
+        db.goalDao().setGoal(stretchId, timesPerDay, today)
     }
 
-    /** GOAL-006: removing a goal keeps the stretch's completion history. */
-    suspend fun removeGoal(stretchId: Long) {
-        db.goalDao().deleteForStretch(stretchId)
+    /** GOAL-006/009: removing a goal keeps the completion history and the goal's past versions. */
+    suspend fun removeGoal(stretchId: Long, today: LocalDate = LocalDate.now()) {
+        db.goalDao().removeGoal(stretchId, today)
     }
 
     /** SESS-003: one completion per stretch, one timestamp, one transaction; append only. */

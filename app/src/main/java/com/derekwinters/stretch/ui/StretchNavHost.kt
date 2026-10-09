@@ -13,6 +13,10 @@ import com.derekwinters.stretch.ui.schedule.ScheduleEditScreen
 import com.derekwinters.stretch.ui.session.SessionScreen
 import com.derekwinters.stretch.ui.skips.SkipDaysScreen
 import com.derekwinters.stretch.ui.stretches.StretchesScreen
+import com.derekwinters.stretch.ui.trends.DayDetailScreen
+import com.derekwinters.stretch.ui.trends.DayDetailViewModel
+import com.derekwinters.stretch.ui.trends.TrendsScreen
+import java.time.LocalDate
 
 object Routes {
     const val HOME = "home"
@@ -21,7 +25,10 @@ object Routes {
     const val SKIPS = "skips"
     const val GOALS = "goals"
     const val SESSION = "session"
+    const val TRENDS = "trends"
+    const val TREND_DAY = "trends/day/{${DayDetailViewModel.ARG_EPOCH_DAY}}"
     fun schedule(id: Long) = "schedule/$id"
+    fun trendDay(date: LocalDate) = "trends/day/${date.toEpochDay()}"
 }
 
 /**
@@ -42,6 +49,7 @@ fun StretchNavHost(
                 onOpenStretches = { nav.navigate(Routes.STRETCHES) },
                 onOpenSkips = { nav.navigate(Routes.SKIPS) },
                 onOpenGoals = { nav.navigate(Routes.GOALS) },
+                onOpenTrends = { nav.navigate(Routes.TRENDS) },
                 onStretchNow = { nav.navigate(Routes.SESSION) { launchSingleTop = true } },
             )
         }
@@ -59,6 +67,18 @@ fun StretchNavHost(
         }
         composable(Routes.GOALS) {
             GoalsScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Routes.TRENDS) {
+            TrendsScreen(
+                onBack = { nav.popBackStack() },
+                onOpenDay = { nav.navigate(Routes.trendDay(it)) },
+            )
+        }
+        composable(
+            Routes.TREND_DAY,
+            arguments = listOf(navArgument(DayDetailViewModel.ARG_EPOCH_DAY) { type = NavType.LongType }),
+        ) {
+            DayDetailScreen(onBack = { nav.popBackStack() })
         }
         composable(Routes.SESSION) {
             SessionScreen(onDone = { nav.popBackStack() })

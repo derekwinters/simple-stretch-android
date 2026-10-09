@@ -7,7 +7,11 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.derekwinters.stretch.goals.CurrentGoal
+import com.derekwinters.stretch.goals.GoalEdit
+import com.derekwinters.stretch.goals.GoalHistory
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface StretchDao {
@@ -105,25 +109,65 @@ interface SkipDao {
 
     @Query("DELETE FROM skipped_dates WHERE epochDay = :epochDay")
     suspend fun delete(epochDay: Long)
-
-    @Query("DELETE FROM skipped_dates WHERE epochDay < :epochDay")
-    suspend fun deleteBefore(epochDay: Long)
 }
 
 @Dao
-interface GoalDao {
-    @Query("SELECT * FROM goals")
-    fun observeAll(): Flow<List<Goal>>
+abstract class GoalDao {
+    /** Current goals only (GOAL-008): what the rest of the app means by "the goals". */
+    @Query("SELECT * FROM goals WHERE effectiveToEpochDay IS NULL")
+    abstract fun observeCurrent(): Flow<List<Goal>>
 
-    @Query("SELECT * FROM goals")
-    suspend fun getAll(): List<Goal>
+    @Query("SELECT * FROM goals WHERE effectiveToEpochDay IS NULL")
+    abstract suspend fun getCurrent(): List<Goal>
 
-    /** Inserts, or replaces the goal for the same stretch (unique index on stretchId). */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(goal: Goal): Long
+    /** Every version, current and closed, for trends (TREND-001). */
+    @Query("SELECT * FROM goals ORDER BY effectiveFromEpochDay, id")
+    abstract fun observeHistory(): Flow<List<Goal>>
 
-    @Query("DELETE FROM goals WHERE stretchId = :stretchId")
-    suspend fun deleteForStretch(stretchId: Long)
+    @Query("SELECT * FROM goals WHERE stretchId = :stretchId AND effectiveToEpochDay IS NULL ORDER BY effectiveFromEpochDay DESC, id DESC LIMIT 1")
+    abstract suspend fun getCurrentFor(stretchId: Long): Goal?
+
+    @Insert
+    abstract suspend fun insert(goal: Goal): Long
+
+    @Query("UPDATE goals SET timesPerDay = :timesPerDay WHERE id = :id")
+    abstract suspend fun updateCount(id: Long, timesPerDay: Int)
+
+    @Query("UPDATE goals SET effectiveToEpochDay = :toEpochDay WHERE id = :id")
+    abstract suspend fun close(id: Long, toEpochDay: Long)
+
+    @Query("DELETE FROM goals WHERE id = :id")
+    abstract suspend fun delete(id: Long)
+
+    /** GOAL-009: one transaction, so a stretch never ends up with two current rows or none. */
+    @Transaction
+    open suspend fun setGoal(stretchId: Long, timesPerDay: Int, today: LocalDate) {
+        applyEdit(stretchId, GoalHistory.planSet(currentFor(stretchId), timesPerDay, today))
+    }
+
+    /** GOAL-006/009: closes (or, if it started today, deletes) the current row; history stays. */
+    @Transaction
+    open suspend fun removeGoal(stretchId: Long, today: LocalDate) {
+        applyEdit(stretchId, GoalHistory.planRemove(currentFor(stretchId), today))
+    }
+
+    private suspend fun currentFor(stretchId: Long): CurrentGoal? =
+        getCurrentFor(stretchId)?.let { CurrentGoal(it.id, it.timesPerDay, it.effectiveFromEpochDay) }
+
+    private suspend fun applyEdit(stretchId: Long, edit: GoalEdit) {
+        when (edit) {
+            GoalEdit.None -> Unit
+            is GoalEdit.Insert ->
+                insert(Goal(stretchId = stretchId, timesPerDay = edit.timesPerDay, effectiveFromEpochDay = edit.fromEpochDay))
+            is GoalEdit.UpdateInPlace -> updateCount(edit.id, edit.timesPerDay)
+            is GoalEdit.CloseAndInsert -> {
+                close(edit.id, edit.toEpochDay)
+                insert(Goal(stretchId = stretchId, timesPerDay = edit.timesPerDay, effectiveFromEpochDay = edit.toEpochDay))
+            }
+            is GoalEdit.Delete -> delete(edit.id)
+            is GoalEdit.Close -> close(edit.id, edit.toEpochDay)
+        }
+    }
 }
 
 @Dao
@@ -142,4 +186,12 @@ interface CompletionDao {
             "WHERE completedAt >= :fromMillis AND completedAt < :toMillis GROUP BY stretchId",
     )
     suspend fun countsBetween(fromMillis: Long, toMillis: Long): List<StretchCount>
+
+    /** Completions in [fromMillis, toMillis), oldest first (TREND-005..008). */
+    @Query("SELECT * FROM completions WHERE completedAt >= :fromMillis AND completedAt < :toMillis ORDER BY completedAt, id")
+    fun observeBetween(fromMillis: Long, toMillis: Long): Flow<List<Completion>>
+
+    /** Completions at or after [fromMillis], oldest first (TREND-006). */
+    @Query("SELECT * FROM completions WHERE completedAt >= :fromMillis ORDER BY completedAt, id")
+    fun observeSince(fromMillis: Long): Flow<List<Completion>>
 }

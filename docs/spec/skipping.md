@@ -13,7 +13,9 @@
 - **SKIP-006** **Invariant — Skipping a date never modifies, disables or deletes a schedule.**
   Skips are stored separately, per date, and apply to all schedules; the next scheduled day
   reminds as normal.
-- **SKIP-007** Skipped dates older than yesterday are pruned automatically.
+- **SKIP-007** Past skipped dates are kept (they were pruned before version 3), because trends
+  leave skipped days out (TREND-003). The skipped-days screen still lists only today and future
+  dates.
 
 ## Build checklist
 

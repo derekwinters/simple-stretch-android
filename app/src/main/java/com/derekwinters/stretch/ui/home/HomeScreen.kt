@@ -78,6 +78,7 @@ fun HomeScreen(
     onOpenStretches: () -> Unit,
     onOpenSkips: () -> Unit,
     onOpenGoals: () -> Unit,
+    onOpenTrends: () -> Unit,
     onStretchNow: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
@@ -137,6 +138,14 @@ fun HomeScreen(
                                 onClick = {
                                     menuOpen = false
                                     onOpenStretches()
+                                },
+                            )
+                            // TREND-009: trends are reached by a labelled menu item.
+                            DropdownMenuItem(
+                                text = { Text("Trends") },
+                                onClick = {
+                                    menuOpen = false
+                                    onOpenTrends()
                                 },
                             )
                         }
@@ -207,6 +216,7 @@ fun HomeScreen(
                     loaded = state.loaded,
                     onStretchNow = onStretchNow,
                     onOpenGoals = onOpenGoals,
+                    onOpenTrends = onOpenTrends,
                 )
             }
 
@@ -389,17 +399,22 @@ private fun ScheduleCard(
     }
 }
 
-/** HOME-006 / HOME-007: today's progress per goal, "Stretch now" and a link to the goals screen. */
+/** HOME-006 / HOME-007 / TREND-009: today's progress, "Stretch now", links to goals and trends. */
 @Composable
 private fun GoalsCard(
     goals: List<GoalProgress>,
     loaded: Boolean,
     onStretchNow: () -> Unit,
     onOpenGoals: () -> Unit,
+    onOpenTrends: () -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Today's goals", style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Today's goals", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                // TREND-009: in the card's header, so the button row below still fits a phone.
+                if (goals.isNotEmpty()) TextButton(onClick = onOpenTrends) { Text("Trends") }
+            }
             if (loaded && goals.isEmpty()) {
                 Text(
                     "Set daily goals, e.g. 3 hamstring stretches a day.",
