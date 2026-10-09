@@ -50,3 +50,12 @@ jobs:
 
       - name: Assemble the debug APK
         run: ./gradlew assembleDebug
+
+      # Lets the owner install a PR's build on a device before it is released.
+      - name: Upload the debug APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: simple-stretch-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14

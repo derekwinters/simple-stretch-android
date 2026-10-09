@@ -34,6 +34,9 @@ adb install -r app/build/outputs/apk/debug/simple-stretch-*-debug.apk
 
 Or copy the APK to the phone and open it (allow installs from that source when asked).
 
+Every pull request's CI run also uploads its debug APK as the `simple-stretch-debug-apk`
+workflow artifact (kept for 14 days), so a PR can be installed and tried before it is released.
+
 On first launch, allow notifications. On Android 12/12L, also allow "Alarms & reminders" if the
 app shows the banner, so reminders arrive on the minute.
 
