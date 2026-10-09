@@ -3,6 +3,10 @@ name: pr
 # The build gate for a pull request: the unit tests must pass and the app must assemble. This is
 # also where the Android build is verified at all: the Android SDK and the Android Gradle Plugin
 # come from Google's servers, which not every development environment can reach.
+#
+# For a pull request from a branch of this repository (never a fork) it also builds the APK signed
+# with the stable release keystore (docs/adr/0002), so the PR can be installed over the released
+# app in place. Fork PRs get no secrets from GitHub, and the steps are skipped for them outright.
 
 # Every pull request, whatever its base branch, so stacked PRs are built too.
 on:
@@ -13,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    name: test and assembleDebug
+    name: test and assemble
     runs-on: ubuntu-latest
     steps:
       - name: Check out the pull request
@@ -34,6 +38,10 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
+      # Standard library only; covers the release-signature gate used below and on release.
+      - name: Run the release-signing gate tests
+        run: python3 -m unittest discover -s .github/scripts/tests -v
+
       - name: Run the unit tests
         run: ./gradlew test --stacktrace
 
@@ -51,11 +59,74 @@ jobs:
       - name: Assemble the debug APK
         run: ./gradlew assembleDebug
 
-      # Lets the owner install a PR's build on a device before it is released.
+      # A debug build: separate debug key, so it cannot be installed over a release-signed build
+      # (uninstall first). The release-signed artifact below is the one that upgrades in place.
       - name: Upload the debug APK
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: simple-stretch-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      # Same-repository PRs only. Detects (without printing) whether all four required signing
+      # secrets are present; if not, the release-signed build is skipped with a warning rather
+      # than failing the PR.
+      - name: Check for the release signing secrets
+        id: signing
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
+        run: |
+          available=true
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD \
+                      ANDROID_KEY_ALIAS ANDROID_KEY_ALIAS_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::warning title=Release signing::Secret $name is not available; skipping the release-signed APK."
+              available=false
+            fi
+          done
+          echo "available=$available" >> "$GITHUB_OUTPUT"
+
+      - name: Decode the release keystore
+        if: steps.signing.outputs.available == 'true'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          keystore_path="$RUNNER_TEMP/release.keystore"
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          echo "ANDROID_KEYSTORE_PATH=$keystore_path" >> "$GITHUB_ENV"
+
+      - name: Assemble the release-signed APK
+        if: steps.signing.outputs.available == 'true'
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Remove the decoded keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.keystore"
+
+      - name: Verify the release signature
+        if: steps.signing.outputs.available == 'true'
+        env:
+          ANDROID_KEYSTORE_SHA256: ${{ secrets.ANDROID_KEYSTORE_SHA256 }}
+        run: >-
+          python3 .github/scripts/verify_release_signature.py
+          app/build/outputs/apk/release/*.apk
+
+      # Signed by the same key as GitHub Releases, so it installs over the released app in place.
+      - name: Upload the release-signed APK
+        if: steps.signing.outputs.available == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: simple-stretch-release-apk
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 14

@@ -30,5 +30,10 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
   unreachable from some environments; CI (`pr.yml`) is then the build gate.
 - Version: `VERSION_NAME` / `VERSION_CODE` in `gradle.properties` (release-please owns
   `VERSION_NAME`). APKs are named `simple-stretch-<versionName>-<buildType>.apk`.
-- Release builds are debug-signed for now (docs/adr/0001).
+- Release builds are signed with the stable release keystore from repository secrets
+  (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
+  `ANDROID_KEY_ALIAS_PASSWORD`; optional pin `ANDROID_KEYSTORE_SHA256`) via env vars read in
+  `app/build.gradle.kts` (docs/adr/0002). Without them `release` is left unsigned, never
+  debug-signed. The key must never change. `.github/scripts/verify_release_signature.py` gates
+  every release-signed APK; its tests run with `python3 -m unittest discover -s .github/scripts/tests`.
 - Room schemas are exported to `app/schemas/`; commit changes to them with the entity change.
