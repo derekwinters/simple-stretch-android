@@ -1,0 +1,17 @@
+# Gradle / build output
+build/
+.gradle/
+.kotlin/
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Locally built APKs
+dist/
+*.apk
