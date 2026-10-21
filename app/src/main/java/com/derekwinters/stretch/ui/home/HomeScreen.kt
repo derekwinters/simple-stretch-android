@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
@@ -39,7 +38,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -111,8 +109,8 @@ fun HomeScreen(
                     IconButton(onClick = onOpenGoals) {
                         Icon(Icons.Filled.Star, contentDescription = "Daily goals")
                     }
-                    // HOME-004: one icon plus a labelled overflow menu. HOME-008: "Skip today"
-                    // stays reachable here while the skip card is closed.
+                    // HOME-004: one icon plus a labelled overflow menu; "Skip today" / "Resume
+                    // today" stays here alongside the Today row button (HOME-002).
                     var menuOpen by remember { mutableStateOf(false) }
                     Box {
                         IconButton(onClick = { menuOpen = true }) {
@@ -197,17 +195,13 @@ fun HomeScreen(
                 }
             }
 
-            // HOME-008 invariant: a skipped day always shows the card ("Resume today").
-            if (state.todaySkipped || !state.skipCardClosedToday) {
-                item {
-                    SkipTodayCard(
-                        state = state,
-                        onSkip = { viewModel.setTodaySkipped(true) },
-                        onUnskip = { viewModel.setTodaySkipped(false) },
-                        onOpenSkips = onOpenSkips,
-                        onClose = { viewModel.closeSkipCard() },
-                    )
-                }
+            // HOME-001: today's date at the top; there is no skip card.
+            item {
+                Text(
+                    Formatting.date(state.today),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
             item {
@@ -220,7 +214,13 @@ fun HomeScreen(
                 )
             }
 
-            item { SectionTitle("Today") }
+            // SKIP-001 / HOME-002: skip or resume today from the right of the Today heading.
+            item {
+                TodayHeaderRow(
+                    button = TodaySkipButton.of(state.todaySkipped, state.todayReminders),
+                    onClick = { skip -> viewModel.setTodaySkipped(skip) },
+                )
+            }
             if (state.loaded && state.todayReminders.isEmpty()) {
                 item {
                     Text(
@@ -265,6 +265,28 @@ private fun SectionTitle(text: String) {
     )
 }
 
+/**
+ * HOME-002: the "Today" heading with the skip/resume text button at its right end. The button is
+ * always present (HOME-002 invariant: "Resume today" is never hidden while today is skipped).
+ */
+@Composable
+private fun TodayHeaderRow(button: TodaySkipButton, onClick: (skip: Boolean) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            "Today",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = { onClick(button.skipsOnTap) }, enabled = button.enabled) {
+            Text(button.label)
+        }
+    }
+}
+
 @Composable
 private fun WarningCard(text: String, action: String, onAction: () -> Unit) {
     Card(
@@ -279,63 +301,6 @@ private fun WarningCard(text: String, action: String, onAction: () -> Unit) {
             Spacer(Modifier.width(12.dp))
             Text(text, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
             TextButton(onClick = onAction) { Text(action) }
-        }
-    }
-}
-
-@Composable
-private fun SkipTodayCard(
-    state: HomeState,
-    onSkip: () -> Unit,
-    onUnskip: () -> Unit,
-    onOpenSkips: () -> Unit,
-    onClose: () -> Unit,
-) {
-    val skipped = state.todaySkipped
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (skipped) {
-                MaterialTheme.colorScheme.tertiaryContainer
-            } else {
-                MaterialTheme.colorScheme.primaryContainer
-            },
-        ),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    Formatting.date(state.today),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                // HOME-008: closable for today only; never while today is skipped.
-                if (!skipped) {
-                    IconButton(onClick = onClose) {
-                        Icon(Icons.Filled.Close, contentDescription = "Hide until tomorrow")
-                    }
-                }
-            }
-            Text(
-                if (skipped) "Today is skipped. No stretch reminders today." else "Can't stretch today?",
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (skipped) {
-                    OutlinedButton(onClick = onUnskip) { Text("Resume today") }
-                } else {
-                    Button(onClick = onSkip) { Text("Skip today") }
-                }
-                TextButton(onClick = onOpenSkips) {
-                    Text(
-                        if (state.upcomingSkipCount > 0) {
-                            "Skip other days (${state.upcomingSkipCount} planned)"
-                        } else {
-                            "Skip other days"
-                        },
-                    )
-                }
-            }
         }
     }
 }
