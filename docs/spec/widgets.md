@@ -95,20 +95,20 @@ the mat-bar and goal-list widgets are later alternatives.
 
 ## Build checklist
 
-- [ ] `GoalRing.model` is pure and unit tested for 0, 1, 3 and 8 goals; none, partly and all
+- [x] `GoalRing.model` is pure and unit tested for 0, 1, 3 and 8 goals; none, partly and all
       met; progress above the count; and no goals (WIDGET-002 … WIDGET-006).
-- [ ] `GoalRing.fromLog` builds the ring from `GoalMath.goalRows`, the goals screen's
+- [x] `GoalRing.fromLog` builds the ring from `GoalMath.goalRows`, the goals screen's
       calculation, and drops stretches without a goal (WIDGET-009).
-- [ ] `GoalRing.nextRedrawAt` is the next local midnight, including across a daylight-saving
+- [x] `GoalRing.nextRedrawAt` is the next local midnight, including across a daylight-saving
       change (WIDGET-010).
-- [ ] `WidgetPalette.select` returns the fixed mockup values only when dynamic colour is
+- [x] `WidgetPalette.select` returns the fixed mockup values only when dynamic colour is
       unavailable, and its fixed values match WIDGET-008 (unit tested).
-- [ ] The renderer draws round arc ends inside each arc's share, so the visible gap is 8°
+- [x] The renderer draws round arc ends inside each arc's share, so the visible gap is 8°
       (WIDGET-002).
-- [ ] `StretchRepository` requests a redraw after `logCompletions`, `setGoal`, `removeGoal`,
+- [x] `StretchRepository` requests a redraw after `logCompletions`, `setGoal`, `removeGoal`,
       `saveStretch` and `deleteStretch` (WIDGET-010 invariant).
-- [ ] The midnight alarm is re-armed at every redraw and cancelled when the last widget is
+- [x] The midnight alarm is re-armed at every redraw and cancelled when the last widget is
       removed (WIDGET-010).
-- [ ] Tapping opens home with any screen above it closed (WIDGET-007).
+- [x] Tapping opens home with any screen above it closed (WIDGET-007).
 - [ ] On a device: light and dark, dynamic colour on and off, resize, tap, and the midnight
       reset (human-only issue).

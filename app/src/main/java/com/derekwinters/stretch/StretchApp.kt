@@ -5,6 +5,7 @@ import com.derekwinters.stretch.data.AppDatabase
 import com.derekwinters.stretch.data.StretchRepository
 import com.derekwinters.stretch.notifications.Notifications
 import com.derekwinters.stretch.scheduling.ReminderScheduler
+import com.derekwinters.stretch.widget.WidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,5 +23,7 @@ class StretchApp : Application() {
         Notifications.createChannel(this)
         // Make sure alarms reflect the stored data whenever the process starts.
         appScope.launch { ReminderScheduler.rescheduleAll(this@StretchApp) }
+        // WIDGET-010: the widget may have missed a day or a wallpaper-colour change.
+        WidgetUpdater.request(this)
     }
 }

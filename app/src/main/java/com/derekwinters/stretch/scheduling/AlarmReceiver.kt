@@ -10,6 +10,7 @@ import com.derekwinters.stretch.data.days
 import com.derekwinters.stretch.data.isRepeating
 import com.derekwinters.stretch.goals.GoalMath
 import com.derekwinters.stretch.notifications.Notifications
+import com.derekwinters.stretch.widget.WidgetUpdater
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -109,6 +110,8 @@ class RescheduleReceiver : BroadcastReceiver() {
         app.appScope.launch {
             try {
                 ReminderScheduler.rescheduleAll(app)
+                // WIDGET-010: a new day or zone may have started; also re-arms its midnight alarm.
+                WidgetUpdater.redraw(app)
             } finally {
                 pending.finish()
             }
