@@ -89,6 +89,11 @@ app/schemas/      exported Room schemas
 docs/spec/        requirements with IDs; docs/adr/ decisions
 ```
 
+## Privacy
+
+Simple Stretch keeps all of its data on the device and collects nothing; see the
+[privacy policy](docs/privacy.md).
+
 ## Notes
 
 - `USE_EXACT_ALARM` is declared so exact reminders work on Android 13+ without a prompt. Google
