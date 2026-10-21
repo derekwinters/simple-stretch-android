@@ -6,13 +6,15 @@ A small Android app that reminds you to stretch during the day, on your own sche
 
 - **Stretch library** ("My stretches" in the home screen's menu): add, edit and delete stretches
   (name, instructions, optional duration). Ten common stretches are added on first run. You can
-  also create a stretch straight from the goal and reminder-time pickers with "New stretch…".
+  also create a stretch straight from the goals screen and the reminder-time picker with
+  "New stretch…".
 - **Schedules**: as many as you like, each with a name, an on/off switch and the days of the
   week it runs. A schedule either has **set times**, each optionally with its own stretches
   (e.g. neck rolls at 10:00, hip flexors at 14:00), or **repeats**: every N minutes at a minute
   past the hour between two times, e.g. every hour at :50 from 8:00 to 17:00 (8:50 ... 16:50;
   the end time is inclusive).
-- **Daily goals**: e.g. 3 hamstring stretches and 3 calf stretches a day. The home screen shows
+- **Daily goals**: e.g. 3 hamstring stretches and 3 calf stretches a day, set with a − / +
+  stepper next to every stretch on the goals screen (0 means no goal). The home screen shows
   today's progress ("Hamstring stretch 2/3"). Once every goal for the day is met, reminders
   stay quiet for the rest of the day.
 - **Trends** ("Trends" in the home screen's menu, or on the goals card): a week or month bar

@@ -1,12 +1,30 @@
 # Goals
 
 - **GOAL-001** A goal says how many times a day the user wants to do one stretch, e.g. 3
-  hamstring stretches a day. It has a stretch and a count of at least 1 (the editor allows 1 to
-  20). A stretch has at most one current goal (GOAL-008).
-- **GOAL-002** The goals screen lists every goal with today's progress. The user can add a goal
-  (pick a stretch that has no goal yet, or create one with "New stretch…" (LIB-007), and set
-  the count), change a goal's count, and remove a
-  goal. It is reached from the home screen's top bar and its goals card (HOME-004, HOME-006).
+  hamstring stretches a day. It has a stretch and a count of 1 to 20. A stretch has at most one
+  current goal (GOAL-008). The goals screen's stepper runs from 0 to 20: 0 is shown for a
+  stretch with no goal and is never stored as a goal.
+- **GOAL-002** The goals screen lists **every stretch** in the library, in library order (by
+  name, ignoring case, as "My stretches" does), under a short intro line. Each row has the
+  stretch's name, "*n* of *count* today" when it has a goal (with a ✓ once the goal is met,
+  GOAL-003), and a − *N* + stepper showing its current goal, 0 when it has none.
+  - \+ on 0 adds a goal of 1; + or − on 1 to 20 changes the count by one; − on 1 removes the
+    goal (GOAL-006). − is disabled at 0 and + at 20.
+  - Each tap is applied at once through GOAL-009; there is no Save step and no dialog.
+  - "New stretch…" at the bottom of the list opens the stretch editor (LIB-007); the new
+    stretch then appears in the list at 0.
+
+  It is reached from the home screen's top bar and its goals card (HOME-004, HOME-006).
+
+  **Invariant — A tap is one GOAL-009 edit.** Each stepper tap runs exactly one `setGoal` or
+  `removeGoal`, in one transaction. Repeated taps on the same day update today's row in place
+  and never leave one-day history rows; the screen never writes goal history of its own.
+
+  **Invariant — The goals screen uses only the theme's colour roles.** A stepper with a goal
+  uses `primaryContainer` / `onPrimaryContainer` (as the "New schedule" button); a stepper at 0
+  uses `surfaceContainerHighest` (as the "Today's goals" card), with − in the disabled content
+  colour. The ✓ and "New stretch…" use `primary` (as "Edit goals"). There are no `Color(…)`
+  literals, so the screen follows dynamic colour and dark mode like the rest of the app.
 - **GOAL-003** A goal's progress on a day is the number of completions of its stretch (SESS-004)
   whose time falls within that local calendar day, from midnight inclusive to the next midnight
   exclusive. A goal is met when progress is at or above the count; progress above the count is
@@ -74,5 +92,13 @@
       foreign key, then the plain `index_goals_stretchId`), copies ids, drops and renames
       (GOAL-010).
 - [x] Count is clamped to at least 1 in the repository, not only in the UI (GOAL-001).
+- [x] `GoalStepper.plan` maps a tap to one edit (add, change, remove or nothing) and keeps the
+      stepper within 0 to 20; it is pure and unit tested (GOAL-001, GOAL-002).
+- [x] `GoalMath.goalRows` lists every stretch by name with its count (0 without a goal) and
+      today's progress; it is pure and unit tested (GOAL-002).
+- [x] Each stepper tap calls exactly one repository `setGoal` / `removeGoal`; same-day taps
+      leave one current row and no history rows (GOAL-002 invariant, GOAL-009).
+- [x] `GoalsScreen.kt` has no `Color(` literal; its colours are the `MaterialTheme.colorScheme`
+      roles named in GOAL-002.
 - [ ] Instrumented migration tests (1→2, 2→3) with `MigrationTestHelper` (need an emulator
       and the committed `1.json` / `2.json` schemas).
