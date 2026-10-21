@@ -61,6 +61,25 @@ object GoalMath {
     }
 
     /**
+     * GOAL-002: a row for every stretch, by name ignoring case (ties broken by id), with its
+     * current goal's count (0 without one) and today's completions. Goals whose stretch no
+     * longer exists are ignored.
+     */
+    fun goalRows(
+        stretches: List<StretchRef>,
+        goals: List<GoalRef>,
+        countsToday: Map<Long, Int>,
+    ): List<GoalRow> {
+        val targets = goals.associate { it.stretchId to it.timesPerDay.coerceAtLeast(1) }
+        return stretches
+            .map { s -> GoalRow(s.id, s.name, targets[s.id] ?: 0, countsToday[s.id] ?: 0) }
+            .sortedWith(
+                compareBy<GoalRow, String>(String.CASE_INSENSITIVE_ORDER) { it.stretchName }
+                    .thenBy { it.stretchId },
+            )
+    }
+
+    /**
      * SESS-002: every stretch; unmet goals first, then everything else; each group by name,
      * ignoring case (ties broken by id so the order is stable).
      */

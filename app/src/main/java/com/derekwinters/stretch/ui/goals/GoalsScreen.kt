@@ -1,42 +1,43 @@
 package com.derekwinters.stretch.ui.goals
 
 import android.app.Application
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,62 +46,73 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.derekwinters.stretch.StretchApp
 import com.derekwinters.stretch.data.Stretch
 import com.derekwinters.stretch.goals.GoalMath
-import com.derekwinters.stretch.goals.GoalProgress
 import com.derekwinters.stretch.goals.GoalRef
+import com.derekwinters.stretch.goals.GoalRow
+import com.derekwinters.stretch.goals.GoalStepper
+import com.derekwinters.stretch.goals.StepperEdit
+import com.derekwinters.stretch.goals.StepperTap
 import com.derekwinters.stretch.goals.StretchRef
 import com.derekwinters.stretch.ui.stretches.StretchEditDialog
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
 
 data class GoalsState(
-    val goals: List<GoalProgress> = emptyList(),
-    /** Stretches without a goal yet, for the "add" picker (GOAL-001). */
-    val available: List<Stretch> = emptyList(),
+    /** GOAL-002: every stretch, by name, with its goal (0 for none) and today's progress. */
+    val rows: List<GoalRow> = emptyList(),
     val loaded: Boolean = false,
 )
 
 class GoalsViewModel(application: Application) : AndroidViewModel(application) {
     private val repo = (application as StretchApp).repository
 
+    /** Taps are applied one at a time, each planned from the stored goal (GOAL-002). */
+    private val taps = Mutex()
+
     val state: StateFlow<GoalsState> = combine(
         repo.stretches,
         repo.goals,
         repo.countsOn(LocalDate.now()),
     ) { stretches, goals, counts ->
-        val progress = GoalMath.progress(
-            stretches.map { StretchRef(it.id, it.name) },
-            goals.map { GoalRef(it.stretchId, it.timesPerDay) },
-            counts,
+        GoalsState(
+            GoalMath.goalRows(
+                stretches.map { StretchRef(it.id, it.name) },
+                goals.map { GoalRef(it.stretchId, it.timesPerDay) },
+                counts,
+            ),
+            loaded = true,
         )
-        val withGoal = goals.map { it.stretchId }.toSet()
-        GoalsState(progress, stretches.filter { it.id !in withGoal }, loaded = true)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GoalsState())
 
-    fun setGoal(stretchId: Long, timesPerDay: Int) {
-        viewModelScope.launch { repo.setGoal(stretchId, timesPerDay) }
+    /**
+     * GOAL-002 invariant: one tap is exactly one `setGoal` or `removeGoal` (each its own
+     * GOAL-009 transaction). The count is read from the database after the previous tap has
+     * been written, so quick repeated taps are never planned from a stale count.
+     */
+    fun tap(stretchId: Long, tap: StepperTap) {
+        viewModelScope.launch {
+            taps.withLock {
+                val count = repo.goals.first().firstOrNull { it.stretchId == stretchId }?.timesPerDay ?: 0
+                when (val edit = GoalStepper.plan(count, tap)) {
+                    StepperEdit.None -> Unit
+                    is StepperEdit.Set -> repo.setGoal(stretchId, edit.timesPerDay)
+                    StepperEdit.Remove -> repo.removeGoal(stretchId)
+                }
+            }
+        }
     }
 
-    fun removeGoal(stretchId: Long) {
-        viewModelScope.launch { repo.removeGoal(stretchId) }
-    }
-
-    /** LIB-007: adds [stretch] to the library, then reports its new id (on the main thread). */
-    fun createStretch(stretch: Stretch, onCreated: (Long) -> Unit) {
-        viewModelScope.launch { onCreated(repo.saveStretch(stretch)) }
+    /** LIB-007: adds [stretch] to the library; it then appears in the list at 0. */
+    fun createStretch(stretch: Stretch) {
+        viewModelScope.launch { repo.saveStretch(stretch) }
     }
 }
-
-/** What the goal dialog is editing: a new goal (stretch not chosen yet) or an existing one. */
-private sealed interface GoalDialog {
-    data object New : GoalDialog
-    data class Edit(val goal: GoalProgress) : GoalDialog
-}
-
-private const val MAX_TIMES_PER_DAY = 20
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +121,7 @@ fun GoalsScreen(
     viewModel: GoalsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var dialog by remember { mutableStateOf<GoalDialog?>(null) }
+    var creating by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -122,164 +134,113 @@ fun GoalsScreen(
                 },
             )
         },
-        floatingActionButton = {
-            // Shown even when every stretch has a goal: the picker can create one (LIB-007).
-            if (state.loaded) {
-                ExtendedFloatingActionButton(
-                    onClick = { dialog = GoalDialog.New },
-                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                    text = { Text("Add goal") },
-                )
-            }
-        },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(bottom = 96.dp),
+            contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             item {
                 Text(
-                    "Set how many times a day you want to do a stretch. Once every goal is met " +
-                        "for the day, reminders stay quiet until tomorrow.",
+                    "Set how many times a day you want to do each stretch. Once every goal is " +
+                        "met for the day, reminders stay quiet until tomorrow.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp),
                 )
             }
-            if (state.loaded && state.goals.isEmpty()) {
-                item {
-                    Text(
-                        "No goals yet. Tap \"Add goal\", e.g. 3 hamstring stretches a day.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                }
-            }
-            items(state.goals, key = { it.stretchId }) { g ->
+            items(state.rows, key = { it.stretchId }) { row ->
                 ListItem(
-                    modifier = Modifier.clickable { dialog = GoalDialog.Edit(g) },
-                    headlineContent = { Text(g.stretchName) },
-                    supportingContent = { Text("${g.target} a day") },
-                    trailingContent = { Text("Today ${g.done}/${g.target}") },
+                    headlineContent = { Text(row.stretchName) },
+                    supportingContent = if (row.hasGoal) {
+                        { GoalProgressText(row) }
+                    } else {
+                        null
+                    },
+                    trailingContent = {
+                        GoalStepperControl(
+                            row = row,
+                            onTap = { tap -> viewModel.tap(row.stretchId, tap) },
+                        )
+                    },
                 )
                 HorizontalDivider()
+            }
+            if (state.loaded) {
+                item {
+                    // LIB-007: the library's editor; the new stretch then appears above at 0.
+                    TextButton(
+                        onClick = { creating = true },
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = null)
+                        Spacer(Modifier.width(4.dp))
+                        Text("New stretch…")
+                    }
+                }
             }
         }
     }
 
-    when (val d = dialog) {
-        null -> Unit
-        GoalDialog.New -> GoalEditDialog(
-            title = "New goal",
-            stretches = state.available,
-            initialStretchId = null,
-            initialCount = 3,
-            onDismiss = { dialog = null },
-            onSave = { id, count ->
-                viewModel.setGoal(id, count)
-                dialog = null
-            },
-            onRemove = null,
-            onCreateStretch = viewModel::createStretch,
-        )
-        is GoalDialog.Edit -> GoalEditDialog(
-            title = d.goal.stretchName,
-            stretches = emptyList(),
-            initialStretchId = d.goal.stretchId,
-            initialCount = d.goal.target,
-            onDismiss = { dialog = null },
-            onSave = { id, count ->
-                viewModel.setGoal(id, count)
-                dialog = null
-            },
-            onRemove = {
-                viewModel.removeGoal(d.goal.stretchId)
-                dialog = null
-            },
-            onCreateStretch = null,
-        )
-    }
-}
-
-/**
- * GOAL-002: pick a stretch (only when [initialStretchId] is null) and a count of 1 to 20.
- * LIB-007: [onCreateStretch] saves a new stretch and calls back with its id, which is then
- * selected; null hides the "New stretch…" entry.
- */
-@Composable
-private fun GoalEditDialog(
-    title: String,
-    stretches: List<Stretch>,
-    initialStretchId: Long?,
-    initialCount: Int,
-    onDismiss: () -> Unit,
-    onSave: (Long, Int) -> Unit,
-    onRemove: (() -> Unit)?,
-    onCreateStretch: ((Stretch, (Long) -> Unit) -> Unit)?,
-) {
-    var stretchId by remember { mutableStateOf(initialStretchId) }
-    var count by remember { mutableIntStateOf(initialCount.coerceIn(1, MAX_TIMES_PER_DAY)) }
-    var creating by remember { mutableStateOf(false) }
-
-    // LIB-007: the library's editor replaces this dialog until saved or cancelled; the choices
-    // above are remembered here, so they survive the round trip.
-    if (creating && onCreateStretch != null) {
+    if (creating) {
         StretchEditDialog(
             initial = Stretch(name = ""),
             onDismiss = { creating = false },
             onSave = { newStretch ->
                 creating = false
-                onCreateStretch(newStretch) { newId -> stretchId = newId }
+                viewModel.createStretch(newStretch)
             },
         )
-        return
     }
+}
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (initialStretchId == null) {
-                    Text("Stretch", style = MaterialTheme.typography.titleSmall)
-                    LazyColumn(Modifier.heightIn(max = 280.dp)) {
-                        items(stretches, key = { it.id }) { s ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth().clickable { stretchId = s.id },
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                RadioButton(selected = stretchId == s.id, onClick = { stretchId = s.id })
-                                Text(s.name)
-                            }
-                        }
-                    }
-                    if (onCreateStretch != null) {
-                        TextButton(onClick = { creating = true }) {
-                            Icon(Icons.Filled.Add, contentDescription = null)
-                            Text("New stretch…")
-                        }
-                    }
-                }
-                Text("Times per day", style = MaterialTheme.typography.titleSmall)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    OutlinedButton(onClick = { count-- }, enabled = count > 1) { Text("−") }
-                    Text("$count", style = MaterialTheme.typography.headlineSmall)
-                    OutlinedButton(onClick = { count++ }, enabled = count < MAX_TIMES_PER_DAY) { Text("+") }
-                }
-                if (onRemove != null) {
-                    TextButton(onClick = onRemove) { Text("Remove goal") }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = stretchId != null,
-                onClick = { stretchId?.let { onSave(it, count) } },
-            ) { Text("Save") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+/** GOAL-002: "n of count today", with a ✓ in `primary` once the goal is met. */
+@Composable
+private fun GoalProgressText(row: GoalRow) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text("${row.done} of ${row.count} today")
+        if (row.met) {
+            Spacer(Modifier.width(4.dp))
+            Icon(
+                Icons.Filled.Check,
+                contentDescription = "Goal met",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+/**
+ * GOAL-002: a compact − N + stepper. Colours are theme roles only (GOAL-002 invariant): with a
+ * goal, `primaryContainer` / `onPrimaryContainer` (as the "New schedule" button); at 0,
+ * `surfaceContainerHighest` (as the "Today's goals" card) with − disabled.
+ */
+@Composable
+private fun GoalStepperControl(row: GoalRow, onTap: (StepperTap) -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val container = if (row.hasGoal) scheme.primaryContainer else scheme.surfaceContainerHighest
+    val content = if (row.hasGoal) scheme.onPrimaryContainer else scheme.onSurface
+    val buttonColors = IconButtonDefaults.iconButtonColors(contentColor = content)
+    Surface(shape = CircleShape, color = container, contentColor = content) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = { onTap(StepperTap.Minus) },
+                enabled = GoalStepper.canDecrease(row.count),
+                colors = buttonColors,
+                modifier = Modifier.semantics { contentDescription = "Fewer ${row.stretchName}" },
+            ) { Text("−", style = MaterialTheme.typography.titleMedium) }
+            Text(
+                "${row.count}",
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.widthIn(min = 24.dp),
+            )
+            IconButton(
+                onClick = { onTap(StepperTap.Plus) },
+                enabled = GoalStepper.canIncrease(row.count),
+                colors = buttonColors,
+                modifier = Modifier.semantics { contentDescription = "More ${row.stretchName}" },
+            ) { Text("+", style = MaterialTheme.typography.titleMedium) }
+        }
+    }
 }
