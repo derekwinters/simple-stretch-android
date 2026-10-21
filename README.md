@@ -33,7 +33,7 @@ A small Android app that reminds you to stretch during the day, on your own sche
   in the top bar's menu), silences every reminder for the rest of the day; "Resume today" undoes
   it. Future days can be skipped from the calendar screen, and skipped days can be removed again.
 - **Notifications** show the stretches (or today's unmet goals), with **Start** (opens the
-  stretch session), **Snooze 5 min** and **Skip today** buttons; swipe to dismiss just this one.
+  stretch session) and **Snooze 5 min** buttons; swipe to dismiss just this one.
   Tapping also opens the session.
 - Reminders survive reboots and time or time-zone changes, and use exact alarms when Android
   allows them (falling back to slightly-less-punctual alarms when it doesn't).

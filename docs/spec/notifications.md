@@ -10,7 +10,11 @@
   dismisses the notification.
 - **NOTIF-003** A "Start" action does the same as tapping: it opens the stretch session screen
   and dismisses the notification. (It replaces the earlier "Done" action.)
-- **NOTIF-004** A "Skip today" action skips today (SKIP-005).
+- **NOTIF-004** _Retired._ It described a "Skip today" notification action, which was removed.
+  Skipping today is done from the home screen (SKIP-001) or the "Skipped days" screen
+  (SKIP-002). A notification posted before the removal may still show the old button; tapping
+  it does nothing (no skip is written and the notification is not dismissed), and the
+  notification stays until swiped away or replaced.
 - **NOTIF-005** On Android 13+ the app asks for `POST_NOTIFICATIONS` on first launch. While
   notifications are blocked, the home screen shows a banner linking to the app's notification
   settings.
@@ -23,8 +27,12 @@
   again 5 minutes later (SCHED-015). Snoozing again from the re-posted notification snoozes
   again.
 - **NOTIF-009** Dismissing just this reminder is done by swiping the notification away (it is
-  not ongoing). Android shows at most three action buttons, so the three buttons are Start,
-  Snooze 5 min and Skip today, in that order.
+  not ongoing). A reminder shows exactly two action buttons, Start and Snooze 5 min, in that
+  order; the third slot Android allows is left empty.
+
+  **Invariant — No notification button skips a day.** The reminder carries no skip action, and
+  `NotificationActionReceiver` handles only Snooze; any other action it receives, including the
+  old Skip today action, writes nothing and leaves the notification alone.
 - **NOTIF-010** When at least one goal exists and every goal's progress today (GOAL-003) is at
   or above its count, a reminder is not shown. This applies to every reminder: set times (with
   or without stretches), repeating schedules and snoozed reminders. It is decided when the alarm
@@ -44,6 +52,9 @@
 - [x] Start and the content tap share one activity PendingIntent carrying the notification id;
       `MainActivity` cancels that notification and navigates to the session (NOTIF-002/003).
 - [x] Snooze is a broadcast action handled by `NotificationActionReceiver` (NOTIF-008).
+- [x] The reminder's buttons come from one pure list, unit tested as exactly Start then Snooze;
+      the receiver's handled actions are a pure set, unit tested to exclude the old Skip today
+      action (NOTIF-004 retired, NOTIF-009).
 - [x] "Every goal met" is the pure `GoalMath.allGoalsMet` (false for no goals), unit tested
       (NOTIF-010).
 - [x] The receiver returns before posting, but `onAlarmHandled` still runs, so the next alarm

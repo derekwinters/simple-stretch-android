@@ -8,7 +8,6 @@
     <string name="notification_goals_header">Still to do today:</string>
     <string name="action_start">Start</string>
     <string name="action_snooze">Snooze 5 min</string>
-    <string name="action_skip_today">Skip today</string>
     <string name="widget_goal_ring_label">Today\'s goals</string>
     <string name="widget_goal_ring_description">A ring with one arc per daily goal, filling as you stretch.</string>
     <string name="widget_goal_ring_count">Today\'s goals: %1$d of %2$d done</string>

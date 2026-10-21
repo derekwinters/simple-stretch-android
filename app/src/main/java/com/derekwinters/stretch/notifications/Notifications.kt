@@ -42,9 +42,9 @@ object Notifications {
     }
 
     /**
-     * NOTIF-001..004, NOTIF-008, NOTIF-009: stretch names and instructions (or today's unmet
-     * goals); tapping or "Start" opens the stretch session; "Snooze 5 min"; "Skip today".
-     * Dismissing just this one is a swipe (Android shows at most three buttons).
+     * NOTIF-001..003, NOTIF-008, NOTIF-009: stretch names and instructions (or today's unmet
+     * goals); tapping or "Start" opens the stretch session; "Snooze 5 min". The buttons are
+     * [ReminderActions.BUTTONS], in order. Dismissing just this one is a swipe.
      *
      * [key] is the alarm key (SCHED-005); it is also the notification id. [goalLines] is used
      * only when [stretches] is empty: null means no goals (generic text).
@@ -84,7 +84,7 @@ object Notifications {
 
         val openSession = sessionIntent(context, notificationId)
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(shortText)
@@ -94,21 +94,22 @@ object Notifications {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setContentIntent(openSession)
-            .addAction(0, context.getString(R.string.action_start), openSession)
-            .addAction(
-                0,
-                context.getString(R.string.action_snooze),
-                actionIntent(context, NotificationActionReceiver.ACTION_SNOOZE, notificationId, key),
-            )
-            .addAction(
-                0,
-                context.getString(R.string.action_skip_today),
-                actionIntent(context, NotificationActionReceiver.ACTION_SKIP_TODAY, notificationId, key),
-            )
-            .build()
+
+        // NOTIF-009: exactly the buttons in ReminderActions.BUTTONS, in that order.
+        for (action in ReminderActions.BUTTONS) {
+            when (action) {
+                ReminderAction.START ->
+                    builder.addAction(0, context.getString(R.string.action_start), openSession)
+                ReminderAction.SNOOZE -> builder.addAction(
+                    0,
+                    context.getString(R.string.action_snooze),
+                    actionIntent(context, NotificationActionReceiver.ACTION_SNOOZE, notificationId, key),
+                )
+            }
+        }
 
         try {
-            NotificationManagerCompat.from(context).notify(notificationId, notification)
+            NotificationManagerCompat.from(context).notify(notificationId, builder.build())
         } catch (_: SecurityException) {
             // Permission revoked between the check and the call; nothing else to do.
         }
