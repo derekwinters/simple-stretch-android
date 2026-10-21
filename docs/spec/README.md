@@ -6,7 +6,7 @@ tests reference these IDs. Change the spec before the code.
 | Page | IDs | Covers |
 | --- | --- | --- |
 | [scheduling.md](scheduling.md) | SCHED-001 … SCHED-015 | Schedules (set times or repeating), next-occurrence maths, alarms, snooze |
-| [skipping.md](skipping.md) | SKIP-001 … SKIP-007 | Skip today, skip future dates, skip from a notification |
+| [skipping.md](skipping.md) | SKIP-001 … SKIP-007 | Skip today, skip future dates |
 | [notifications.md](notifications.md) | NOTIF-001 … NOTIF-010 | Reminder notification content, actions, permission |
 | [library.md](library.md) | LIB-001 … LIB-007 | Stretch library and first-run seed |
 | [goals.md](goals.md) | GOAL-001 … GOAL-010 | Daily goals per stretch, progress, goal history, database upgrades |

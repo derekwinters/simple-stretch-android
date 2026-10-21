@@ -10,8 +10,9 @@
   it was already scheduled.** The alarm receiver checks the skip list for the occurrence's date
   before notifying; it does not rely on the alarm having been rescheduled.
 - **SKIP-004** When computing a reminder's next occurrence, skipped dates are passed over.
-- **SKIP-005** Every reminder notification has a "Skip today" action that skips today
-  (as SKIP-001) and dismisses the notification.
+- **SKIP-005** _Retired._ It described a "Skip today" action on every reminder notification,
+  which was removed (NOTIF-004 retired, NOTIF-009). Today is skipped from the home screen
+  (SKIP-001) or the "Skipped days" screen (SKIP-002).
 - **SKIP-006** **Invariant — Skipping a date never modifies, disables or deletes a schedule.**
   Skips are stored separately, per date, and apply to all schedules; the next scheduled day
   reminds as normal.
@@ -26,6 +27,5 @@
       deliveries alike (SKIP-003).
 - [x] Unit tests: skipped today, several skipped days, skipped non-scheduled day, single-day
       schedule rolling a week (SKIP-001, SKIP-002, SKIP-004, SKIP-006).
-- [x] Notification action writes the skip through the repository, which reschedules (SKIP-005).
 - [x] The Today row's skip/resume button state is a pure function of "today skipped" and
       "reminders left today", unit-tested (SKIP-001, HOME-002).
