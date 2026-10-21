@@ -1,7 +1,9 @@
 # Skipping days
 
-- **SKIP-001** The home screen has a prominent "Skip today" button. Pressing it suppresses every
-  remaining reminder for today across all schedules. It can be undone with "Resume today".
+- **SKIP-001** The "Today" heading row on the home screen has a "Skip today" text button at its
+  right end (HOME-002). Pressing it suppresses every remaining reminder for today across all
+  schedules. It is shown but disabled when no reminders are left today, and once today is
+  skipped the same spot shows a "Resume today" text button that undoes the skip.
 - **SKIP-002** The user can skip any future date, picked with a date picker, from the "Skipped
   days" screen. That screen lists today and future skipped dates, each removable.
 - **SKIP-003** **Invariant — A skipped date never produces a notification, even if an alarm for
@@ -25,3 +27,5 @@
 - [x] Unit tests: skipped today, several skipped days, skipped non-scheduled day, single-day
       schedule rolling a week (SKIP-001, SKIP-002, SKIP-004, SKIP-006).
 - [x] Notification action writes the skip through the repository, which reschedules (SKIP-005).
+- [x] The Today row's skip/resume button state is a pure function of "today skipped" and
+      "reminders left today", unit-tested (SKIP-001, HOME-002).
