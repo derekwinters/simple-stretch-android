@@ -29,9 +29,9 @@ A small Android app that reminds you to stretch during the day, on your own sche
   starts again at 0 at midnight, and opens the app when tapped.
 - **Stretch sessions**: from a reminder or the home screen's **Stretch now**, tick the stretches
   you did and save. Stretches still short of today's goal are listed first.
-- **Skip a day**: one tap on "Skip today" silences every reminder for the rest of the day.
-  Future days can be skipped from the calendar screen, and skipped days can be removed again.
-  The skip card can be closed for the day (X); "Skip today" is then in the top bar's menu.
+- **Skip a day**: one tap on "Skip today", at the right of the home screen's "Today" heading (or
+  in the top bar's menu), silences every reminder for the rest of the day; "Resume today" undoes
+  it. Future days can be skipped from the calendar screen, and skipped days can be removed again.
 - **Notifications** show the stretches (or today's unmet goals), with **Start** (opens the
   stretch session), **Snooze 5 min** and **Skip today** buttons; swipe to dismiss just this one.
   Tapping also opens the session.
