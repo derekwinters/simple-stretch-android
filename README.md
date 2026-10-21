@@ -23,6 +23,10 @@ A small Android app that reminds you to stretch during the day, on your own sche
   day to see its goals, the score climbing through the day, and every stretch logged with its
   time. Skipped days and days without goals are gaps, not 0%; changing a goal never rewrites
   past days.
+- **Home screen widget** ("Today's goals", 2×2, resizable): a ring with one arc per daily goal,
+  each filling as you do that stretch, around the app's stretch figure and today's count (a
+  check mark once every goal is met). It follows light/dark mode and your wallpaper colours,
+  starts again at 0 at midnight, and opens the app when tapped.
 - **Stretch sessions**: from a reminder or the home screen's **Stretch now**, tick the stretches
   you did and save. Stretches still short of today's goal are listed first.
 - **Skip a day**: one tap on "Skip today" silences every reminder for the rest of the day.
@@ -83,10 +87,12 @@ app/src/main/java/com/derekwinters/stretch/
   scheduling/     next-occurrence and repeating-slot maths, AlarmManager scheduling, snooze,
                   alarm + reschedule receivers
   notifications/  notification channel/content and the Snooze / Skip actions
+  widget/         segmented ring home screen widget: ring layout and palette (pure Kotlin),
+                  bitmap renderer, provider and redraws
   ui/             Compose screens: home, schedule editor, stretch session, goals, trends
                   (Canvas charts) and day detail, stretch library, skipped days
 app/src/test/     JVM unit tests (next occurrence, repeating slots, goal maths, goal history,
-                  trends)
+                  trends, widget ring and palette)
 app/schemas/      exported Room schemas
 docs/spec/        requirements with IDs; docs/adr/ decisions
 ```

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WIDGET-001: 2×2 cells, resizable both ways; redrawn by the app (WIDGET-010), not by a
+     period, so updatePeriodMillis is 0. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="40dp"
+    android:minResizeHeight="40dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/widget_goal_ring"
+    android:description="@string/widget_goal_ring_description"
+    android:widgetCategory="home_screen" />

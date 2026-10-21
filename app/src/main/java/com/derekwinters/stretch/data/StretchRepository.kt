@@ -10,6 +10,9 @@ import com.derekwinters.stretch.goals.StretchRef
 import com.derekwinters.stretch.trends.CompletionRef
 import com.derekwinters.stretch.trends.GoalPeriod
 import com.derekwinters.stretch.scheduling.ReminderScheduler
+import com.derekwinters.stretch.widget.GoalRing
+import com.derekwinters.stretch.widget.RingModel
+import com.derekwinters.stretch.widget.WidgetUpdater
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
@@ -17,7 +20,8 @@ import java.time.ZoneId
 
 /**
  * Single entry point for reading and changing app data. Every write that can change when a
- * reminder fires is followed by a full reschedule (SCHED-006).
+ * reminder fires is followed by a full reschedule (SCHED-006), and every write that can change
+ * today's goals or progress by a widget redraw (WIDGET-010).
  */
 class StretchRepository(
     context: Context,
@@ -77,6 +81,14 @@ class StretchRepository(
             countsOnce(date, zone),
         )
 
+    /** One-shot segmented ring for [date], from the goals screen's calculation (WIDGET-009). */
+    suspend fun goalRingOn(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): RingModel =
+        GoalRing.fromLog(
+            db.stretchDao().getAll().map { StretchRef(it.id, it.name) },
+            db.goalDao().getCurrent().map { GoalRef(it.stretchId, it.timesPerDay) },
+            countsOnce(date, zone),
+        )
+
     /**
      * GOAL-001/009: one current goal per stretch; the count is clamped to at least 1 (in
      * `GoalHistory.planSet`, not only in the UI). The new count applies from today; earlier days
@@ -84,11 +96,13 @@ class StretchRepository(
      */
     suspend fun setGoal(stretchId: Long, timesPerDay: Int, today: LocalDate = LocalDate.now()) {
         db.goalDao().setGoal(stretchId, timesPerDay, today)
+        redrawWidgets()
     }
 
     /** GOAL-006/009: removing a goal keeps the completion history and the goal's past versions. */
     suspend fun removeGoal(stretchId: Long, today: LocalDate = LocalDate.now()) {
         db.goalDao().removeGoal(stretchId, today)
+        redrawWidgets()
     }
 
     /** SESS-003: one completion per stretch, one timestamp, one transaction; append only. */
@@ -97,21 +111,27 @@ class StretchRepository(
         db.withTransaction {
             db.completionDao().insertAll(stretchIds.distinct().map { Completion(stretchId = it, completedAt = atMillis) })
         }
+        redrawWidgets()
     }
 
     suspend fun getSchedule(id: Long): ScheduleWithReminders? = db.scheduleDao().getWithReminders(id)
 
     /** Inserts (id 0) or updates [stretch]; returns its id, so a picker can select a new one (LIB-007). */
     suspend fun saveStretch(stretch: Stretch): Long {
-        if (stretch.id != 0L) {
+        // WIDGET-010: a rename can change the arcs' order.
+        val id = if (stretch.id != 0L) {
             db.stretchDao().update(stretch)
-            return stretch.id
+            stretch.id
+        } else {
+            db.stretchDao().insert(stretch)
         }
-        return db.stretchDao().insert(stretch)
+        redrawWidgets()
+        return id
     }
 
     suspend fun deleteStretch(stretch: Stretch) {
         db.stretchDao().delete(stretch)
+        redrawWidgets()
     }
 
     suspend fun saveSchedule(schedule: Schedule, reminders: List<ReminderDraft>): Long {
@@ -141,4 +161,7 @@ class StretchRepository(
     }
 
     private suspend fun reschedule() = ReminderScheduler.rescheduleAll(appContext)
+
+    /** WIDGET-010 invariant: made here, after the write, so no screen can forget it. */
+    private fun redrawWidgets() = WidgetUpdater.request(appContext)
 }

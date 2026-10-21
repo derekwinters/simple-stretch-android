@@ -32,8 +32,8 @@ object Routes {
 }
 
 /**
- * [pendingRoute] is a screen requested from outside the UI (a notification, NOTIF-002/003); it
- * is opened on top of home and then reported back through [onPendingRouteHandled].
+ * [pendingRoute] is a screen requested from outside the UI (a notification, NOTIF-002/003, or
+ * the widget, WIDGET-007); it is opened on top of home and then reported back through [onPendingRouteHandled].
  */
 @Composable
 fun StretchNavHost(
@@ -89,7 +89,8 @@ fun StretchNavHost(
         val route = pendingRoute ?: return@LaunchedEffect
         // Start from home so Back from the session lands on home.
         nav.popBackStack(Routes.HOME, inclusive = false)
-        nav.navigate(route) { launchSingleTop = true }
+        // WIDGET-007: home itself only needs the screens above it closed.
+        if (route != Routes.HOME) nav.navigate(route) { launchSingleTop = true }
         onPendingRouteHandled()
     }
 }

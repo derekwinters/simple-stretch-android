@@ -41,8 +41,15 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
     }
 
-    /** NOTIF-002/003: open the stretch session and clear the notification it came from. */
+    /**
+     * NOTIF-002/003: open the stretch session and clear the notification it came from.
+     * WIDGET-007: the widget opens home, closing any screen above it.
+     */
     private fun handleIntent(intent: Intent?) {
+        if (intent?.action == ACTION_OPEN_HOME) {
+            pendingRoute = Routes.HOME
+            return
+        }
         if (intent?.action != ACTION_OPEN_SESSION) return
         val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, Int.MIN_VALUE)
         if (notificationId != Int.MIN_VALUE) NotificationManagerCompat.from(this).cancel(notificationId)
@@ -57,6 +64,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val ACTION_OPEN_SESSION = "com.derekwinters.stretch.action.OPEN_SESSION"
+        const val ACTION_OPEN_HOME = "com.derekwinters.stretch.action.OPEN_HOME"
         const val EXTRA_NOTIFICATION_ID = "notificationId"
     }
 }
