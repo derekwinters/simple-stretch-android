@@ -1,0 +1,92 @@
+name: docs
+
+# Builds the documentation site with MkDocs (mkdocs.yml, plain MkDocs theme) and publishes it to
+# GitHub Pages from the gh-pages branch.
+#
+# On a pull request the site is only built, with `mkdocs build --strict`, so a broken internal
+# link, a missing anchor or a page left out of the nav fails before merge. On a push to main (and
+# on workflow_dispatch from main) it is built again and published: `mkdocs gh-deploy --force`
+# replaces the whole contents of gh-pages each time. This workflow owns that branch.
+#
+# The site is built only from what is committed: every page is a Markdown file under docs/, and
+# neither job edits, generates, copies or reorders any of them. CHANGELOG.md, CLAUDE.md and
+# .ai-sdlc/ are not part of the site.
+#
+# Publishing is not triggered by "release published": release-please creates releases with the
+# default GITHUB_TOKEN, and GitHub starts no workflow runs from events that token causes (see
+# release-please.yml). Every release is a merge to main, so the push trigger covers releases.
+#
+# MkDocs and everything it installs are pinned in requirements-docs.txt.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build the site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-docs.txt
+
+      - name: Install MkDocs
+        run: python -m pip install -r requirements-docs.txt
+
+      - name: Build the site
+        run: mkdocs build --strict
+
+  publish:
+    name: publish to gh-pages
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # One publish at a time, in order; a newer push waits rather than racing on gh-pages.
+    concurrency:
+      group: docs-publish
+      cancel-in-progress: false
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-docs.txt
+
+      - name: Install MkDocs
+        run: python -m pip install -r requirements-docs.txt
+
+      - name: Publish the site
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          mkdocs gh-deploy --strict --force --no-history
