@@ -47,7 +47,9 @@ object Notifications {
      * [ReminderActions.BUTTONS], in order. Dismissing just this one is a swipe.
      *
      * [key] is the alarm key (SCHED-005); it is also the notification id. [goalLines] is used
-     * only when [stretches] is empty: null means no goals (generic text).
+     * only when [stretches] is empty: null means no goals (generic text). [scheduledAt] is the
+     * occurrence's original scheduled time (kept across snoozes, NOTIF-008); it and the stretches
+     * travel into the session (NOTIF-002/003, SESS-001).
      */
     fun showReminder(
         context: Context,
@@ -55,6 +57,7 @@ object Notifications {
         scheduleName: String,
         stretches: List<Stretch>,
         goalLines: List<String>?,
+        scheduledAt: Long,
     ) {
         if (!canPost(context)) return
         val notificationId = AlarmKeys.requestCode(key)
@@ -82,7 +85,7 @@ object Notifications {
             else -> scheduleName
         }
 
-        val openSession = sessionIntent(context, notificationId)
+        val openSession = sessionIntent(context, notificationId, stretches.map { it.id }, scheduleName, scheduledAt)
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
@@ -103,7 +106,7 @@ object Notifications {
                 ReminderAction.SNOOZE -> builder.addAction(
                     0,
                     context.getString(R.string.action_snooze),
-                    actionIntent(context, NotificationActionReceiver.ACTION_SNOOZE, notificationId, key),
+                    actionIntent(context, NotificationActionReceiver.ACTION_SNOOZE, notificationId, key, scheduledAt),
                 )
             }
         }
@@ -119,25 +122,41 @@ object Notifications {
      * NOTIF-002/003: opens [MainActivity] on the session screen. The activity cancels the
      * notification, since an action's activity intent does not auto-cancel it.
      */
-    private fun sessionIntent(context: Context, notificationId: Int): PendingIntent =
+    private fun sessionIntent(
+        context: Context,
+        notificationId: Int,
+        stretchIds: List<Long>,
+        scheduleName: String,
+        scheduledAt: Long,
+    ): PendingIntent =
         PendingIntent.getActivity(
             context,
             notificationId,
             Intent(context, MainActivity::class.java)
                 .setAction(MainActivity.ACTION_OPEN_SESSION)
                 .putExtra(MainActivity.EXTRA_NOTIFICATION_ID, notificationId)
+                .putExtra(MainActivity.EXTRA_STRETCH_IDS, stretchIds.toLongArray())
+                .putExtra(MainActivity.EXTRA_SCHEDULE_NAME, scheduleName)
+                .putExtra(MainActivity.EXTRA_SCHEDULED_AT, scheduledAt)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-    private fun actionIntent(context: Context, action: String, notificationId: Int, key: Long): PendingIntent =
+    private fun actionIntent(
+        context: Context,
+        action: String,
+        notificationId: Int,
+        key: Long,
+        scheduledAt: Long,
+    ): PendingIntent =
         PendingIntent.getBroadcast(
             context,
             notificationId,
             Intent(context, NotificationActionReceiver::class.java)
                 .setAction(action)
                 .putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId)
-                .putExtra(NotificationActionReceiver.EXTRA_ALARM_KEY, key),
+                .putExtra(NotificationActionReceiver.EXTRA_ALARM_KEY, key)
+                .putExtra(NotificationActionReceiver.EXTRA_SCHEDULED_AT, scheduledAt),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 

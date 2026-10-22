@@ -7,9 +7,12 @@
   or (with no goals) shows the generic message. (Once every goal is met no reminder is shown at
   all, NOTIF-010.)
 - **NOTIF-002** Tapping the notification opens the stretch session screen (SESS-001) and
-  dismisses the notification.
+  dismisses the notification. It carries the reminder's named stretches, its schedule name and
+  its scheduled time into the session, which lists those stretches as their own section
+  (SESS-002). A reminder with no stretches carries no named list.
 - **NOTIF-003** A "Start" action does the same as tapping: it opens the stretch session screen
-  and dismisses the notification. (It replaces the earlier "Done" action.)
+  with the same named stretches, schedule name and scheduled time, and dismisses the
+  notification. (It replaces the earlier "Done" action.)
 - **NOTIF-004** _Retired._ It described a "Skip today" notification action, which was removed.
   Skipping today is done from the home screen (SKIP-001) or the "Skipped days" screen
   (SKIP-002). A notification posted before the removal may still show the old button; tapping
@@ -25,7 +28,9 @@
 
 - **NOTIF-008** A "Snooze 5 min" action dismisses the notification and posts the same reminder
   again 5 minutes later (SCHED-015). Snoozing again from the re-posted notification snoozes
-  again.
+  again. **Invariant — A snooze keeps the original scheduled time.** The re-posted reminder (and
+  any snooze of it) carries the time it was first scheduled for, so the session heading says
+  "From your 9:00 … reminder" even when it was re-posted at 9:05 (SESS-002).
 - **NOTIF-009** Dismissing just this reminder is done by swiping the notification away (it is
   not ongoing). A reminder shows exactly two action buttons, Start and Snooze 5 min, in that
   order; the third slot Android allows is left empty.
@@ -52,6 +57,9 @@
 - [x] Start and the content tap share one activity PendingIntent carrying the notification id;
       `MainActivity` cancels that notification and navigates to the session (NOTIF-002/003).
 - [x] Snooze is a broadcast action handled by `NotificationActionReceiver` (NOTIF-008).
+- [x] The scheduled time travels notification → snooze alarm → re-posted notification as an
+      extra; only a missing extra (an alarm armed before this) falls back to the trigger time
+      (NOTIF-008 invariant).
 - [x] The reminder's buttons come from one pure list, unit tested as exactly Start then Snooze;
       the receiver's handled actions are a pure set, unit tested to exclude the old Skip today
       action (NOTIF-004 retired, NOTIF-009).

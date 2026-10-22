@@ -37,6 +37,8 @@ object ReminderScheduler {
     /** Extra used by version 1 alarms (always a reminder id); read as a fallback. */
     const val EXTRA_LEGACY_REMINDER_ID = "reminderId"
     const val EXTRA_TRIGGER_AT = "triggerAt"
+    /** NOTIF-008: the time a snoozed reminder was first scheduled for (snooze alarms only). */
+    const val EXTRA_SCHEDULED_AT = "scheduledAt"
 
     const val SNOOZE_MILLIS = 5 * 60 * 1000L
 
@@ -135,11 +137,18 @@ object ReminderScheduler {
     /**
      * SCHED-015: posts the reminder for [key] again in 5 minutes. A separate one-shot alarm (its
      * own action) that is never written to the remembered alarms, so the schedule's own next
-     * alarm is untouched and no reschedule cancels the snooze.
+     * alarm is untouched and no reschedule cancels the snooze. [scheduledAt] is the reminder's
+     * original scheduled time, carried through so the re-post keeps it (NOTIF-008 invariant);
+     * null when the notification predates it.
      */
-    fun snooze(context: Context, key: Long, nowMillis: Long = System.currentTimeMillis()) {
+    fun snooze(
+        context: Context,
+        key: Long,
+        scheduledAt: Long?,
+        nowMillis: Long = System.currentTimeMillis(),
+    ) {
         val triggerAt = nowMillis + SNOOZE_MILLIS
-        setAlarm(context, key, triggerAt, ACTION_SNOOZE_FIRE)
+        setAlarm(context, key, triggerAt, ACTION_SNOOZE_FIRE, scheduledAt)
     }
 
     private fun pendingIntent(
@@ -147,11 +156,13 @@ object ReminderScheduler {
         key: Long,
         triggerAt: Long,
         action: String = ACTION_FIRE,
+        scheduledAt: Long? = null,
     ): PendingIntent {
         val intent = Intent(context, AlarmReceiver::class.java)
             .setAction(action)
             .putExtra(EXTRA_ALARM_KEY, key)
             .putExtra(EXTRA_TRIGGER_AT, triggerAt)
+        if (scheduledAt != null) intent.putExtra(EXTRA_SCHEDULED_AT, scheduledAt)
         return PendingIntent.getBroadcast(
             context,
             AlarmKeys.requestCode(key),
@@ -160,14 +171,20 @@ object ReminderScheduler {
         )
     }
 
-    private fun setAlarm(context: Context, key: Long, triggerAt: Long, action: String = ACTION_FIRE) {
+    private fun setAlarm(
+        context: Context,
+        key: Long,
+        triggerAt: Long,
+        action: String = ACTION_FIRE,
+        scheduledAt: Long? = null,
+    ) {
         val am = context.getSystemService(AlarmManager::class.java) ?: return
         // Cancel first: FLAG_UPDATE_CURRENT on an immutable PendingIntent does not reliably
         // refresh extras for an alarm that is already registered.
         val stale = pendingIntent(context, key, triggerAt, action)
         am.cancel(stale)
         stale.cancel()
-        val pi = pendingIntent(context, key, triggerAt, action)
+        val pi = pendingIntent(context, key, triggerAt, action, scheduledAt)
         try {
             if (canScheduleExact(context)) {
                 am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)

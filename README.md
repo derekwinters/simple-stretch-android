@@ -28,7 +28,9 @@ A small Android app that reminds you to stretch during the day, on your own sche
   check mark once every goal is met). It follows light/dark mode and your wallpaper colours,
   starts again at 0 at midnight, and opens the app when tapped.
 - **Stretch sessions**: from a reminder or the home screen's **Stretch now**, tick the stretches
-  you did and save. Stretches still short of today's goal are listed first.
+  you did and save. Opened from a reminder, that reminder's stretches lead in their own section;
+  otherwise stretches still short of today's goal do. Everything else follows alphabetically,
+  and nothing is pre-checked.
 - **Skip a day**: one tap on "Skip today", at the right of the home screen's "Today" heading (or
   in the top bar's menu), silences every reminder for the rest of the day; "Resume today" undoes
   it. Future days can be skipped from the calendar screen, and skipped days can be removed again.

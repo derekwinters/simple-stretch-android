@@ -53,7 +53,15 @@ class MainActivity : ComponentActivity() {
         if (intent?.action != ACTION_OPEN_SESSION) return
         val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, Int.MIN_VALUE)
         if (notificationId != Int.MIN_VALUE) NotificationManagerCompat.from(this).cancel(notificationId)
-        pendingRoute = Routes.SESSION
+        // SESS-001: a reminder that names stretches opens the session with them as its own section.
+        val stretchIds = intent.getLongArrayExtra(EXTRA_STRETCH_IDS)?.toList().orEmpty()
+        val scheduleName = intent.getStringExtra(EXTRA_SCHEDULE_NAME)
+        val scheduledAt = intent.getLongExtra(EXTRA_SCHEDULED_AT, -1L)
+        pendingRoute = if (stretchIds.isNotEmpty() && scheduleName != null && scheduledAt >= 0) {
+            Routes.session(stretchIds, scheduleName, scheduledAt)
+        } else {
+            Routes.session()
+        }
     }
 
     override fun onResume() {
@@ -66,5 +74,8 @@ class MainActivity : ComponentActivity() {
         const val ACTION_OPEN_SESSION = "com.derekwinters.stretch.action.OPEN_SESSION"
         const val ACTION_OPEN_HOME = "com.derekwinters.stretch.action.OPEN_HOME"
         const val EXTRA_NOTIFICATION_ID = "notificationId"
+        const val EXTRA_STRETCH_IDS = "stretchIds"
+        const val EXTRA_SCHEDULE_NAME = "scheduleName"
+        const val EXTRA_SCHEDULED_AT = "scheduledAt"
     }
 }

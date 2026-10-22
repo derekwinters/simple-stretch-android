@@ -9,6 +9,7 @@ import com.derekwinters.stretch.data.Stretch
 import com.derekwinters.stretch.data.days
 import com.derekwinters.stretch.data.isRepeating
 import com.derekwinters.stretch.goals.GoalMath
+import com.derekwinters.stretch.goals.ReminderOrigin
 import com.derekwinters.stretch.notifications.Notifications
 import com.derekwinters.stretch.widget.WidgetUpdater
 import kotlinx.coroutines.launch
@@ -33,12 +34,22 @@ class AlarmReceiver : BroadcastReceiver() {
         val triggerAt = intent.getLongExtra(ReminderScheduler.EXTRA_TRIGGER_AT, System.currentTimeMillis())
         if (key == 0L) return
         val snoozed = action == ReminderScheduler.ACTION_SNOOZE_FIRE
+        // NOTIF-008 invariant: a snooze carries the original scheduled time; a scheduled alarm's
+        // trigger time is its scheduled time.
+        val scheduledAt = ReminderOrigin.scheduledAt(
+            extra = if (intent.hasExtra(ReminderScheduler.EXTRA_SCHEDULED_AT)) {
+                intent.getLongExtra(ReminderScheduler.EXTRA_SCHEDULED_AT, triggerAt)
+            } else {
+                null
+            },
+            triggerAt = triggerAt,
+        )
 
         val app = context.applicationContext as StretchApp
         val pending = goAsync()
         app.appScope.launch {
             try {
-                handle(app, key, triggerAt, snoozed)
+                handle(app, key, triggerAt, scheduledAt, snoozed)
                 // SCHED-015: a snooze is not one of the scheduler's alarms; nothing to re-arm.
                 if (!snoozed) ReminderScheduler.onAlarmHandled(app, key)
             } finally {
@@ -47,7 +58,13 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private suspend fun handle(app: StretchApp, key: Long, triggerAt: Long, snoozed: Boolean) {
+    private suspend fun handle(
+        app: StretchApp,
+        key: Long,
+        triggerAt: Long,
+        scheduledAt: Long,
+        snoozed: Boolean,
+    ) {
         if (!snoozed) {
             val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             // NOTIF-007: the same occurrence can be delivered twice if a reschedule re-armed it.
@@ -91,7 +108,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         // NOTIF-001: a reminder without stretches lists today's unmet goals.
         val goalLines = if (stretches.isEmpty()) GoalMath.reminderSummary(progress) else null
-        Notifications.showReminder(app, key, schedule.name, stretches, goalLines)
+        Notifications.showReminder(app, key, schedule.name, stretches, goalLines, scheduledAt)
     }
 
     private companion object {
