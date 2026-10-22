@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>0002 Release signing with a stable keystore - Simple Stretch</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../../css/brands.min.css" rel="stylesheet">
+        <link href="../../css/solid.min.css" rel="stylesheet">
+        <link href="../../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">Simple Stretch</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../.." class="nav-link">Home</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Specification</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../../spec/" class="dropdown-item">Overview</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/scheduling/" class="dropdown-item">Scheduling</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/skipping/" class="dropdown-item">Skipping</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/notifications/" class="dropdown-item">Notifications</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/library/" class="dropdown-item">Stretch library</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/goals/" class="dropdown-item">Goals</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/sessions/" class="dropdown-item">Sessions</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/trends/" class="dropdown-item">Trends</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/screens/" class="dropdown-item">Screens</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/widgets/" class="dropdown-item">Widgets</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle active" aria-current="page" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Decisions</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../0001-debug-signing-until-release-keystore/" class="dropdown-item">0001 Debug signing until a release keystore</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active" aria-current="page">0002 Release signing with a stable keystore</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../0001-debug-signing-until-release-keystore/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" class="nav-link disabled">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/derekwinters/simple-stretch-android/edit/main/docs/adr/0002-release-signing-with-a-stable-keystore.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#0002-sign-release-builds-with-a-stable-release-keystore" class="nav-link">0002: Sign release builds with a stable release keystore</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#context" class="nav-link">Context</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#decision" class="nav-link">Decision</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#consequences" class="nav-link">Consequences</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="0002-sign-release-builds-with-a-stable-release-keystore">0002: Sign release builds with a stable release keystore</h1>
+<p>Status: accepted (supersedes <a href="../0001-debug-signing-until-release-keystore/">0001</a>)</p>
+<h2 id="context">Context</h2>
+<p>Android only installs an update over an existing app when the new APK is signed by the same
+certificate. Anything else is refused (<code>INSTALL_FAILED_UPDATE_INCOMPATIBLE</code>), and the only way
+past it is to uninstall, which deletes the app's schedules, goals, completion log and skipped days.</p>
+<p>Under ADR 0001, release APKs were debug-signed, and every CI runner generates its own debug key, so
+consecutive releases could not be relied on to upgrade in place. Simple Stretch is sideloaded:
+there is no Play App Signing to re-sign uploads and no key recovery. The owner has now added a
+release keystore to this repository's secrets, the same way as for the sibling Android apps
+(Interval Trainer, Doggiehood, Chores).</p>
+<h2 id="decision">Decision</h2>
+<p>Release builds are signed with one stable, owned keystore. It reaches a build only as repository
+secrets, never as a committed file or Gradle property:</p>
+<table>
+<thead>
+<tr>
+<th>Secret</th>
+<th>Holds</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ANDROID_KEYSTORE_BASE64</code></td>
+<td>the keystore file, base64-encoded</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ANDROID_KEYSTORE_PASSWORD</code></td>
+<td>the keystore password</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ANDROID_KEY_ALIAS</code></td>
+<td>the alias of the signing key</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ANDROID_KEY_ALIAS_PASSWORD</code></td>
+<td>that key's password</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ANDROID_KEYSTORE_SHA256</code></td>
+<td>the signing certificate's SHA-256 fingerprint</td>
+<td>no (pin, if set)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>app/build.gradle.kts</code> reads <code>ANDROID_KEYSTORE_PATH</code> (the decoded file),
+  <code>ANDROID_KEYSTORE_PASSWORD</code>, <code>ANDROID_KEY_ALIAS</code> and <code>ANDROID_KEY_ALIAS_PASSWORD</code> from the
+  environment and signs <code>release</code> with v1, v2 and v3 schemes stated explicitly.</li>
+<li><strong>Invariant — when any of those four is missing, the <code>release</code> build type is left unsigned,
+  never debug-signed.</strong> An unsigned APK cannot be installed, so it cannot be mistaken for a
+  release; a debug-signed one would install and only fail at the next upgrade.</li>
+<li><code>release-please.yml</code> fails before building if a required secret is missing (naming it, never
+  printing a value), decodes the keystore into the runner temp directory with <code>umask 077</code>, builds,
+  removes the keystore in an <code>always()</code> step, and runs <code>.github/scripts/verify_release_signature.py</code>
+  (<code>apksigner verify --print-certs</code>) before attaching the APK. The gate rejects unsigned,
+  debug-signed and multi-signer APKs and, when <code>ANDROID_KEYSTORE_SHA256</code> is set, any certificate
+  other than the pinned one. A manual <code>workflow_dispatch</code> with <code>backfill_tag</code> re-signs and
+  re-attaches the APK for an existing release.</li>
+<li><code>pr.yml</code> builds a release-signed APK (artifact <code>simple-stretch-release-apk</code>, 14 days) for pull
+  requests from branches of this repository, so a PR build can be installed over the released app.
+  Fork PRs never receive the secrets and skip those steps.</li>
+<li>Debug builds keep the debug key.</li>
+</ul>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>The key must never change and must not be lost.</strong> A different key means every install has to
+  be uninstalled (losing its data) to take the next update. The owner keeps the keystore outside
+  this repository.</li>
+<li>Installs of earlier debug- or CI-signed builds must be uninstalled <strong>once</strong> before the first
+  release-signed build is installed. From then on, releases and same-repository PR release builds
+  upgrade in place.</li>
+<li>The debug APK artifact and a release-signed build cannot be installed over each other (same
+  application ID, different keys).</li>
+<li>Local <code>assembleRelease</code> without the secrets produces an unsigned APK, by design.</li>
+<li>The secret names above were taken from the sibling repositories; if any differs here, the
+  release job fails at its first step and names the missing one.</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
