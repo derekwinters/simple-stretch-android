@@ -1,5 +1,6 @@
 package com.derekwinters.stretch.ui
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavType
@@ -7,10 +8,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.derekwinters.stretch.goals.ReminderOrigin
 import com.derekwinters.stretch.ui.goals.GoalsScreen
 import com.derekwinters.stretch.ui.home.HomeScreen
 import com.derekwinters.stretch.ui.schedule.ScheduleEditScreen
 import com.derekwinters.stretch.ui.session.SessionScreen
+import com.derekwinters.stretch.ui.session.SessionViewModel
 import com.derekwinters.stretch.ui.skips.SkipDaysScreen
 import com.derekwinters.stretch.ui.stretches.StretchesScreen
 import com.derekwinters.stretch.ui.trends.DayDetailScreen
@@ -24,11 +27,21 @@ object Routes {
     const val STRETCHES = "stretches"
     const val SKIPS = "skips"
     const val GOALS = "goals"
-    const val SESSION = "session"
+    /** SESS-001: optional reminder origin (named stretch ids, schedule name, scheduled time). */
+    const val SESSION = "session?ids={${SessionViewModel.ARG_IDS}}" +
+        "&schedule={${SessionViewModel.ARG_SCHEDULE}}&at={${SessionViewModel.ARG_AT}}"
     const val TRENDS = "trends"
     const val TREND_DAY = "trends/day/{${DayDetailViewModel.ARG_EPOCH_DAY}}"
     fun schedule(id: Long) = "schedule/$id"
     fun trendDay(date: LocalDate) = "trends/day/${date.toEpochDay()}"
+
+    /** "Stretch now", or a reminder without stretches: no named list. */
+    fun session() = "session"
+
+    /** A reminder naming [stretchIds], from schedule [scheduleName], scheduled for [scheduledAt]. */
+    fun session(stretchIds: List<Long>, scheduleName: String, scheduledAt: Long) =
+        "session?ids=${ReminderOrigin.formatIds(stretchIds)}" +
+            "&schedule=${Uri.encode(scheduleName)}&at=$scheduledAt"
 }
 
 /**
@@ -50,7 +63,7 @@ fun StretchNavHost(
                 onOpenSkips = { nav.navigate(Routes.SKIPS) },
                 onOpenGoals = { nav.navigate(Routes.GOALS) },
                 onOpenTrends = { nav.navigate(Routes.TRENDS) },
-                onStretchNow = { nav.navigate(Routes.SESSION) { launchSingleTop = true } },
+                onStretchNow = { nav.navigate(Routes.session()) { launchSingleTop = true } },
             )
         }
         composable(
@@ -80,7 +93,25 @@ fun StretchNavHost(
         ) {
             DayDetailScreen(onBack = { nav.popBackStack() })
         }
-        composable(Routes.SESSION) {
+        composable(
+            Routes.SESSION,
+            arguments = listOf(
+                navArgument(SessionViewModel.ARG_IDS) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument(SessionViewModel.ARG_SCHEDULE) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument(SessionViewModel.ARG_AT) {
+                    type = NavType.LongType
+                    defaultValue = -1L
+                },
+            ),
+        ) {
             SessionScreen(onDone = { nav.popBackStack() })
         }
     }

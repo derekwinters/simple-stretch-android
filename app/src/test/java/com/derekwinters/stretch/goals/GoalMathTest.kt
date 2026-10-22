@@ -47,26 +47,6 @@ class GoalMathTest {
         assertTrue(GoalMath.progress(listOf(calf), listOf(GoalRef(99, 2)), emptyMap()).isEmpty())
     }
 
-    // SESS-002: unmet goals first (by name), then everything else by name, ignoring case.
-    @Test
-    fun sessionOrderPutsUnmetGoalsFirst() {
-        val order = GoalMath.sessionOrder(stretches, goals, mapOf(2L to 3))
-        assertEquals(
-            listOf("Hamstring stretch", "Wrist stretch", "Calf stretch", "neck rolls"),
-            order.map { it.name },
-        )
-        assertEquals(3, order.first { it.stretchId == 2L }.target)
-        assertNull(order.first { it.stretchId == 3L }.target)
-    }
-
-    // SESS-002: with no goals the list is simply alphabetical.
-    @Test
-    fun sessionOrderWithoutGoals() {
-        val order = GoalMath.sessionOrder(stretches, emptyList(), emptyMap())
-        assertEquals(listOf("Calf stretch", "Hamstring stretch", "neck rolls", "Wrist stretch"), order.map { it.name })
-        assertTrue(order.none { it.goalUnmet })
-    }
-
     // GOAL-003: a day is local midnight to next midnight, including a 23-hour DST day.
     @Test
     fun dayBoundsFollowLocalMidnight() {

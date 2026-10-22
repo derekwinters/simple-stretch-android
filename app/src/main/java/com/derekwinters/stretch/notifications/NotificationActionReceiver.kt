@@ -21,8 +21,14 @@ class NotificationActionReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_SNOOZE -> {
                 val key = intent.getLongExtra(EXTRA_ALARM_KEY, 0L)
+                // NOTIF-008 invariant: the re-post keeps the original scheduled time.
+                val scheduledAt = if (intent.hasExtra(EXTRA_SCHEDULED_AT)) {
+                    intent.getLongExtra(EXTRA_SCHEDULED_AT, 0L)
+                } else {
+                    null
+                }
                 // SCHED-015: a one-shot alarm; the schedule's own alarm is left alone.
-                if (key != 0L) ReminderScheduler.snooze(context.applicationContext, key)
+                if (key != 0L) ReminderScheduler.snooze(context.applicationContext, key, scheduledAt)
             }
         }
     }
@@ -31,5 +37,6 @@ class NotificationActionReceiver : BroadcastReceiver() {
         const val ACTION_SNOOZE = "com.derekwinters.stretch.action.SNOOZE"
         const val EXTRA_NOTIFICATION_ID = "notificationId"
         const val EXTRA_ALARM_KEY = "alarmKey"
+        const val EXTRA_SCHEDULED_AT = "scheduledAt"
     }
 }

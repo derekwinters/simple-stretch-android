@@ -80,22 +80,35 @@ object GoalMath {
     }
 
     /**
-     * SESS-002: every stretch; unmet goals first, then everything else; each group by name,
-     * ignoring case (ties broken by id so the order is stable).
+     * SESS-002: every stretch once, in two sections. With [reminderStretchIds] naming at least one
+     * stretch that still exists, the top section is those stretches in the reminder's order
+     * (deleted ones dropped silently, duplicates once). Otherwise it is the goals still short
+     * today, by name, or absent when none is short. "Other stretches" is everything else by name,
+     * ignoring case, ties broken by id. Computed once per screen (SESS-005).
      */
-    fun sessionOrder(
+    fun sessionLayout(
         stretches: List<StretchRef>,
         goals: List<GoalRef>,
         countsToday: Map<Long, Int>,
-    ): List<SessionEntry> {
+        reminderStretchIds: List<Long>?,
+    ): SessionLayout {
         val targets = goals.associate { it.stretchId to it.timesPerDay.coerceAtLeast(1) }
-        val entries = stretches.map { s ->
-            SessionEntry(s.id, s.name, targets[s.id], countsToday[s.id] ?: 0)
+        val entries = stretches.associate { s ->
+            s.id to SessionEntry(s.id, s.name, targets[s.id], countsToday[s.id] ?: 0)
         }
         val byName = compareBy<SessionEntry, String>(String.CASE_INSENSITIVE_ORDER) { it.name }
             .thenBy { it.stretchId }
-        val (unmet, rest) = entries.partition { it.goalUnmet }
-        return unmet.sortedWith(byName) + rest.sortedWith(byName)
+
+        val named = reminderStretchIds.orEmpty().distinct().mapNotNull { entries[it] }
+        val (top, topEntries) = if (named.isNotEmpty()) {
+            SessionTop.FROM_REMINDER to named
+        } else {
+            val short = entries.values.filter { it.goalUnmet }.sortedWith(byName)
+            (if (short.isEmpty()) null else SessionTop.GOALS_SHORT) to short
+        }
+        val inTop = topEntries.mapTo(HashSet()) { it.stretchId }
+        val others = entries.values.filter { it.stretchId !in inTop }.sortedWith(byName)
+        return SessionLayout(top, topEntries, others)
     }
 
     /**

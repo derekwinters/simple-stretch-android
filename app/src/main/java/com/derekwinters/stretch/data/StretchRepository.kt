@@ -5,7 +5,7 @@ import androidx.room.withTransaction
 import com.derekwinters.stretch.goals.GoalMath
 import com.derekwinters.stretch.goals.GoalProgress
 import com.derekwinters.stretch.goals.GoalRef
-import com.derekwinters.stretch.goals.SessionEntry
+import com.derekwinters.stretch.goals.SessionLayout
 import com.derekwinters.stretch.goals.StretchRef
 import com.derekwinters.stretch.trends.CompletionRef
 import com.derekwinters.stretch.trends.GoalPeriod
@@ -73,12 +73,20 @@ class StretchRepository(
             countsOnce(date, zone),
         )
 
-    /** One-shot session list for [date], ordered once (SESS-002, SESS-005). */
-    suspend fun sessionEntries(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): List<SessionEntry> =
-        GoalMath.sessionOrder(
+    /**
+     * One-shot session sections for [date], decided once (SESS-002, SESS-005).
+     * [reminderStretchIds] are the stretches the opening reminder named, or null.
+     */
+    suspend fun sessionLayout(
+        date: LocalDate,
+        reminderStretchIds: List<Long>?,
+        zone: ZoneId = ZoneId.systemDefault(),
+    ): SessionLayout =
+        GoalMath.sessionLayout(
             db.stretchDao().getAll().map { StretchRef(it.id, it.name) },
             db.goalDao().getCurrent().map { GoalRef(it.stretchId, it.timesPerDay) },
             countsOnce(date, zone),
+            reminderStretchIds,
         )
 
     /** One-shot segmented ring for [date], from the goals screen's calculation (WIDGET-009). */

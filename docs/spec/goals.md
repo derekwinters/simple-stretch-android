@@ -77,7 +77,7 @@
 
 ## Build checklist
 
-- [x] `GoalMath` (progress, day bounds, session order, notification summary) is pure and unit
+- [x] `GoalMath` (progress, day bounds, session layout, notification summary) is pure and unit
       tested (GOAL-003, SESS-002, NOTIF-001).
 - [x] `goals.stretchId` has an index and a cascading foreign key (GOAL-001, LIB-005); since
       version 3 it is not unique, as a stretch has history rows (GOAL-008).

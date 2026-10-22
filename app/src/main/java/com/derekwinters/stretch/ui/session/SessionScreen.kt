@@ -15,6 +15,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,23 +26,42 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.derekwinters.stretch.StretchApp
+import com.derekwinters.stretch.goals.ReminderOrigin
 import com.derekwinters.stretch.goals.SessionEntry
+import com.derekwinters.stretch.goals.SessionHeadings
+import com.derekwinters.stretch.goals.SessionLayout
+import com.derekwinters.stretch.goals.SessionTop
+import com.derekwinters.stretch.ui.common.Formatting
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
-class SessionViewModel(application: Application) : AndroidViewModel(application) {
+class SessionViewModel(
+    application: Application,
+    savedStateHandle: SavedStateHandle,
+) : AndroidViewModel(application) {
     private val repo = (application as StretchApp).repository
 
-    /** SESS-005: read once, so the order never changes while the screen is shown. */
-    var entries by mutableStateOf<List<SessionEntry>>(emptyList())
+    /** SESS-001: what the opening reminder named, if anything. */
+    private val reminderStretchIds: List<Long> = ReminderOrigin.parseIds(savedStateHandle.get<String>(ARG_IDS))
+    private val scheduleName: String? = savedStateHandle.get<String>(ARG_SCHEDULE)
+    private val scheduledAt: Long = savedStateHandle.get<Long>(ARG_AT) ?: -1L
+
+    /** SESS-002/005: both sections are read once, so nothing moves while the screen is shown. */
+    var layout by mutableStateOf(SessionLayout(null, emptyList(), emptyList()))
         private set
     var loading by mutableStateOf(true)
         private set
+
+    /** SESS-002 invariant: nothing is pre-checked, however the screen was opened. */
     var checked by mutableStateOf<Set<Long>>(emptySet())
         private set
     var saving by mutableStateOf(false)
@@ -49,16 +69,27 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         viewModelScope.launch {
-            entries = repo.sessionEntries(LocalDate.now())
+            val named = if (scheduleName != null && scheduledAt >= 0) reminderStretchIds else null
+            layout = repo.sessionLayout(LocalDate.now(), named)
             loading = false
         }
+    }
+
+    /** SESS-002: the top section's heading, or null when there is no top section. */
+    fun topHeading(): String? = when (layout.top) {
+        SessionTop.FROM_REMINDER -> {
+            val time = Instant.ofEpochMilli(scheduledAt).atZone(ZoneId.systemDefault()).toLocalTime()
+            SessionHeadings.fromReminder(Formatting.time(getApplication<Application>(), time), scheduleName.orEmpty())
+        }
+        SessionTop.GOALS_SHORT -> SessionHeadings.GOALS_SHORT
+        null -> null
     }
 
     fun toggle(stretchId: Long) {
         checked = if (stretchId in checked) checked - stretchId else checked + stretchId
     }
 
-    /** SESS-003: one completion per checked stretch, then close. */
+    /** SESS-003: one completion per checked stretch, in either section, then close. */
     fun save(onDone: () -> Unit) {
         if (checked.isEmpty() || saving) return
         saving = true
@@ -67,6 +98,12 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             saving = false
             onDone()
         }
+    }
+
+    companion object {
+        const val ARG_IDS = "ids"
+        const val ARG_SCHEDULE = "schedule"
+        const val ARG_AT = "at"
     }
 }
 
@@ -95,37 +132,81 @@ fun SessionScreen(
         },
     ) { padding ->
         if (!viewModel.loading) {
+            val layout = viewModel.layout
+            val topHeading = viewModel.topHeading()
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
-                item {
-                    Text(
-                        if (viewModel.entries.isEmpty()) {
-                            "Your stretch library is empty. Add stretches from the library screen."
-                        } else {
-                            "Check what you stretched, then tap Save."
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(16.dp),
-                    )
+                if (layout.topEntries.isEmpty() && layout.others.isEmpty()) {
+                    item {
+                        Text(
+                            "Your stretch library is empty. Add stretches from the library screen.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(16.dp),
+                        )
+                    }
                 }
-                items(viewModel.entries, key = { it.stretchId }) { entry ->
-                    val isChecked = entry.stretchId in viewModel.checked
-                    ListItem(
-                        modifier = Modifier.clickable { viewModel.toggle(entry.stretchId) },
-                        leadingContent = {
-                            Checkbox(checked = isChecked, onCheckedChange = { viewModel.toggle(entry.stretchId) })
-                        },
-                        headlineContent = { Text(entry.name) },
-                        supportingContent = { Text(progressLabel(entry)) },
-                    )
-                    HorizontalDivider()
+                // SESS-002: the reminder's stretches, or the goals still short, highlighted.
+                if (topHeading != null) {
+                    item(key = "top-heading") {
+                        SectionHeading(topHeading, MaterialTheme.colorScheme.primary)
+                    }
+                    items(layout.topEntries, key = { it.stretchId }) { entry ->
+                        SessionRow(
+                            entry = entry,
+                            checked = entry.stretchId in viewModel.checked,
+                            highlighted = true,
+                            onToggle = { viewModel.toggle(entry.stretchId) },
+                        )
+                    }
+                }
+                // SESS-002: every other stretch, alphabetical, always expanded.
+                if (layout.others.isNotEmpty()) {
+                    if (topHeading != null) {
+                        item(key = "others-heading") {
+                            SectionHeading(SessionHeadings.OTHERS, MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    items(layout.others, key = { it.stretchId }) { entry ->
+                        SessionRow(
+                            entry = entry,
+                            checked = entry.stretchId in viewModel.checked,
+                            highlighted = false,
+                            onToggle = { viewModel.toggle(entry.stretchId) },
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SectionHeading(text: String, color: Color) {
+    Text(
+        text.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
+        color = color,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+    )
+}
+
+@Composable
+private fun SessionRow(entry: SessionEntry, checked: Boolean, highlighted: Boolean, onToggle: () -> Unit) {
+    ListItem(
+        modifier = Modifier.clickable(onClick = onToggle),
+        colors = if (highlighted) {
+            ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+        } else {
+            ListItemDefaults.colors()
+        },
+        leadingContent = { Checkbox(checked = checked, onCheckedChange = { onToggle() }) },
+        headlineContent = { Text(entry.name) },
+        supportingContent = { Text(progressLabel(entry)) },
+    )
+    HorizontalDivider()
 }
 
 /** SESS-002: "n of target today" for goals; nothing special otherwise. */
