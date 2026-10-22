@@ -1,0 +1,38 @@
+# The documentation site, built with plain MkDocs and published to GitHub Pages by
+# .github/workflows/docs.yml. Every page is a Markdown file committed under docs/; nothing is
+# generated or copied at build time. CHANGELOG.md, CLAUDE.md and .ai-sdlc/ are deliberately not
+# part of the site.
+site_name: Simple Stretch
+site_description: A small Android app that reminds you to stretch during the day, on your own schedule.
+repo_url: https://github.com/derekwinters/simple-stretch-android
+edit_uri: edit/main/docs/
+docs_dir: docs
+
+theme:
+  name: mkdocs
+
+# A broken internal link, a link to a missing anchor, or a page left out of the nav fails the
+# build (strict turns these warnings into errors).
+strict: true
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+nav:
+  - Home: index.md
+  - Specification:
+      - Overview: spec/README.md
+      - Scheduling: spec/scheduling.md
+      - Skipping: spec/skipping.md
+      - Notifications: spec/notifications.md
+      - Stretch library: spec/library.md
+      - Goals: spec/goals.md
+      - Sessions: spec/sessions.md
+      - Trends: spec/trends.md
+      - Screens: spec/screens.md
+      - Widgets: spec/widgets.md
+  - Decisions:
+      - 0001 Debug signing until a release keystore: adr/0001-debug-signing-until-release-keystore.md
+      - 0002 Release signing with a stable keystore: adr/0002-release-signing-with-a-stable-keystore.md
