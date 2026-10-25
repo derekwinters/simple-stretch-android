@@ -39,9 +39,17 @@ secrets, never as a committed file or Gradle property:
   (`apksigner verify --print-certs`) before attaching the APK. The gate rejects unsigned,
   debug-signed and multi-signer APKs and, when `ANDROID_KEYSTORE_SHA256` is set, any certificate
   other than the pinned one. A manual `workflow_dispatch` with `backfill_tag` re-signs and
-  re-attaches the APK for an existing release.
+  re-attaches the APK and AAB for an existing release.
+- The release Android App Bundle (`simple-stretch-<version>-release.aab`, the Google Play upload
+  format) is built in the same step, signed with the same key, and attached beside the APK. AGP
+  signs an AAB with a JAR (v1) signature only, so the same gate checks it with
+  `jarsigner -verify -strict` and `keytool -printcert -jarfile` and applies the same rules.
+  **Invariant — an unsigned or debug-signed AAB is never attached or uploaded:** the gate runs
+  before every attach or upload of an AAB, and a failure ends the job.
 - `pr.yml` builds a release-signed APK (artifact `simple-stretch-release-apk`, 14 days) for pull
-  requests from branches of this repository, so a PR build can be installed over the released app.
+  requests from branches of this repository, so a PR build can be installed over the released app,
+  and the release-signed AAB (artifact `simple-stretch-release-aab`, 14 days), both through the
+  gate first.
   Fork PRs never receive the secrets and skip those steps.
 - Debug builds keep the debug key.
 
@@ -55,6 +63,11 @@ secrets, never as a committed file or Gradle property:
   upgrade in place.
 - The debug APK artifact and a release-signed build cannot be installed over each other (same
   application ID, different keys).
-- Local `assembleRelease` without the secrets produces an unsigned APK, by design.
+- Local `assembleRelease` or `bundleRelease` without the secrets produces an unsigned APK or AAB,
+  by design.
+- An AAB uploaded to Google Play with Play App Signing is re-signed by Google: what users install
+  from Play carries the app-signing key Play holds, not necessarily this one. Whether this key is
+  enrolled as the app-signing key or only as the upload key is a Play Console decision for the
+  first upload, not part of this change; the sideloaded APK is signed with this key either way.
 - The secret names above were taken from the sibling repositories; if any differs here, the
   release job fails at its first step and names the missing one.
