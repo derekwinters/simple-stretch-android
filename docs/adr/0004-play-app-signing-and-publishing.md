@@ -15,7 +15,8 @@ already signs both the release APK attached to each GitHub Release and the relea
 be settled before the first Play release, because the app signing key cannot be swapped afterwards
 without breaking updates for everyone who installed from Play.
 
-Options considered:
+Two questions were decided: (1) which key Play signs installs with, and (2) whether GitHub
+Releases keep the APK. Options considered:
 
 - **1A. Upload the existing release key as the app signing key, and keep it as the upload key.**
   Play installs and GitHub-released APKs then carry one signature.
@@ -26,6 +27,9 @@ Options considered:
 - **1C. Let Google generate the app signing key.** Google holds the only copy, so the sideloaded
   APK could never be signed with it: a Play install and a GitHub-released APK could not update
   each other, and moving between them would mean uninstalling and losing the app's data.
+- **2. Keep or drop the GitHub-released APK.** Dropping it would make Play the only install path;
+  keeping it serves people without Play and costs nothing under 1A, since it is signed with the
+  same key.
 
 ## Decision
 
