@@ -40,10 +40,12 @@ The app asks Android for three permissions, and uses them only for reminders:
 
 ## Device backup
 
-The app allows Android's own device backup. If backup is turned on in your phone's settings,
-Android may copy the app's data to your Google account and restore it to a new phone. That
-backup is handled by Android and Google under your Google account's settings, not by the
-developer, who has no access to it.
+The app allows Android's own device backup and sets no limits on it, so all of the app's data
+is included. If backup is turned on in your phone's settings, Android may copy all of the app's
+data to your Google account and restore it later. When you move to a new phone, Android can
+also copy it directly from the old phone to the new one. That backup and transfer are handled
+by Android and Google under your Google account's settings, not by the developer, who has no
+access to it.
 
 ## Deleting your data
 
