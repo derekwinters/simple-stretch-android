@@ -97,3 +97,27 @@ gate reads keytool's stdout only, and these captures are stdout only.
 **None of these certificates is this repository's release certificate.** Like the apksigner
 captures, they pin the tools' output *shape*. Unlike the APK case, the debug-signed and two-signer
 AABs could be produced, so those samples are captured rather than hand-written.
+
+## aapt2 fixtures: the release version-code guard
+
+`check_version_code.py` (docs/adr/0003) reads each APK's `versionCode` with `aapt2 dump badging`.
+These files are **verbatim** output of exactly that command, with no other flags, run on the
+release APKs actually attached to this repository's GitHub releases. Nothing in them was edited.
+
+| File | Command | APK |
+| --- | --- | --- |
+| `aapt2-dump-badging-0.2.0-release.txt` | `aapt2 dump badging v0.2.0.apk` (stdout, exit 0) | `simple-stretch-0.2.0-release.apk` from release v0.2.0 |
+| `aapt2-dump-badging-0.1.0-release.txt` | `aapt2 dump badging v0.1.0.apk` (stdout, exit 0) | `simple-stretch-0.1.0-release.apk` from release v0.1.0 |
+| `aapt2-dump-badging-not-an-apk-stderr.txt` | `aapt2 dump badging bogus.apk` (stderr, exit 1; stdout empty) | a one-line text file named `bogus.apk` |
+
+They were captured with Ubuntu 24.04's packaged aapt2 (`aapt` package 1:14~beta1-2build3,
+`aapt2 version`: "Android Asset Packaging Tool (aapt) 2.19-debian"), because Google's Maven
+repository, where the SDK's build-tools come from, was unreachable from the capturing machine. CI
+runs the aapt2 of `build-tools;36.0.0`. The `package:` line the guard reads has had this shape
+across aapt2 releases, and the parser fails closed rather than guessing if a later one differs
+(the script's docstring says how). Both releases shipped as versionCode 1, from before the code
+was derived from the version name.
+
+The unrecognised-output cases in `test_check_version_code.py` are these captures with one
+attribute removed or altered, and the `gh release list` listings there are hand-written in the
+four fields the guard asks for.
