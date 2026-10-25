@@ -61,6 +61,14 @@ class VersionCodeTest {
     }
 
     @Test
+    fun `rejects leading zeros, which are not semver and would alias another version`() {
+        for (name in listOf("0.03.0", "00.3.0", "0.3.00", "01.0.0")) {
+            assertRejected(name, "MAJOR.MINOR.PATCH")
+        }
+        assertEquals(0, VersionCode.fromVersionName("0.0.0"))
+    }
+
+    @Test
     fun `rejects a major too large for any integer instead of overflowing`() {
         assertRejected("99999999999999999999.0.0", "2100000000")
     }

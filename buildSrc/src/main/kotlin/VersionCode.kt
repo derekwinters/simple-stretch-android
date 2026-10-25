@@ -14,13 +14,14 @@ object VersionCode {
     /** The largest minor or patch this scheme can hold without colliding with the next field. */
     const val MAX_MINOR_OR_PATCH = 99L
 
-    private val VERSION_NAME = Regex("""(\d+)\.(\d+)\.(\d+)""")
+    // Semver's numeric fields: no leading zeros, so "0.03.0" cannot pass as 0.3.0.
+    private val VERSION_NAME = Regex("""(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)""")
 
     fun fromVersionName(versionName: String): Int {
         val match = VERSION_NAME.matchEntire(versionName)
             ?: throw IllegalArgumentException(
-                "Version name \"$versionName\" is not MAJOR.MINOR.PATCH (digits only, no prefix " +
-                    "or suffix), so no versionCode can be derived from it (docs/adr/0003).",
+                "Version name \"$versionName\" is not MAJOR.MINOR.PATCH (digits only, no leading " +
+                    "zeros, no prefix or suffix), so no versionCode can be derived from it (docs/adr/0003).",
             )
         val (majorText, minorText, patchText) = match.destructured
         val minor = minorText.toLongOrNull() ?: Long.MAX_VALUE

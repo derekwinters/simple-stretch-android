@@ -32,8 +32,9 @@ versionCode = major * 10000 + minor * 100 + patch
 - The conversion lives in `buildSrc/` (`VersionCode.fromVersionName`) and is unit-tested there;
   `app/build.gradle.kts` sets `defaultConfig.versionCode` from it, so debug and release builds of
   one version share one code.
-- It accepts only `MAJOR.MINOR.PATCH`, three dot-separated runs of digits: no `v` prefix, no
-  pre-release or build suffix. **Minor and patch are capped at 99**, and the code may not exceed
+- It accepts only `MAJOR.MINOR.PATCH`, three dot-separated numbers without leading zeros
+  (`0.03.0` is refused): no `v` prefix, no pre-release or build suffix. **Minor and patch are
+  capped at 99**, and the code may not exceed
   2100000000, Google Play's largest allowed `versionCode`. Anything else fails the build with a
   message naming the value.
 - **Invariant — the conversion never wraps, clamps or truncates.** A version it cannot represent
