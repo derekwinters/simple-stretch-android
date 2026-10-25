@@ -4,8 +4,9 @@ name: release-please
 # in gradle.properties and the manifest are rewritten by it and by nothing else.
 #
 # build-and-attach builds the versioned release APK (for sideloading) and release AAB (for Google
-# Play) and attaches both to the release in this same run. A separate tag-triggered workflow would never fire: release-please pushes its tag with the
-# default GITHUB_TOKEN, and GitHub does not start workflow runs from events that token initiated.
+# Play) and attaches both to the release in this same run. A separate tag-triggered workflow would
+# never fire: release-please pushes its tag with the default GITHUB_TOKEN, and GitHub does not
+# start workflow runs from events that token initiated.
 #
 # The release APK and AAB are signed with the stable release keystore (docs/adr/0002). The four
 # keystore secrets are required; the job fails before building if any is missing, and refuses to
