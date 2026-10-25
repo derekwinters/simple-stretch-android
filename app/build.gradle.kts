@@ -43,7 +43,11 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.derekwinters.stretch"
+        // The application ID must match the Play Console registration and can never change after
+        // the first Play upload (issue #42). It is deliberately different from `namespace`, which
+        // only names the Kotlin package of R and BuildConfig. No applicationIdSuffix: debug and
+        // release share this ID.
+        applicationId = "io.github.derekwinters.simple_stretch_android"
         minSdk = 26
         targetSdk = 36
         versionCode = derivedVersionCode
@@ -91,6 +95,8 @@ android {
 
     buildFeatures {
         compose = true
+        // BuildConfig.APPLICATION_ID is what ApplicationIdTest checks (issue #42).
+        buildConfig = true
     }
 }
 

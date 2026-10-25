@@ -65,6 +65,9 @@ secrets, never as a committed file or Gradle property:
 - Installs of earlier debug- or CI-signed builds must be uninstalled **once** before the first
   release-signed build is installed. From then on, releases and same-repository PR release builds
   upgrade in place.
+- The application ID changed in 0.3.0 (#42), from `com.derekwinters.stretch` to
+  `io.github.derekwinters.simple_stretch_android`, so in-place upgrades start again from that
+  release: 0.3.0 installs as a separate app, not over 0.1.0 or 0.2.0.
 - The debug APK artifact and a release-signed build cannot be installed over each other (same
   application ID, different keys).
 - Local `assembleRelease` or `bundleRelease` without the secrets produces an unsigned APK or AAB,
