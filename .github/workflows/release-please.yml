@@ -20,7 +20,9 @@ name: release-please
 #
 # workflow_dispatch with `backfill_tag` rebuilds and re-attaches the APK and AAB for an existing
 # release tag (for example one published before signing was wired up); release-please itself is
-# skipped, and so is the version-code guard (an old release is lower than newer ones by design).
+# skipped. A backfill of the newest published release is guarded like a release, so it cannot
+# attach what the guard refused; a backfill of an older release skips the version-code guard (it
+# is lower than newer releases by design).
 
 on:
   push:
@@ -174,23 +176,28 @@ jobs:
           app/build/outputs/bundle/release/*.aab
 
       # The versionCode of the APK just built (read with aapt2, never recomputed from the formula)
-      # must be higher than that of the previous release's APK: the newest published release
-      # other than RELEASE_TAG that is neither a draft nor a pre-release (docs/adr/0003). Runs from
-      # the main checkout like the signature gate, and before the upload, so a release with a lower
-      # or equal code gets nothing attached. With no earlier release it passes with a notice; an
-      # earlier release with no APK, or more than one, fails and names the tag to backfill. A
-      # backfill re-attaches an old release, which is lower than newer ones by design, so the
-      # guard is skipped for it.
+      # must be higher than that of the previous release's APK: the newest published release by
+      # publish time, other than RELEASE_TAG, that is neither a draft nor a pre-release
+      # (docs/adr/0003). Runs from the main checkout like the signature gate, and before the
+      # upload, so a release with a lower or equal code gets nothing attached. With no earlier
+      # release it passes with a notice; an earlier release with no APK, or more than one, fails
+      # and names the tag to backfill. Only the APK is read: the AAB is covered because the one
+      # Gradle invocation above builds both with one versionCode, so keep them in one build.
+      # On a backfill, --backfill-tag makes the script decide (with the same release selection):
+      # the newest published release is guarded exactly as with --exclude-tag, so re-attaching
+      # cannot bypass a guard that failed on release; an older release, lower than newer ones by
+      # design, is skipped with a notice.
       - name: Check the version code is higher than the previous release's
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "::notice title=Release version code::Backfill of $RELEASE_TAG: the version-code guard is skipped."
-            exit 0
+            tag_option=--backfill-tag
+          else
+            tag_option=--exclude-tag
           fi
           python3 verification-gate/.github/scripts/check_version_code.py \
-            --repo "$GITHUB_REPOSITORY" --exclude-tag "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" "$tag_option" "$RELEASE_TAG" \
             app/build/outputs/apk/release/*.apk
 
       # Uses the runner's pre-installed gh CLI rather than another pinned action. --clobber lets a

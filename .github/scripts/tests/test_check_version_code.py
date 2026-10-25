@@ -100,6 +100,37 @@ class PreviousReleaseTest(unittest.TestCase):
                     guard.previous_release(listing)
 
 
+class NewestReleaseTest(unittest.TestCase):
+    """Whether a backfill tag is the newest published release, so the guard must run on it."""
+
+    LISTING = [
+        _release("v0.1.0", "2026-10-11T20:51:07Z"),
+        _release("v0.2.0", "2026-10-22T10:15:48Z"),
+    ]
+
+    def test_the_newest_published_release_is_newest(self):
+        self.assertTrue(guard.is_newest_release(self.LISTING, "v0.2.0"))
+
+    def test_an_older_release_is_not_newest(self):
+        self.assertFalse(guard.is_newest_release(self.LISTING, "v0.1.0"))
+
+    def test_drafts_and_prereleases_do_not_count_as_newer(self):
+        listing = self.LISTING + [
+            _release("v0.4.0", "0001-01-01T00:00:00Z", draft=True),
+            _release("v0.3.0-rc.1", "2026-10-24T09:00:00Z", prerelease=True),
+        ]
+        self.assertTrue(guard.is_newest_release(listing, "v0.2.0"))
+
+    def test_a_draft_or_prerelease_tag_is_not_newest(self):
+        listing = self.LISTING + [
+            _release("v0.3.0-rc.1", "2026-10-24T09:00:00Z", prerelease=True)]
+        self.assertFalse(guard.is_newest_release(listing, "v0.3.0-rc.1"))
+
+    def test_a_tag_not_in_the_listing_is_not_newest(self):
+        self.assertFalse(guard.is_newest_release(self.LISTING, "v9.9.9"))
+        self.assertFalse(guard.is_newest_release([], "v0.2.0"))
+
+
 class ParseBadgingTest(unittest.TestCase):
 
     def test_reads_the_code_and_name_from_a_real_release_apk(self):
@@ -281,6 +312,54 @@ class MainTest(unittest.TestCase):
             "downloaded": []}, BADGING_0_2_0)
         self.assertEqual(1, status)
         self.assertIn("::error", out)
+
+    BACKFILL_LISTING = (
+        '[{"isDraft":false,"isPrerelease":false,"publishedAt":"2026-10-22T10:15:48Z",'
+        '"tagName":"v0.2.0"},'
+        '{"isDraft":false,"isPrerelease":false,"publishedAt":"2026-10-11T20:51:07Z",'
+        '"tagName":"v0.1.0"},'
+        '{"isDraft":false,"isPrerelease":true,"publishedAt":"2026-10-24T09:00:00Z",'
+        '"tagName":"v0.3.0-rc.1"}]')
+    ASSETS_0_1_0 = '{"assets":[{"name":"simple-stretch-0.1.0-release.apk"}]}'
+
+    def test_a_backfill_of_the_newest_release_runs_the_guard(self):
+        # Re-attaching v0.2.0 (code 1) must not bypass the guard: it is compared with v0.1.0.
+        status, out = self._run(
+            ["--repo", "owner/repo", "--backfill-tag", "v0.2.0", "new.apk"],
+            {"gh release list": (0, self.BACKFILL_LISTING),
+             "gh release view": (0, self.ASSETS_0_1_0),
+             "downloaded": ["simple-stretch-0.1.0-release.apk"]},
+            BADGING_0_2_0)
+        self.assertEqual(1, status, out)
+        self.assertIn("::error", out)
+        download = [c for c in self.calls if c[:3] == ["gh", "release", "download"]][0]
+        self.assertIn("v0.1.0", download)
+
+    def test_a_backfill_of_the_newest_release_passes_when_higher(self):
+        new = BADGING_0_2_0.replace("versionCode='1' versionName='0.2.0'",
+                                    "versionCode='200' versionName='0.2.0'", 1)
+        status, out = self._run(
+            ["--repo", "owner/repo", "--backfill-tag", "v0.2.0", "new.apk"],
+            {"gh release list": (0, self.BACKFILL_LISTING),
+             "gh release view": (0, self.ASSETS_0_1_0),
+             "downloaded": ["simple-stretch-0.1.0-release.apk"]},
+            new)
+        self.assertEqual(0, status, out)
+
+    def test_a_backfill_of_an_older_release_is_skipped_with_a_notice(self):
+        status, out = self._run(
+            ["--repo", "owner/repo", "--backfill-tag", "v0.1.0", "new.apk"],
+            {"gh release list": (0, self.BACKFILL_LISTING)}, BADGING_0_1_0)
+        self.assertEqual(0, status, out)
+        self.assertIn("::notice", out)
+        self.assertIn("v0.1.0", out)
+        self.assertFalse([c for c in self.calls if c[:3] == ["gh", "release", "download"]])
+
+    def test_backfill_and_exclude_tag_are_exclusive(self):
+        with self.assertRaises(SystemExit), redirect_stdout(StringIO()), \
+                mock.patch("sys.stderr", StringIO()):
+            guard.main(["--repo", "o/r", "--backfill-tag", "v0.2.0",
+                        "--exclude-tag", "v0.2.0", "new.apk"])
 
     def test_fails_when_the_release_listing_fails(self):
         status, out = self._run(self.ARGV, {"gh release list": (1, "HTTP 401")}, BADGING_0_2_0)

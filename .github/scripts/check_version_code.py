@@ -25,6 +25,11 @@ What it compares.
 - It passes only when the new code is strictly greater, and otherwise fails
   naming both codes and both versions. With no published release at all it
   passes with a notice.
+- `--backfill-tag` (a manual re-attach of an existing release) guards the
+  tag as if it were being released when it is the newest published release,
+  so a backfill cannot attach what the guard refused on release; a backfill
+  of an older release is skipped with a notice, since it is lower than newer
+  releases by design.
 
 `aapt2 dump badging` prints a `package:` line first and then many lines this
 guard does not need. The parser fails closed where it matters: the first
@@ -36,9 +41,10 @@ tests use output captured from this repository's real release APKs
 Google Play's own record is the authority, and this guard cannot see it: an
 upload made outside a GitHub release is invisible here (docs/adr/0003).
 
-The decisions are pure functions (`previous_release`, `parse_badging`,
-`single_release_apk`, `compare`) so they unit-test with no Android SDK or
-network. `main` wires them to gh and aapt2. Standard library only.
+The decisions are pure functions (`previous_release`, `is_newest_release`,
+`parse_badging`, `single_release_apk`, `compare`) so they unit-test with no
+Android SDK or network. `main` wires them to gh and aapt2. Standard library
+only.
 """
 
 import argparse
@@ -156,6 +162,17 @@ def parse_badging(text):
                       attributes["versionName"])
 
 
+def is_newest_release(listing, tag):
+    """Whether `tag` is the release `previous_release` would pick with nothing excluded: the
+    newest published release that is neither a draft nor a pre-release.
+
+    A backfill of that release is guarded like a new release (it is what the next release is
+    compared against, and re-attaching it must not bypass a guard that failed on it); a backfill
+    of any older release is not.
+    """
+    return previous_release(listing) == tag
+
+
 def single_release_apk(tag, asset_names):
     """The one asset of release `tag` that is a release APK. Raises
     `GuardError` naming the tag, and how to fix it, for none or several."""
@@ -230,8 +247,13 @@ def _gh_json(cmd, what):
         raise GuardError("{0} printed something that is not JSON: {1!r}".format(what, output[:200]))
 
 
-def check(apk, repo, exclude_tag):
-    """(ok, message) for one new APK, or `GuardError` when no verdict can be trusted."""
+class Notice(str):
+    """A pass that compared nothing, printed as a workflow notice."""
+
+
+def check(apk, repo, exclude_tag, backfill_tag=None):
+    """(ok, message) for one new APK, or `GuardError` when no verdict can be trusted. The
+    message is a `Notice` when there was nothing to compare against."""
     aapt2 = find_aapt2()
     new = read_apk_version(apk, aapt2)
     print("New APK {0}: {1} versionCode {2} versionName {3}".format(
@@ -241,9 +263,17 @@ def check(apk, repo, exclude_tag):
         ["gh", "release", "list", "--repo", repo, "--limit", "1000",
          "--json", "tagName,isDraft,isPrerelease,publishedAt"],
         "listing the releases of {0}".format(repo))
+    if backfill_tag is not None:
+        if not is_newest_release(listing, backfill_tag):
+            return True, Notice(
+                "Backfill of {0}, which is not the newest published release: an older release "
+                "is lower than newer ones by design, so the version-code guard is "
+                "skipped.".format(backfill_tag))
+        exclude_tag = backfill_tag
     tag = previous_release(listing, exclude_tag)
     if tag is None:
-        return True, None
+        return True, Notice(
+            "No earlier published release to compare against, so any versionCode is accepted.")
 
     view = _gh_json(["gh", "release", "view", tag, "--repo", repo, "--json", "assets"],
                     "reading the assets of {0}".format(tag))
@@ -273,19 +303,23 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("apk", help="the APK just built")
     parser.add_argument("--repo", required=True, help="OWNER/REPO whose releases to compare")
-    parser.add_argument("--exclude-tag", default=None,
-                        help="the tag being released, which is not its own previous release")
+    tags = parser.add_mutually_exclusive_group()
+    tags.add_argument("--exclude-tag", default=None,
+                      help="the tag being released, which is not its own previous release")
+    tags.add_argument("--backfill-tag", default=None,
+                      help="the existing release being re-attached: guarded as with "
+                           "--exclude-tag when it is the newest published release, otherwise "
+                           "skipped with a notice")
     args = parser.parse_args(argv)
 
     try:
-        ok, message = check(args.apk, args.repo, args.exclude_tag)
+        ok, message = check(args.apk, args.repo, args.exclude_tag, args.backfill_tag)
     except GuardError as exc:
         print("::error title={0}::{1}".format(_TITLE, exc))
         return 1
 
-    if message is None:
-        print("::notice title={0}::No earlier published release to compare against, so "
-              "any versionCode is accepted.".format(_TITLE))
+    if isinstance(message, Notice):
+        print("::notice title={0}::{1}".format(_TITLE, message))
         return 0
     if ok:
         print(message)
