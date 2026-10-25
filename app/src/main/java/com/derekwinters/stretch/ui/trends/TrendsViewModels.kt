@@ -56,7 +56,10 @@ private data class TrendInputs(
 class TrendsViewModel(application: Application) : AndroidViewModel(application) {
     private val app = application as StretchApp
     private val repo = app.repository
-    // SCHED-016: the zone and today are read from the app clock when the screen opens.
+    // SCHED-016: the zone and today are read from the app clock once, when the screen opens, and
+    // held for the screen's lifetime on purpose: a Trends screen left open across a time-zone
+    // change keeps its zone until it is reopened. The clock itself still reads the default zone
+    // on every call (SCHED-010 invariant).
     private val zone: ZoneId = app.clock.zone
     private val today: LocalDate = LocalDate.now(app.clock)
     private val period = MutableStateFlow(TrendMath.periodContaining(PeriodKind.WEEK, today))
@@ -136,6 +139,9 @@ class DayDetailViewModel(
 
     /** SCHED-016: the app clock, also read by the day detail screen for "now". */
     val clock: Clock = app.clock
+
+    // Read from the app clock once and held for the screen's lifetime on purpose, as in
+    // TrendsViewModel: the screen keeps its zone across a time-zone change until it is reopened.
     private val zone: ZoneId = clock.zone
     val date: LocalDate = LocalDate.ofEpochDay(savedStateHandle.get<Long>(ARG_EPOCH_DAY) ?: LocalDate.now(clock).toEpochDay())
 
