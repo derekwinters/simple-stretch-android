@@ -8,7 +8,8 @@
   slots are left today. Reminders already past, or all of them when today is skipped, are
   dimmed. The "Today" heading row carries a text button at its right end (SKIP-001): "Skip
   today" while today is not skipped (enabled when at least one reminder is left today, shown
-  disabled when none are), and "Resume today" once today is skipped.
+  disabled when none are), and "Resume today" once today is skipped. Every row opens the
+  stretch session when tapped (HOME-009).
 
   **Invariant — When today is skipped, the Today row always shows "Resume today".** No state
   hides it: not an empty Today list, not the time of day, and nothing stored per device.
@@ -37,6 +38,19 @@
 - **HOME-008** _Retired._ It described the closable "Skip today" card, which was removed with
   its close (X) button and its stored closed date. Its invariant, a skipped day is never hidden,
   now lives in HOME-002.
+- **HOME-009** Tapping any row of the Today list (HOME-002) opens the stretch session screen
+  (SESS-001) as that reminder's notification would (NOTIF-002). Every row is tappable: past,
+  upcoming and current alike, and also while today is skipped. A set-time row opens the
+  session with its reminder's named stretches, its schedule name and the row's time today; a
+  repeating schedule's row, whose reminders name no stretches (SCHED-011), opens it with no
+  named list ("Goals still short today"), as its notification does. Tapping only opens the
+  screen: nothing is checked or logged until Save (SESS-002, SESS-003), and rows look the same
+  whether or not their stretches were logged.
+
+  **Invariant — A Today row opens exactly what its notification would.** The row and the
+  notification build the session route with the same function from the same values (stretch
+  ids in the reminder's order, schedule name, scheduled time), so the two ways in cannot drift
+  apart.
 
 ## Build checklist
 
@@ -51,3 +65,6 @@
       Trends (HOME-004).
 - [x] Goal progress re-queries when the date changes (the clock tick drives the day bounds)
       (HOME-006).
+- [x] Today rows build their session route with the same pure, unit-tested function as the
+      notification intent, from the reminder's stretch ids, schedule name and today's time
+      (HOME-009 invariant).

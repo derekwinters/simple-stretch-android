@@ -1,11 +1,12 @@
 # Stretch sessions
 
 - **SESS-001** The stretch session screen is where the user records what they stretched. It
-  opens from a reminder notification (tap or "Start", NOTIF-002, NOTIF-003) and from the
-  "Stretch now" button on the home screen (HOME-007). A reminder opens it carrying the
-  reminder's named stretches, its schedule name and its original scheduled time (NOTIF-002,
-  NOTIF-008); "Stretch now" and a reminder with no stretches (every repeating schedule,
-  SCHED-011) carry no named list.
+  opens from a reminder notification (tap or "Start", NOTIF-002, NOTIF-003), from the
+  "Stretch now" button on the home screen (HOME-007) and from a row of the home screen's
+  Today list, which opens it as that reminder's notification would (HOME-009). A reminder
+  opens it carrying the reminder's named stretches, its schedule name and its original
+  scheduled time (NOTIF-002, NOTIF-008); "Stretch now" and a reminder with no stretches
+  (every repeating schedule, SCHED-011) carry no named list.
 - **SESS-002** It lists every stretch in the library once, each with a checkbox and a progress
   label: "n of target today" for an unmet goal, "Goal met: n of target today" for a met one,
   "No goal" otherwise. The list has two sections:
@@ -42,6 +43,8 @@
       (SESS-002, SESS-005); it is pure and unit tested, including deleted named stretches.
 - [x] The reminder's stretch ids, schedule name and scheduled time travel as session route
       arguments, so they survive process death (SESS-001).
+- [x] A Today row and a notification build the session route with one shared function
+      (SESS-001, HOME-009).
 - [x] The checked set starts empty for every way of opening (SESS-002 invariant).
 - [x] All completions of one save are inserted in one transaction with one timestamp (SESS-003).
 - [x] `completions` has indices on `stretchId` and `completedAt` (SESS-004, GOAL-003).
