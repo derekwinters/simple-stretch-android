@@ -23,9 +23,12 @@
   `BOOT_COMPLETED`, `TIME_SET`, `TIMEZONE_CHANGED`, `MY_PACKAGE_REPLACED` and
   `SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED`.
 - **SCHED-007** Alarms are exact (`setExactAndAllowWhileIdle`) when the app may schedule exact
-  alarms (`USE_EXACT_ALARM` on 13+, user-granted `SCHEDULE_EXACT_ALARM` on 12/12L). Otherwise
-  they fall back to `setAndAllowWhileIdle`, and the home screen shows a banner linking to the
-  system setting.
+  alarms. `SCHEDULE_EXACT_ALARM` is the only exact-alarm permission the app declares, and on
+  Android 12 and later it is granted by the user ("Alarms & reminders" in system settings); on
+  Android 14 and later a new install starts with it denied. `USE_EXACT_ALARM` is deliberately
+  not declared: Google Play restricts it to alarm, timer and calendar apps, and the user cannot
+  revoke it. Without the grant, alarms fall back to `setAndAllowWhileIdle`, and the home screen
+  shows a banner linking to the system setting (HOME-005).
 
   **Invariant — Losing the exact-alarm permission degrades timing, never delivery.** A refused
   exact alarm is always replaced by an inexact one, never dropped.
@@ -80,6 +83,8 @@
 - [x] Every repository write that affects timing calls `rescheduleAll` (SCHED-006).
 - [x] Receiver re-checks schedule enabled + day of week before notifying (SCHED-003 invariant).
 - [x] SecurityException from exact alarms falls back to inexact (SCHED-007 invariant).
+- [x] The manifest declares no `USE_EXACT_ALARM`, and `SCHEDULE_EXACT_ALARM` has no
+      `maxSdkVersion`; a unit test parses the manifest to check both (SCHED-007).
 - [x] `RepeatingSlots.forDay` and `NextOccurrence.computeAny` are pure and unit tested: the
       :50 example, inclusive end, end before start, non-dividing interval, skips and days
       (SCHED-012, SCHED-013).

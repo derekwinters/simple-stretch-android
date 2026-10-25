@@ -42,6 +42,8 @@
 
 - [x] Home state is derived from Room flows plus a 30-second clock tick (HOME-002).
 - [x] Banners re-check permissions on resume (HOME-005).
+- [x] The exact-alarm banner is the only place the user is asked for exact alarms: no prompt at
+      first launch or on first schedule save (HOME-005, SCHED-007).
 - [x] Today row: a "Skip today" / "Resume today" text button at the right of the heading,
       disabled when nothing is left today; its state is a pure, unit-tested function (HOME-002).
 - [x] No skip-card closed date is written or read (HOME-008 retired).

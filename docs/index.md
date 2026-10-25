@@ -101,8 +101,10 @@ docs/spec/        requirements with IDs; docs/adr/ decisions
 
 ## Notes
 
-- `USE_EXACT_ALARM` is declared so exact reminders work on Android 13+ without a prompt. Google
-  Play restricts that permission to alarm/calendar apps; for a Play listing, drop it and rely on
-  `SCHEDULE_EXACT_ALARM` plus the in-app banner.
+- Exact reminders need the user-granted `SCHEDULE_EXACT_ALARM` ("Alarms & reminders") on
+  Android 12 and later. On Android 14 and later it starts denied on a new install, so reminders
+  are inexact (may arrive a few minutes late) until the user taps **Allow** on the home-screen
+  banner. `USE_EXACT_ALARM` is deliberately not declared: Google Play restricts it to alarm,
+  timer and calendar apps.
 - Some manufacturers aggressively stop background apps; if reminders go missing, exempt the app
   from battery optimisation.
