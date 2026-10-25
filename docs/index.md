@@ -87,7 +87,8 @@ Both are signed with a stable release key
 signature gate before they are attached, so each release from 0.3.0 on upgrades the installed app
 in place and keeps its data. The same key is Google Play's app signing key
 ([ADR 0004](adr/0004-play-app-signing-and-publishing.md)), so an install from Google Play and a
-sideloaded release APK share one signature and can update each other in place.
+sideloaded release APK share one signature and can update each other in place to the same or a
+newer version.
 
 Each release's version code is derived from its version (0.3.0 is 300; see
 [ADR 0003](adr/0003-version-code-derived-from-version-name.md)), so it rises with every release,

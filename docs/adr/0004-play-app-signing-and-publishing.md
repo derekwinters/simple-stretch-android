@@ -33,7 +33,8 @@ Option 1A. The stable release keystore of ADR 0002 is uploaded to Play Console a
 key, and the same key stays the upload key.
 
 - Users who install from Play and users who install the APK from a GitHub Release run builds
-  signed by the same certificate, so either can update the other in place, keeping its data.
+  signed by the same certificate, so either can update the other in place to the same or a newer
+  version, keeping its data.
 - CI keeps signing the release AAB with the current secrets. The AAB build, the signature gate and
   the secrets of ADR 0002 need no change.
 - GitHub Releases keep attaching the release-signed APK next to the AAB, for people who do not use
