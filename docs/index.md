@@ -58,10 +58,15 @@ adb install -r app/build/outputs/apk/debug/simple-stretch-*-debug.apk
 
 Or copy the APK to the phone and open it (allow installs from that source when asked).
 
+**Application ID:** from 0.3.0 the application ID is `io.github.derekwinters.simple_stretch_android`.
+An install of 0.1.0 or 0.2.0 (`com.derekwinters.stretch`) is a separate app: it will not update to
+new builds and keeps its own data until uninstalled. Nothing is carried over, so the new app starts
+empty, and the old one can be uninstalled whenever you like.
+
 Every pull request's CI run also uploads its debug APK as the `simple-stretch-debug-apk`
 workflow artifact (kept for 14 days). Pull requests from branches of this repository also upload
-`simple-stretch-release-apk`, signed with the release key, which installs over the released app in
-place, so a PR can be tried before it is released without losing data. A debug APK and a
+`simple-stretch-release-apk`, signed with the release key, which installs over a released app from
+0.3.0 on in place, so a PR can be tried before it is released without losing data. A debug APK and a
 release-signed APK cannot be installed over each other.
 
 On first launch, allow notifications. On Android 12/12L, also allow "Alarms & reminders" if the
@@ -77,7 +82,9 @@ upgrades the installed app in place and keeps its data.
 
 **One-time step:** builds made before release signing (debug-signed releases, CI or local debug
 APKs) use a different key. Uninstall those once before installing the first release-signed build;
-after that, upgrades are in place.
+after that, upgrades are in place. The same applies to moving from the old application ID: 0.1.0
+and 0.2.0 (`com.derekwinters.stretch`) do not upgrade to 0.3.0 or later, which install alongside
+them as a new, empty app; uninstall the old one when you no longer need it.
 
 ## Project layout
 
