@@ -27,18 +27,21 @@ jobs:
 
       # SCHED-016: the app reads the current time and zone from one clock, AppClock, handed out
       # by StretchApp. Outside that file, code under app/src/main must not read the system clock
-      # itself: no no-argument now() (LocalDate.now(), Instant.now(), ...) and no
-      # System.currentTimeMillis(). Pass the app clock instead, e.g. LocalDate.now(clock).
+      # itself: no no-argument now() (LocalDate.now(), Instant.now(), ...), no
+      # System.currentTimeMillis() and no Clock.system* (Clock.systemDefaultZone(),
+      # Clock.systemUTC(), Clock.system(zone)). Pass the app clock instead, e.g.
+      # LocalDate.now(clock).
       - name: Check that the current time is read only from the app clock
         run: |
           clock_file='app/src/main/java/com/derekwinters/stretch/AppClock.kt'
-          pattern='(^|[^A-Za-z0-9_])now\([[:space:]]*\)|System\.currentTimeMillis\('
+          pattern='(^|[^A-Za-z0-9_])now\([[:space:]]*\)|System\.currentTimeMillis\(|Clock\.system'
           hits="$(grep -rnE --include='*.kt' --include='*.java' "$pattern" app/src/main \
             | grep -v "^$clock_file:" || true)"
           if [ -n "$hits" ]; then
             echo "$hits"
             echo "::error title=Current time (SCHED-016)::Code under app/src/main reads the" \
-              "system clock directly (a no-argument now() or System.currentTimeMillis()) outside" \
+              "system clock directly (a no-argument now(), System.currentTimeMillis() or" \
+              "Clock.system*) outside" \
               "$clock_file. Read the app clock instead (StretchApp.clock), e.g." \
               "LocalDate.now(clock) or clock.millis(); see docs/spec/scheduling.md SCHED-016."
             exit 1
