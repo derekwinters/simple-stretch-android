@@ -44,6 +44,8 @@ secrets, never as a committed file or Gradle property:
   format) is built in the same step, signed with the same key, and attached beside the APK. AGP
   signs an AAB with a JAR (v1) signature only, so the same gate checks it with
   `jarsigner -verify -strict` and `keytool -printcert -jarfile` and applies the same rules.
+  It also rejects an AAB whose signer certificate has expired or is not yet valid, and any
+  jarsigner warning outside the short allowlist in the script's docstring.
   **Invariant — an unsigned or debug-signed AAB is never attached or uploaded:** the gate runs
   before every attach or upload of an AAB, and a failure ends the job.
 - `pr.yml` builds a release-signed APK (artifact `simple-stretch-release-apk`, 14 days) for pull

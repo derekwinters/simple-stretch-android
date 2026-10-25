@@ -52,12 +52,25 @@ or jar is committed:
 | `keytool-printcert-jarfile-two-signers.txt` | `keytool -printcert -jarfile two.aab` | signed twice: release-like key with `-sigfile RELEASE`, then the other key with `-sigfile OTHER` |
 | `jarsigner-verify-strict-signed.txt` | `jarsigner -verify -strict signed.aab` (exit 4) | signed with the release-like key; byte-identical for the debug and two-signer jars, which also exit 4 |
 | `jarsigner-verify-strict-unsigned.txt` | `jarsigner -verify -strict unsigned.aab` (exit 16) | not signed |
+| `jarsigner-verify-strict-expired.txt` | `jarsigner -verify -strict expired.aab` (exit 4) | signed with an expired key (below) |
+| `jarsigner-verify-strict-not-yet-valid.txt` | `jarsigner -verify -strict not-yet-valid.aab` (exit 4) | signed with a not-yet-valid key (below) |
+| `keytool-printcert-jarfile-expired.txt` | `keytool -printcert -jarfile expired.aab` | signed with the expired key |
 
-**Exit 4 on a correctly signed jar is expected.** `-strict` turns warnings into exit-code bits,
-and bit 4 is set because the signer certificate is self-signed and chains to no CA, which is true
-of every Android signing key. The gate therefore accepts exit 0 or 4 and fails on any other bit
-(1 for a broken signature, 16 for unsigned entries, and so on), as well as on "jar is unsigned".
-Exit codes are not in the captured stdout; the tests state them next to the fixtures.
+The expired and not-yet-valid jars were signed with two more throwaway keys with the release-like
+subject, generated with `keytool -genkeypair ... -validity 1` and `-startdate -3d` (expired two
+days before the capture) or `-startdate +1y` (valid only from a year after it). jarsigner signs
+with either without complaint; both captures' stderr was empty.
+
+**Exit 4 on a correctly signed jar is expected, but exit 4 alone proves nothing.** `-strict` turns
+warnings into exit-code bits, and bit 4 is set because the signer certificate is self-signed and
+chains to no CA, which is true of every Android signing key. The captures show that an expired or
+not-yet-valid certificate sets the same bit 4. The gate therefore accepts exit 0 or 4 and fails on
+any other bit (1 for a broken signature, 16 for unsigned entries, and so on), on "jar is
+unsigned", and, whatever the exit code, on any line under jarsigner's `Error:`/`Warning:`
+headings that is not one of the three in the signed capture (self-signed, the PKIX "unable to find
+valid certification path" chain line, and the missing-timestamp line). Exit 4 must also come with
+the self-signed line. Exit codes are not in the captured stdout; the tests state them next to the
+fixtures.
 
 The JDK prints a `Picked up JAVA_TOOL_OPTIONS` line on stderr when that variable is set; the
 gate reads keytool's stdout only, and these captures are stdout only.
