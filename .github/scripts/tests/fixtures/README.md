@@ -1,6 +1,6 @@
-# Captured apksigner output
+# Captured apksigner, keytool and jarsigner output
 
-These files are **verbatim apksigner stdout**, copied byte for byte from
+The `apksigner-*` files are **verbatim apksigner stdout**, copied byte for byte from
 `derekwinters/chores-web-android`, which copied them from `derekwinters/Interval-trainer-android`
 (`.github/scripts/tests/fixtures/`, same filenames; the files hash identically). Nothing in them was edited and nothing should be: a comment header would
 turn them into authored files that only look captured, which is exactly the failure they exist to
@@ -27,3 +27,41 @@ time, when that optional secret is set.
 The two-signer and debug-signed samples in `test_verify_release_signature.py` are hand-written,
 because neither kind of APK could be produced to capture from. They are used only for those two
 cases.
+
+## AAB fixtures: keytool and jarsigner
+
+The release AAB carries only a JAR (v1) signature, so the gate reads it with the JDK:
+`jarsigner -verify -strict` and `keytool -printcert -jarfile`. These files are **verbatim stdout**
+of those two commands, with exactly those flags, captured for this repository with OpenJDK 21
+(`keytool` and `jarsigner` 21.0.12.1; CI runs 17). Nothing in them was edited.
+
+They were captured from a one-entry jar (an `.aab` is a zip/jar) named `*.aab`, built with
+`jar cf` and signed with `jarsigner`. Three throwaway RSA 2048 keys were generated with
+`keytool -genkeypair` in a scratch directory outside the repository and then discarded; no key
+or jar is committed:
+
+- release-like: `CN=Simple Stretch Test Release, O=Fixture, L=Somewhere, C=US`
+- debug: `CN=Android Debug, O=Android, C=US` (the default debug certificate's subject)
+- other: `CN=Someone Else, O=Fixture, C=US`
+
+| File | Command | Jar |
+| --- | --- | --- |
+| `keytool-printcert-jarfile-signed.txt` | `keytool -printcert -jarfile signed.aab` | signed with the release-like key |
+| `keytool-printcert-jarfile-unsigned.txt` | `keytool -printcert -jarfile unsigned.aab` | not signed |
+| `keytool-printcert-jarfile-debug.txt` | `keytool -printcert -jarfile debug.aab` | signed with the debug key |
+| `keytool-printcert-jarfile-two-signers.txt` | `keytool -printcert -jarfile two.aab` | signed twice: release-like key with `-sigfile RELEASE`, then the other key with `-sigfile OTHER` |
+| `jarsigner-verify-strict-signed.txt` | `jarsigner -verify -strict signed.aab` (exit 4) | signed with the release-like key; byte-identical for the debug and two-signer jars, which also exit 4 |
+| `jarsigner-verify-strict-unsigned.txt` | `jarsigner -verify -strict unsigned.aab` (exit 16) | not signed |
+
+**Exit 4 on a correctly signed jar is expected.** `-strict` turns warnings into exit-code bits,
+and bit 4 is set because the signer certificate is self-signed and chains to no CA, which is true
+of every Android signing key. The gate therefore accepts exit 0 or 4 and fails on any other bit
+(1 for a broken signature, 16 for unsigned entries, and so on), as well as on "jar is unsigned".
+Exit codes are not in the captured stdout; the tests state them next to the fixtures.
+
+The JDK prints a `Picked up JAVA_TOOL_OPTIONS` line on stderr when that variable is set; the
+gate reads keytool's stdout only, and these captures are stdout only.
+
+**None of these certificates is this repository's release certificate.** Like the apksigner
+captures, they pin the tools' output *shape*. Unlike the APK case, the debug-signed and two-signer
+AABs could be produced, so those samples are captured rather than hand-written.
