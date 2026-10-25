@@ -14,7 +14,6 @@ import com.derekwinters.stretch.notifications.Notifications
 import com.derekwinters.stretch.widget.WidgetUpdater
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.ZoneId
 
 /**
  * Receives a reminder's alarm (scheduled or snoozed), decides whether to notify, and, for a
@@ -31,7 +30,9 @@ class AlarmReceiver : BroadcastReceiver() {
             // Alarms armed by version 1 carry only a reminder id.
             else -> intent.getLongExtra(ReminderScheduler.EXTRA_LEGACY_REMINDER_ID, 0L)
         }
-        val triggerAt = intent.getLongExtra(ReminderScheduler.EXTRA_TRIGGER_AT, System.currentTimeMillis())
+        val app = context.applicationContext as StretchApp
+        // SCHED-016: a missing trigger time falls back to now, read from the app clock.
+        val triggerAt = intent.getLongExtra(ReminderScheduler.EXTRA_TRIGGER_AT, app.clock.millis())
         if (key == 0L) return
         val snoozed = action == ReminderScheduler.ACTION_SNOOZE_FIRE
         // NOTIF-008 invariant: a snooze carries the original scheduled time; a scheduled alarm's
@@ -45,7 +46,6 @@ class AlarmReceiver : BroadcastReceiver() {
             triggerAt = triggerAt,
         )
 
-        val app = context.applicationContext as StretchApp
         val pending = goAsync()
         app.appScope.launch {
             try {
@@ -90,7 +90,9 @@ class AlarmReceiver : BroadcastReceiver() {
         }
         if (!schedule.enabled) return
 
-        val zone = ZoneId.systemDefault()
+        // SCHED-016: the date and the staleness check read the app clock (zone as of now, SCHED-010).
+        val clock = app.clock
+        val zone = clock.zone
         val date = Instant.ofEpochMilli(triggerAt).atZone(zone).toLocalDate()
         // SKIP-003: a skipped date never produces a notification, even if an alarm was already
         // set - and that includes a snooze (SCHED-015).
@@ -98,7 +100,7 @@ class AlarmReceiver : BroadcastReceiver() {
         // SCHED-003 invariant, re-checked at delivery.
         if (date.dayOfWeek !in schedule.days) return
         // NOTIF-006: don't nag about something that was due hours ago (e.g. delayed by Doze).
-        if (System.currentTimeMillis() - triggerAt > STALE_AFTER_MILLIS) return
+        if (clock.millis() - triggerAt > STALE_AFTER_MILLIS) return
 
         // NOTIF-010: once every goal for the day is met, no reminder (set time, repeating or
         // snoozed) is shown. The caller still re-arms the next alarm, so the schedule keeps

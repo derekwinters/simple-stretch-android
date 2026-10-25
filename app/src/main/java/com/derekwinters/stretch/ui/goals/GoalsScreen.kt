@@ -70,7 +70,8 @@ data class GoalsState(
 )
 
 class GoalsViewModel(application: Application) : AndroidViewModel(application) {
-    private val repo = (application as StretchApp).repository
+    private val app = application as StretchApp
+    private val repo = app.repository
 
     /** Taps are applied one at a time, each planned from the stored goal (GOAL-002). */
     private val taps = Mutex()
@@ -78,7 +79,8 @@ class GoalsViewModel(application: Application) : AndroidViewModel(application) {
     val state: StateFlow<GoalsState> = combine(
         repo.stretches,
         repo.goals,
-        repo.countsOn(LocalDate.now()),
+        // SCHED-016: today from the app clock.
+        repo.countsOn(LocalDate.now(app.clock)),
     ) { stretches, goals, counts ->
         GoalsState(
             GoalMath.goalRows(

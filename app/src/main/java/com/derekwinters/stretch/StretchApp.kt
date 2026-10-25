@@ -10,13 +10,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.time.Clock
 
-class StretchApp : Application() {
+open class StretchApp : Application() {
     /** Process-wide scope for short background work (rescheduling, receiver work). */
     val appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    val database: AppDatabase by lazy { AppDatabase.build(this) }
-    val repository: StretchRepository by lazy { StretchRepository(this, database) }
+    /**
+     * SCHED-016: the one clock every screen, ViewModel, the repository, the scheduler, the
+     * receivers, the widget and the database migrations read the current date, time and zone
+     * from. Its zone is the device's default at each call (SCHED-010 invariant). A test or
+     * screenshot application can override it with `Clock.fixed(instant, zone)`.
+     */
+    open val clock: Clock = AppClock()
+
+    val database: AppDatabase by lazy { AppDatabase.build(this, clock) }
+    val repository: StretchRepository by lazy { StretchRepository(this, database, clock) }
 
     override fun onCreate() {
         super.onCreate()

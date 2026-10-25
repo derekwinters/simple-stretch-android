@@ -43,13 +43,16 @@ import com.derekwinters.stretch.ui.common.Formatting
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 
 class SessionViewModel(
     application: Application,
     savedStateHandle: SavedStateHandle,
 ) : AndroidViewModel(application) {
-    private val repo = (application as StretchApp).repository
+    private val app = application as StretchApp
+    private val repo = app.repository
+
+    /** SCHED-016: today and the reminder's local time are read from the app clock. */
+    private val clock = app.clock
 
     /** SESS-001: what the opening reminder named, if anything. */
     private val reminderStretchIds: List<Long> = ReminderOrigin.parseIds(savedStateHandle.get<String>(ARG_IDS))
@@ -71,7 +74,7 @@ class SessionViewModel(
     init {
         viewModelScope.launch {
             val named = if (scheduleName != null && scheduledAt >= 0) reminderStretchIds else null
-            layout = repo.sessionLayout(LocalDate.now(), named)
+            layout = repo.sessionLayout(LocalDate.now(clock), named)
             loading = false
         }
     }
@@ -79,7 +82,7 @@ class SessionViewModel(
     /** SESS-002: the top section's heading, or null when there is no top section. */
     fun topHeading(): String? = when (layout.top) {
         SessionTop.FROM_REMINDER -> {
-            val time = Instant.ofEpochMilli(scheduledAt).atZone(ZoneId.systemDefault()).toLocalTime()
+            val time = Instant.ofEpochMilli(scheduledAt).atZone(clock.zone).toLocalTime()
             SessionHeadings.fromReminder(Formatting.time(getApplication<Application>(), time), scheduleName.orEmpty())
         }
         SessionTop.GOALS_SHORT -> SessionHeadings.GOALS_SHORT
