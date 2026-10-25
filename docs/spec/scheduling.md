@@ -25,7 +25,8 @@
 - **SCHED-007** Alarms are exact (`setExactAndAllowWhileIdle`) when the app may schedule exact
   alarms. `SCHEDULE_EXACT_ALARM` is the only exact-alarm permission the app declares, and on
   Android 12 and later it is granted by the user ("Alarms & reminders" in system settings); on
-  Android 14 and later a new install starts with it denied. `USE_EXACT_ALARM` is deliberately
+  Android 14 and later a new install starts with it denied; below Android 12 (API 26 to 30)
+  exact alarms need no permission. `USE_EXACT_ALARM` is deliberately
   not declared: Google Play restricts it to alarm, timer and calendar apps, and the user cannot
   revoke it. Without the grant, alarms fall back to `setAndAllowWhileIdle`, and the home screen
   shows a banner linking to the system setting (HOME-005).
