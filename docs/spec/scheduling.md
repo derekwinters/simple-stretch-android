@@ -43,6 +43,10 @@
 - **SCHED-010** Times are local wall-clock times: 10:00 stays 10:00 after a time-zone or
   daylight-saving change.
 
+  **Invariant — The app's clock reports the device's default zone at the moment it is asked,
+  never a zone saved earlier.** A clock built once at process start must not hold on to the zone
+  it was built with (SCHED-016).
+
 ### Repeating schedules
 
 - **SCHED-011** A repeating schedule has a start time *S*, an end time *E*, an interval of *N*
@@ -76,6 +80,14 @@
   cancels or replaces it. A snoozed reminder that comes due on a skipped date, or whose schedule
   was disabled or deleted, is not shown (SKIP-003). A pending snooze does not survive a reboot.
 
+### Current time
+
+- **SCHED-016** The app reads the current date, time and time zone from one clock, created in
+  `StretchApp` and handed to everything that needs it: screens, ViewModels, the repository, the
+  scheduler, receivers, the widget and database migrations. Nothing else reads the system clock
+  or the default zone. Tests and screenshot runs replace it with a fixed clock (instant and
+  zone).
+
 ## Build checklist
 
 - [x] `NextOccurrence.compute` is pure (no Android types) and unit tested for days, skips,
@@ -92,4 +104,8 @@
       (SCHED-012, SCHED-013).
 - [x] Alarm keys (reminder id / negated schedule id) are pure and unit tested (SCHED-005).
 - [x] Snooze uses its own intent action and never touches the remembered alarms (SCHED-015).
+- [ ] One app clock whose zone is read on every call; a unit test changes the default zone
+      after the clock is built and sees the new zone (SCHED-010 invariant, SCHED-016).
+- [ ] No no-argument `now()` / `System.currentTimeMillis()` under `app/src/main` outside the
+      clock's file, enforced by a grep step in `pr.yml` (SCHED-016).
 - [ ] Instrumented test of alarm registration (not yet; needs an emulator in CI).
