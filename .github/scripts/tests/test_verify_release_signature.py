@@ -365,6 +365,8 @@ JARSIGNER_SIGNED = _fixture("jarsigner-verify-strict-signed.txt")
 JARSIGNER_UNSIGNED = _fixture("jarsigner-verify-strict-unsigned.txt")
 JARSIGNER_EXPIRED = _fixture("jarsigner-verify-strict-expired.txt")
 JARSIGNER_NOT_YET_VALID = _fixture("jarsigner-verify-strict-not-yet-valid.txt")
+# The real release AAB, verified in CI (JDK 17.0.20); entry list trimmed (fixtures/README.md).
+JARSIGNER_AAB_CI = _fixture("jarsigner-verify-strict-aab-ci.txt")
 KEYTOOL_EXPIRED = _fixture("keytool-printcert-jarfile-expired.txt")
 
 AAB_SHA256 = "932d7cb1330dc712178067bb850475bf34b07002276e692b51db74136b713b2b"
@@ -622,6 +624,72 @@ class JarToolInvocationTests(unittest.TestCase):
         with self.assertRaises(gate.JarVerificationFailed) as caught:
             self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
         self.assertIn("self-signed", str(caught.exception))
+
+    # The real AAB from CI: a POSIX-attributes warning and a JarFile/JarInputStream
+    # inconsistencies section, because bundletool writes META-INF/MANIFEST.MF after the entries.
+
+    _ENTRY_LINE = ("- Entry BUNDLE-METADATA/com.android.tools/d8.json is signed in JarFile but is "
+                   "not signed in JarInputStream")
+
+    def test_the_real_ci_aab_capture_passes_with_exit_4(self):
+        self._verify(JARSIGNER_SELF_SIGNED_EXIT, JARSIGNER_AAB_CI)
+
+    def test_the_reverse_inconsistency_fails_closed(self):
+        # Unsigned in JarFile (what verification reads) is the dangerous direction.
+        for replacement in (
+                "- Entry BUNDLE-METADATA/com.android.tools/d8.json is not signed in JarFile but "
+                "is signed in JarInputStream",
+                "- Entry BUNDLE-METADATA/com.android.tools/d8.json is missing when reading via "
+                "JarFile",
+                "- Manifest is missing when reading via JarFile"):
+            text = JARSIGNER_AAB_CI.replace(self._ENTRY_LINE, replacement)
+            with self.subTest(replacement=replacement):
+                self.assertNotEqual(text, JARSIGNER_AAB_CI)
+                with self.assertRaises(gate.JarVerificationFailed) as caught:
+                    self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+                self.assertIn("unrecognized warning", str(caught.exception))
+
+    def test_an_unrecognized_line_under_the_inconsistencies_header_fails_closed(self):
+        text = JARSIGNER_AAB_CI.replace(
+            "- Manifest is missing when reading via JarInputStream\n",
+            "Something else entirely\n- Manifest is missing when reading via JarInputStream\n")
+        self.assertNotEqual(text, JARSIGNER_AAB_CI)
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        self.assertIn("Something else entirely", str(caught.exception))
+
+    def test_entry_lines_outside_the_inconsistencies_section_fail_closed(self):
+        # The section ends at its blank line; an entry line is accepted only inside it.
+        header = ("This JAR file contains internal inconsistencies that may result in different "
+                  "contents when reading via JarFile and JarInputStream:\n")
+        text = JARSIGNER_AAB_CI.replace(header, "")
+        self.assertNotEqual(text, JARSIGNER_AAB_CI)
+        with self.assertRaises(gate.JarVerificationFailed):
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        text = JARSIGNER_SIGNED.replace(
+            "Re-run with", self._ENTRY_LINE + "\n\nRe-run with")
+        self.assertNotEqual(text, JARSIGNER_SIGNED)
+        with self.assertRaises(gate.JarVerificationFailed):
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+
+    def test_a_line_after_the_inconsistencies_section_is_checked_again(self):
+        text = JARSIGNER_AAB_CI.replace(
+            "\nRe-run with", "\nThis jar contains unsigned entries which have not been "
+            "integrity-checked.\n\nRe-run with")
+        self.assertNotEqual(text, JARSIGNER_AAB_CI)
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        self.assertIn("unsigned entries", str(caught.exception))
+
+    def test_the_ci_capture_with_an_expired_certificate_still_fails(self):
+        expired = [line for line in JARSIGNER_EXPIRED.splitlines() if "expired" in line]
+        self.assertTrue(expired)
+        text = JARSIGNER_AAB_CI.replace(
+            "Warning: \n", "Warning: \n" + "\n".join(expired) + "\n")
+        self.assertNotEqual(text, JARSIGNER_AAB_CI)
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        self.assertIn("expired", str(caught.exception))
 
     def test_keytool_is_run_with_printcert_jarfile_and_returns_stdout(self):
         with mock.patch.object(gate.subprocess, "run", return_value=self._completed(

@@ -1,0 +1,21 @@
+
+jar verified, with signer errors.
+
+Error: 
+This jar contains entries whose certificate chain is invalid. Reason: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+This jar contains entries whose signer certificate is self-signed.
+
+Warning: 
+This jar contains signatures that do not include a timestamp. Without a timestamp, users may not be able to validate this jar after any of the signer certificates expire (as early as 2054-02-26).
+POSIX file permission and/or symlink attributes detected. These attributes are ignored when signing and are not protected by the signature.
+
+This JAR file contains internal inconsistencies that may result in different contents when reading via JarFile and JarInputStream:
+- Manifest is missing when reading via JarInputStream
+- Entry BUNDLE-METADATA/com.android.tools.build.gradle/app-metadata.properties is signed in JarFile but is not signed in JarInputStream
+- Entry BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb is signed in JarFile but is not signed in JarInputStream
+- Entry BUNDLE-METADATA/com.android.tools.build.profiles/baseline.prof is signed in JarFile but is not signed in JarInputStream
+- Entry BUNDLE-METADATA/com.android.tools.build.profiles/baseline.profm is signed in JarFile but is not signed in JarInputStream
+- Entry BUNDLE-METADATA/com.android.tools/d8.json is signed in JarFile but is not signed in JarInputStream
+- Entry META-INF/MANIFEST.MF is signed in JarFile but is not signed in JarInputStream
+
+Re-run with the -verbose and -certs options for more details.

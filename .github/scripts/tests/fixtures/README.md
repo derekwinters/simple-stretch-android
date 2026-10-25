@@ -56,6 +56,22 @@ or jar is committed:
 | `jarsigner-verify-strict-not-yet-valid.txt` | `jarsigner -verify -strict not-yet-valid.aab` (exit 4) | signed with a not-yet-valid key (below) |
 | `keytool-printcert-jarfile-expired.txt` | `keytool -printcert -jarfile expired.aab` | signed with the expired key |
 
+One more jarsigner file comes from the real release bundle, not a throwaway jar:
+
+| File | Command | Jar |
+| --- | --- | --- |
+| `jarsigner-verify-strict-aab-ci.txt` | `jarsigner -verify -strict` on the release AAB | this repository's real AGP 8.9.1 release bundle, signed with the real release key |
+
+It was captured in this pull request's `pr` workflow run on CI's JDK (Temurin 17.0.20), copied
+from the gate's own error dump (the stdout it prints between `jarsigner output begin` and `end`)
+when the gate rejected the bundle. It is verbatim with one edit: the inconsistencies section
+listed 127 `- Entry <name> is signed in JarFile but is not signed in JarInputStream` lines, one
+per entry, and only the first five and the last (`META-INF/MANIFEST.MF`) are kept. The certificate
+it names is the real release certificate, which is public (it ships in every release); the file
+carries no digest of it. The dump does not show the exit code. The gate reported "unrecognized
+warning", which it only reaches after the exit-code check passed, so the exit was 0 or 4; with the
+self-signed line present it is taken as 4, and the tests use 4.
+
 The expired and not-yet-valid jars were signed with two more throwaway keys with the release-like
 subject, generated with `keytool -genkeypair ... -validity 1` and `-startdate -3d` (expired two
 days before the capture) or `-startdate +1y` (valid only from a year after it). jarsigner signs
@@ -68,7 +84,10 @@ not-yet-valid certificate sets the same bit 4. The gate therefore accepts exit 0
 any other bit (1 for a broken signature, 16 for unsigned entries, and so on), on "jar is
 unsigned", and, whatever the exit code, on any line under jarsigner's `Error:`/`Warning:`
 headings that is not one of the three in the signed capture (self-signed, the PKIX "unable to find
-valid certification path" chain line, and the missing-timestamp line). Exit 4 must also come with
+valid certification path" chain line, and the missing-timestamp line), plus the POSIX-attributes
+line and the JarFile/JarInputStream inconsistencies section from the CI capture, inside which only
+"manifest missing via JarInputStream" and "entry signed in JarFile but not in JarInputStream" are
+accepted (the script's docstring says why). Exit 4 must also come with
 the self-signed line. Exit codes are not in the captured stdout; the tests state them next to the
 fixtures.
 

@@ -56,6 +56,23 @@ chosen by the `.aab` file extension (everything else is treated as an APK):
       timestamp, users may not be able to validate this jar after any of the
       signer certificates expire (as early as YYYY-MM-DD).
       (one line; Android signing never timestamps)
+    POSIX file permission and/or symlink attributes detected. These
+      attributes are ignored when signing and are not protected by the
+      signature.
+      (one line; seen on the real AGP-built AAB in CI, JDK 17.0.20:
+      `tests/fixtures/jarsigner-verify-strict-aab-ci.txt`)
+
+  The same CI capture adds a section headed "This JAR file contains internal
+  inconsistencies that may result in different contents when reading via
+  JarFile and JarInputStream:". bundletool writes META-INF/MANIFEST.MF after
+  the content entries, so the streaming JarInputStream reader cannot see the
+  manifest, while JarFile (the central directory, which verification uses)
+  finds every entry signed. Under that header, up to the next blank line,
+  only "- Manifest is missing when reading via JarInputStream" and
+  "- Entry <name> is signed in JarFile but is not signed in JarInputStream"
+  are accepted. The reverse direction (not signed, or missing, in JarFile)
+  would be content outside the verified signature and fails, as does any
+  other line in the section.
 
   Any other line fails closed, and a line saying a certificate has expired or
   is not yet valid fails by name.
@@ -155,11 +172,32 @@ _JARSIGNER_ALLOWED_LINES = (
         "This jar contains signatures that do not include a timestamp. Without a timestamp, "
         "users may not be able to validate this jar after any of the signer certificates "
         "expire (as early as ") + r"\d{4}-\d{2}-\d{2}\)\.$"),
+    # The zip stores POSIX permission or symlink bits. jarsigner does not sign them and Android
+    # ignores them, so their presence says nothing about the signed contents.
+    re.compile(re.escape(
+        "POSIX file permission and/or symlink attributes detected. These attributes are ignored "
+        "when signing and are not protected by the signature.") + "$"),
 )
+# A section, not a single line: this header, then one "- ..." line per finding, ended by a blank
+# line (or the "Re-run with" footer). bundletool writes META-INF/MANIFEST.MF after the content
+# entries, so the streaming JarInputStream reader never sees the manifest and reports every entry
+# as unsigned. The signature is verified through JarFile (the central directory), which found
+# every entry signed ("jar verified"), and Play reads the bundle as a zip. Only that direction is
+# accepted: signed in JarFile, not in JarInputStream. The reverse ("not signed in JarFile",
+# "missing when reading via JarFile") would mean content the verified signature does not cover,
+# and it, like any other line in the section, fails closed.
+_JARSIGNER_INCONSISTENCIES_HEADER = (
+    "This JAR file contains internal inconsistencies that may result in different contents when "
+    "reading via JarFile and JarInputStream:")
+_JARSIGNER_INCONSISTENCY_LINES = (
+    re.compile(re.escape("- Manifest is missing when reading via JarInputStream") + "$"),
+    re.compile(r"^- Entry (\S.*) is signed in JarFile but is not signed in JarInputStream$"),
+)
+_JARSIGNER_RERUN_LINE = "Re-run with the -verbose and -certs options for more details."
 # Lines that frame jarsigner's report rather than state a finding.
 _JARSIGNER_FRAME_LINES = (
     "jar verified.", "jar verified, with signer errors.", "Error:", "Warning:",
-    "Re-run with the -verbose and -certs options for more details.")
+    _JARSIGNER_RERUN_LINE)
 _JARSIGNER_VALIDITY_PROBLEM = re.compile(
     r"\b(?:has expired|is not yet valid|not yet valid)\b", re.IGNORECASE)
 
@@ -497,6 +535,32 @@ def find_jdk_tool(name):
     raise OSError("{0} not found on PATH or under JAVA_HOME/bin".format(name))
 
 
+def _jarsigner_findings(stdout):
+    """(findings, unexplained) for jarsigner's stdout.
+
+    `findings` is every line that is not report framing. `unexplained` is every finding off the
+    allowlist: outside the internal-inconsistencies section a line must match
+    `_JARSIGNER_ALLOWED_LINES`; inside it (from its exact header to the next blank line or the
+    "Re-run with" footer) a line must match `_JARSIGNER_INCONSISTENCY_LINES`, and nothing else.
+    """
+    findings, unexplained = [], []
+    in_section = False
+    for raw in stdout.splitlines():
+        line = raw.strip()
+        if not line or line == _JARSIGNER_RERUN_LINE:
+            in_section = False
+        if not line or line in _JARSIGNER_FRAME_LINES:
+            continue
+        findings.append(line)
+        if line == _JARSIGNER_INCONSISTENCIES_HEADER:
+            in_section = True
+            continue
+        allowed = _JARSIGNER_INCONSISTENCY_LINES if in_section else _JARSIGNER_ALLOWED_LINES
+        if not any(pattern.match(line) for pattern in allowed):
+            unexplained.append(line)
+    return findings, unexplained
+
+
 def verify_jar(aab, jarsigner=None):
     """Fails unless `jarsigner -verify -strict` verifies the AAB's JAR signature.
 
@@ -509,10 +573,7 @@ def verify_jar(aab, jarsigner=None):
     result = subprocess.run(
         [tool, "-verify", "-strict", aab], capture_output=True, text=True, check=False)
     output = "{0}{1}".format(result.stdout or "", result.stderr or "")
-    findings = [line.strip() for line in (result.stdout or "").splitlines()
-                if line.strip() and line.strip() not in _JARSIGNER_FRAME_LINES]
-    unexplained = [line for line in findings
-                   if not any(allowed.match(line) for allowed in _JARSIGNER_ALLOWED_LINES)]
+    findings, unexplained = _jarsigner_findings(result.stdout or "")
     validity = _JARSIGNER_VALIDITY_PROBLEM.search(output)
     # Every capture prints both phrases on stdout with stderr empty. A failure phrase is looked
     # for in both streams, which can only fail more; the success phrase must come from stdout,
