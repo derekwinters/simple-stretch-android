@@ -45,7 +45,7 @@ Behaviour is set out in the [specification](spec/README.md).
 ## Requirements
 
 - Android 8.0 (API 26) or later.
-- To build: JDK 17+, Android SDK with platform 35 and build-tools 35.0.0 (set `ANDROID_HOME` or
+- To build: JDK 17+, Android SDK with platform 36 and build-tools 36.0.0 (set `ANDROID_HOME` or
   `sdk.dir` in `local.properties`).
 
 ## Build and install
