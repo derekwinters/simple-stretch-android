@@ -117,7 +117,7 @@ jobs:
       # AGP names the bundle app-release.aab and ignores the APK's outputFileName hook, so it is
       # renamed to match the APK, using VERSION_NAME from gradle.properties without
       # release-please's trailing marker comment. Kept identical to the same step in
-      # release-please.yml.
+      # release-please.yml, which reads the exported version back from the release.
       - name: Name the release AAB
         if: steps.signing.outputs.available == 'true'
         run: |
@@ -132,6 +132,7 @@ jobs:
             exit 1
           fi
           mv "$bundle_dir/app-release.aab" "$bundle_dir/simple-stretch-$version_name-release.aab"
+          echo "RELEASE_VERSION_NAME=$version_name" >> "$GITHUB_ENV"
 
       # Covers the APK and the AAB. Runs before either upload, so an unsigned or debug-signed AAB
       # is never uploaded: a failure here ends the job.

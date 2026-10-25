@@ -136,7 +136,10 @@ jobs:
       # AGP names the bundle app-release.aab and ignores the APK's outputFileName hook, so it is
       # renamed to match the APK. VERSION_NAME is read from the checked-out tag's gradle.properties
       # (so a backfill gets that tag's version), without release-please's trailing marker comment.
-      # Kept identical to the same step in pr.yml.
+      # Kept identical to the same step in pr.yml; both export the version for later steps.
+      # Unlike pr.yml's copy it has no `if:`, on purpose: this job requires the signing secrets and
+      # has already failed above without them, whereas pr.yml skips its signed steps when the
+      # secrets are absent (fork PRs). Do not add one to make the two "consistent".
       - name: Name the release AAB
         run: |
           version_name="$(sed -n 's/^VERSION_NAME=\([^#]*\).*$/\1/p' gradle.properties | head -n 1 | tr -d '[:space:]')"
@@ -150,6 +153,7 @@ jobs:
             exit 1
           fi
           mv "$bundle_dir/app-release.aab" "$bundle_dir/simple-stretch-$version_name-release.aab"
+          echo "RELEASE_VERSION_NAME=$version_name" >> "$GITHUB_ENV"
 
       # Refuses anything unsigned, debug-signed, multi-signed, or (when the optional pin secret is
       # set) signed by a certificate other than the pinned one, for the APK (apksigner) and the AAB
@@ -174,3 +178,23 @@ jobs:
             app/build/outputs/bundle/release/*.aab \
             --clobber \
             --repo "${{ github.repository }}"
+
+      # Reads back what the release actually carries: both assets, by their exact names.
+      - name: Check the release carries the named APK and AAB
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          assets="$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' \
+            --repo "${{ github.repository }}")"
+          missing=0
+          for name in "simple-stretch-$RELEASE_VERSION_NAME-release.apk" \
+                      "simple-stretch-$RELEASE_VERSION_NAME-release.aab"; do
+            if ! printf '%s\n' "$assets" | grep -Fxq -- "$name"; then
+              echo "::error title=Release assets::$RELEASE_TAG does not carry $name."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            printf 'Assets on %s:\n%s\n' "$RELEASE_TAG" "$assets"
+            exit 1
+          fi
