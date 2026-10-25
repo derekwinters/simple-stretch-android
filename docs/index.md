@@ -62,7 +62,9 @@ Every pull request's CI run also uploads its debug APK as the `simple-stretch-de
 workflow artifact (kept for 14 days). Pull requests from branches of this repository also upload
 `simple-stretch-release-apk`, signed with the release key, which installs over the released app in
 place, so a PR can be tried before it is released without losing data. A debug APK and a
-release-signed APK cannot be installed over each other.
+release-signed APK cannot be installed over each other. Those pull requests also upload
+`simple-stretch-release-aab`, the release Android App Bundle signed with the same key; the AAB is
+the upload format for Google Play and cannot be installed directly, so sideload the APK.
 
 On first launch, allow notifications. On Android 12/12L, also allow "Alarms & reminders" if the
 app shows the banner, so reminders arrive on the minute.
@@ -70,10 +72,15 @@ app shows the banner, so reminders arrive on the minute.
 ## Releases
 
 Merging to `main` runs release-please, which keeps a release PR up to date from Conventional
-Commit titles. Merging that PR tags a release and attaches `simple-stretch-<version>-release.apk`.
-Release APKs are signed with a stable release key
-([ADR 0002](adr/0002-release-signing-with-a-stable-keystore.md)), so each release
-upgrades the installed app in place and keeps its data.
+Commit titles. Merging that PR tags a release and attaches two files:
+
+- `simple-stretch-<version>-release.apk`, for sideloading onto a phone;
+- `simple-stretch-<version>-release.aab`, the Android App Bundle for uploading to Google Play.
+
+Both are signed with a stable release key
+([ADR 0002](adr/0002-release-signing-with-a-stable-keystore.md)) and checked by the same
+signature gate before they are attached, so each sideloaded release upgrades the installed app in
+place and keeps its data.
 
 **One-time step:** builds made before release signing (debug-signed releases, CI or local debug
 APKs) use a different key. Uninstall those once before installing the first release-signed build;

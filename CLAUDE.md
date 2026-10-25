@@ -35,7 +35,7 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
   `ANDROID_KEY_ALIAS_PASSWORD`; optional pin `ANDROID_KEYSTORE_SHA256`) via env vars read in
   `app/build.gradle.kts` (docs/adr/0002). Without them `release` is left unsigned, never
   debug-signed. The key must never change. `.github/scripts/verify_release_signature.py` gates
-  every release-signed APK; its tests run with `python3 -m unittest discover -s .github/scripts/tests`.
+  every release-signed APK and AAB; its tests run with `python3 -m unittest discover -s .github/scripts/tests`.
 - Room schemas are exported to `app/schemas/`; commit changes to them with the entity change.
 
 @.ai-sdlc/house-rules.md

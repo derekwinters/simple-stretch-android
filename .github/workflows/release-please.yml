@@ -3,17 +3,19 @@ name: release-please
 # Versioning is release-please's, derived from Conventional Commits on main. The VERSION_NAME line
 # in gradle.properties and the manifest are rewritten by it and by nothing else.
 #
-# build-and-attach builds the versioned release APK and attaches it to the release in this same
-# run. A separate tag-triggered workflow would never fire: release-please pushes its tag with the
-# default GITHUB_TOKEN, and GitHub does not start workflow runs from events that token initiated.
+# build-and-attach builds the versioned release APK (for sideloading) and release AAB (for Google
+# Play) and attaches both to the release in this same run. A separate tag-triggered workflow would
+# never fire: release-please pushes its tag with the default GITHUB_TOKEN, and GitHub does not
+# start workflow runs from events that token initiated.
 #
-# The release APK is signed with the stable release keystore (docs/adr/0002). The four keystore
-# secrets are required; the job fails before building if any is missing, and refuses to attach an
-# APK that is unsigned, debug-signed, or (when ANDROID_KEYSTORE_SHA256 is set) signed by any
-# certificate other than the pinned one.
+# The release APK and AAB are signed with the stable release keystore (docs/adr/0002). The four
+# keystore secrets are required; the job fails before building if any is missing, and refuses to
+# attach an APK or AAB that is unsigned, debug-signed, or (when ANDROID_KEYSTORE_SHA256 is set)
+# signed by any certificate other than the pinned one.
 #
-# workflow_dispatch with `backfill_tag` rebuilds and re-attaches the APK for an existing release
-# tag (for example one published before signing was wired up); release-please itself is skipped.
+# workflow_dispatch with `backfill_tag` rebuilds and re-attaches the APK and AAB for an existing
+# release tag (for example one published before signing was wired up); release-please itself is
+# skipped.
 
 on:
   push:
@@ -21,7 +23,7 @@ on:
   workflow_dispatch:
     inputs:
       backfill_tag:
-        description: Existing release tag to rebuild, sign and (re)attach the APK for.
+        description: Existing release tag to rebuild, sign and (re)attach the APK and AAB for.
         required: true
         type: string
 
@@ -45,7 +47,7 @@ jobs:
           manifest-file: .github/release-please/manifest.json
 
   build-and-attach:
-    name: build and attach the release APK
+    name: build and attach the release APK and AAB
     needs: release-please
     # always() so a manual backfill still runs when release-please was skipped.
     if: >-
@@ -118,34 +120,81 @@ jobs:
           echo "ANDROID_KEYSTORE_PATH=$keystore_path" >> "$GITHUB_ENV"
 
       # app/build.gradle.kts signs release from these env vars plus ANDROID_KEYSTORE_PATH, with
-      # v1/v2/v3 stated, and never falls back to the debug key.
-      - name: Assemble the signed release APK
+      # v1/v2/v3 stated for the APK (an AAB is JAR-signed only), and never falls back to the debug
+      # key. Both are built here, while the decoded keystore exists.
+      - name: Build the signed release APK and AAB
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease bundleRelease
 
       - name: Remove the decoded keystore
         if: always()
         run: rm -f "$RUNNER_TEMP/release.keystore"
 
+      # AGP names the bundle app-release.aab and ignores the APK's outputFileName hook, so it is
+      # renamed to match the APK. VERSION_NAME is read from the checked-out tag's gradle.properties
+      # (so a backfill gets that tag's version), without release-please's trailing marker comment.
+      # Kept identical to the same step in pr.yml; both export the version for later steps.
+      # Unlike pr.yml's copy it has no `if:`, on purpose: this job requires the signing secrets and
+      # has already failed above without them, whereas pr.yml skips its signed steps when the
+      # secrets are absent (fork PRs). Do not add one to make the two "consistent".
+      - name: Name the release AAB
+        run: |
+          version_name="$(sed -n 's/^VERSION_NAME=\([^#]*\).*$/\1/p' gradle.properties | head -n 1 | tr -d '[:space:]')"
+          bundle_dir=app/build/outputs/bundle/release
+          if [ -z "$version_name" ]; then
+            echo "::error title=Release AAB::VERSION_NAME is missing or empty in gradle.properties."
+            exit 1
+          fi
+          if [ ! -f "$bundle_dir/app-release.aab" ]; then
+            echo "::error title=Release AAB::$bundle_dir/app-release.aab was not built."
+            exit 1
+          fi
+          mv "$bundle_dir/app-release.aab" "$bundle_dir/simple-stretch-$version_name-release.aab"
+          echo "RELEASE_VERSION_NAME=$version_name" >> "$GITHUB_ENV"
+
       # Refuses anything unsigned, debug-signed, multi-signed, or (when the optional pin secret is
-      # set) signed by a certificate other than the pinned one. Runs before the upload.
-      - name: Verify the release signature
+      # set) signed by a certificate other than the pinned one, for the APK (apksigner) and the AAB
+      # (jarsigner and keytool) alike. Runs before the upload, so an unsigned or debug-signed AAB is
+      # never attached: a failure here ends the job.
+      - name: Verify the release signatures of the APK and AAB
         env:
           ANDROID_KEYSTORE_SHA256: ${{ secrets.ANDROID_KEYSTORE_SHA256 }}
         run: >-
           python3 verification-gate/.github/scripts/verify_release_signature.py
           app/build/outputs/apk/release/*.apk
+          app/build/outputs/bundle/release/*.aab
 
       # Uses the runner's pre-installed gh CLI rather than another pinned action. --clobber lets a
       # backfill replace an earlier (debug-signed) asset of the same name.
-      - name: Attach the release APK to the GitHub Release
+      - name: Attach the release APK and AAB to the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$RELEASE_TAG" \
             app/build/outputs/apk/release/*.apk \
+            app/build/outputs/bundle/release/*.aab \
             --clobber \
             --repo "${{ github.repository }}"
+
+      # Reads back what the release actually carries: both assets, by their exact names.
+      - name: Check the release carries the named APK and AAB
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          assets="$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' \
+            --repo "${{ github.repository }}")"
+          missing=0
+          for name in "simple-stretch-$RELEASE_VERSION_NAME-release.apk" \
+                      "simple-stretch-$RELEASE_VERSION_NAME-release.aab"; do
+            if ! printf '%s\n' "$assets" | grep -Fxq -- "$name"; then
+              echo "::error title=Release assets::$RELEASE_TAG does not carry $name."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            printf 'Assets on %s:\n%s\n' "$RELEASE_TAG" "$assets"
+            exit 1
+          fi

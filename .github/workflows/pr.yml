@@ -6,7 +6,8 @@ name: pr
 #
 # For a pull request from a branch of this repository (never a fork) it also builds the APK signed
 # with the stable release keystore (docs/adr/0002), so the PR can be installed over the released
-# app in place. Fork PRs get no secrets from GitHub, and the steps are skipped for them outright.
+# app in place, and the release AAB signed with the same key. Fork PRs get no secrets from GitHub,
+# and the steps are skipped for them outright.
 
 # Every pull request, whatever its base branch, so stacked PRs are built too.
 on:
@@ -85,7 +86,7 @@ jobs:
           for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD \
                       ANDROID_KEY_ALIAS ANDROID_KEY_ALIAS_PASSWORD; do
             if [ -z "${!name}" ]; then
-              echo "::warning title=Release signing::Secret $name is not available; skipping the release-signed APK."
+              echo "::warning title=Release signing::Secret $name is not available; skipping the release-signed APK and AAB."
               available=false
             fi
           done
@@ -101,25 +102,48 @@ jobs:
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
           echo "ANDROID_KEYSTORE_PATH=$keystore_path" >> "$GITHUB_ENV"
 
-      - name: Assemble the release-signed APK
+      - name: Build the release-signed APK and AAB
         if: steps.signing.outputs.available == 'true'
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease bundleRelease
 
       - name: Remove the decoded keystore
         if: always()
         run: rm -f "$RUNNER_TEMP/release.keystore"
 
-      - name: Verify the release signature
+      # AGP names the bundle app-release.aab and ignores the APK's outputFileName hook, so it is
+      # renamed to match the APK, using VERSION_NAME from gradle.properties without
+      # release-please's trailing marker comment. Kept identical to the same step in
+      # release-please.yml, which reads the exported version back from the release.
+      - name: Name the release AAB
+        if: steps.signing.outputs.available == 'true'
+        run: |
+          version_name="$(sed -n 's/^VERSION_NAME=\([^#]*\).*$/\1/p' gradle.properties | head -n 1 | tr -d '[:space:]')"
+          bundle_dir=app/build/outputs/bundle/release
+          if [ -z "$version_name" ]; then
+            echo "::error title=Release AAB::VERSION_NAME is missing or empty in gradle.properties."
+            exit 1
+          fi
+          if [ ! -f "$bundle_dir/app-release.aab" ]; then
+            echo "::error title=Release AAB::$bundle_dir/app-release.aab was not built."
+            exit 1
+          fi
+          mv "$bundle_dir/app-release.aab" "$bundle_dir/simple-stretch-$version_name-release.aab"
+          echo "RELEASE_VERSION_NAME=$version_name" >> "$GITHUB_ENV"
+
+      # Covers the APK and the AAB. Runs before either upload, so an unsigned or debug-signed AAB
+      # is never uploaded: a failure here ends the job.
+      - name: Verify the release signatures of the APK and AAB
         if: steps.signing.outputs.available == 'true'
         env:
           ANDROID_KEYSTORE_SHA256: ${{ secrets.ANDROID_KEYSTORE_SHA256 }}
         run: >-
           python3 .github/scripts/verify_release_signature.py
           app/build/outputs/apk/release/*.apk
+          app/build/outputs/bundle/release/*.aab
 
       # Signed by the same key as GitHub Releases, so it installs over the released app in place.
       - name: Upload the release-signed APK
@@ -128,5 +152,16 @@ jobs:
         with:
           name: simple-stretch-release-apk
           path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      # The Google Play upload format, signed by the same key. Not installable directly; the APK
+      # above is the one to sideload.
+      - name: Upload the release-signed AAB
+        if: steps.signing.outputs.available == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: simple-stretch-release-aab
+          path: app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 14

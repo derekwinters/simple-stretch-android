@@ -1,0 +1,50 @@
+Signer #1:
+
+Certificate #1:
+Owner: CN=Someone Else, O=Fixture, C=US
+Issuer: CN=Someone Else, O=Fixture, C=US
+Serial number: cef12c049439f1d8
+Valid from: Sun Oct 25 10:46:59 UTC 2026 until: Thu Mar 12 10:46:59 UTC 2054
+Certificate fingerprints:
+	 SHA1: 43:E4:59:3E:A2:E7:4C:DB:E9:C2:6F:42:99:6C:10:B9:53:7C:73:E4
+	 SHA256: 62:F1:74:3D:D8:C8:44:47:A6:4A:86:A4:01:49:EA:0D:66:D8:7C:57:CC:49:99:94:82:76:43:BE:9D:01:28:E0
+Signature algorithm name: SHA384withRSA
+Subject Public Key Algorithm: 2048-bit RSA key
+Version: 3
+
+Extensions: 
+
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 61 0C A0 65 7B D3 87 2F   AC 89 5E EF 27 0B 67 2C  a..e.../..^.'.g,
+0010: D5 B3 30 CF                                        ..0.
+]
+]
+
+
+Signer #2:
+
+Certificate #1:
+Owner: CN=Simple Stretch Test Release, O=Fixture, L=Somewhere, C=US
+Issuer: CN=Simple Stretch Test Release, O=Fixture, L=Somewhere, C=US
+Serial number: efa92c271db6ee6f
+Valid from: Sun Oct 25 10:46:58 UTC 2026 until: Thu Mar 12 10:46:58 UTC 2054
+Certificate fingerprints:
+	 SHA1: CF:80:3D:73:A8:EB:BE:56:3C:48:14:AF:4F:21:FF:10:92:9A:82:71
+	 SHA256: 93:2D:7C:B1:33:0D:C7:12:17:80:67:BB:85:04:75:BF:34:B0:70:02:27:6E:69:2B:51:DB:74:13:6B:71:3B:2B
+Signature algorithm name: SHA384withRSA
+Subject Public Key Algorithm: 2048-bit RSA key
+Version: 3
+
+Extensions: 
+
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 52 00 3D 43 8F CA FB AF   91 71 30 B7 BC 8F 91 FD  R.=C.....q0.....
+0010: 23 3D 03 F0                                        #=..
+]
+]
+
+

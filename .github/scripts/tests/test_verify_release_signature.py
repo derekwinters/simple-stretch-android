@@ -6,7 +6,8 @@ attached and fails unless the APK carries exactly one non-debug certificate, whi
 the pin from the optional `ANDROID_KEYSTORE_SHA256` secret when that is set. These tests need no
 Android SDK, no keystore and no APK. Ported from derekwinters/chores-web-android.
 
-The single-signer apksigner transcripts are captured, not written. See `fixtures/README.md`.
+The single-signer apksigner transcripts are captured, not written. The release AAB goes through
+`jarsigner` and `keytool` instead, and all of its transcripts are captured. See `fixtures/README.md`.
 """
 
 import os
@@ -14,6 +15,7 @@ import subprocess
 import sys
 import unittest
 from contextlib import redirect_stdout
+from datetime import datetime, timezone
 from io import StringIO
 from unittest import mock
 
@@ -348,11 +350,480 @@ class MainTests(unittest.TestCase):
         self.assertIn("OK: app-1.apk", out)
 
 
+# --- Android App Bundles (AAB) ------------------------------------------------
+#
+# An AAB carries only a JAR (v1) signature, so the gate reads it with the JDK's
+# `jarsigner -verify -strict` (integrity) and `keytool -printcert -jarfile` (signer
+# certificates). All of these transcripts are captured with exactly those flags from jars signed
+# with throwaway keys. See `fixtures/README.md`.
+
+KEYTOOL_SIGNED = _fixture("keytool-printcert-jarfile-signed.txt")
+KEYTOOL_UNSIGNED = _fixture("keytool-printcert-jarfile-unsigned.txt")
+KEYTOOL_DEBUG = _fixture("keytool-printcert-jarfile-debug.txt")
+KEYTOOL_TWO_SIGNERS = _fixture("keytool-printcert-jarfile-two-signers.txt")
+JARSIGNER_SIGNED = _fixture("jarsigner-verify-strict-signed.txt")
+JARSIGNER_UNSIGNED = _fixture("jarsigner-verify-strict-unsigned.txt")
+JARSIGNER_EXPIRED = _fixture("jarsigner-verify-strict-expired.txt")
+JARSIGNER_NOT_YET_VALID = _fixture("jarsigner-verify-strict-not-yet-valid.txt")
+# The real release AAB, verified in CI (JDK 17.0.20); entry list trimmed (fixtures/README.md).
+JARSIGNER_AAB_CI = _fixture("jarsigner-verify-strict-aab-ci.txt")
+KEYTOOL_EXPIRED = _fixture("keytool-printcert-jarfile-expired.txt")
+
+AAB_SHA256 = "932d7cb1330dc712178067bb850475bf34b07002276e692b51db74136b713b2b"
+AAB_DN = "CN=Simple Stretch Test Release, O=Fixture, L=Somewhere, C=US"
+AAB_SHA256_KEYTOOL = ":".join(AAB_SHA256[i:i + 2] for i in range(0, len(AAB_SHA256), 2)).upper()
+AAB_DEBUG_SHA256 = "6193e75c5bb46e073d0cc2df81b312c6fc40c2215a5b24dd9d52b0d32338cb02"
+AAB_OTHER_SHA256 = "62f1743dd8c84447a64a86a40149ea0d66d87c57cc499994827643be9d0128e0"
+AAB_OTHER_DN = "CN=Someone Else, O=Fixture, C=US"
+
+# The validity window of the signed capture's certificate ("Valid from: Sun Oct 25 10:46:58 UTC
+# 2026 until: Thu Mar 12 10:46:58 UTC 2054") and of the expired capture's (one day, ended
+# Fri Oct 23 10:56:28 UTC 2026). The clock is fixed in every test so the tests do not rot.
+AAB_VALID = (datetime(2026, 10, 25, 10, 46, 58, tzinfo=timezone.utc),
+             datetime(2054, 3, 12, 10, 46, 58, tzinfo=timezone.utc))
+EXPIRED_VALID = (datetime(2026, 10, 22, 10, 56, 28, tzinfo=timezone.utc),
+                 datetime(2026, 10, 23, 10, 56, 28, tzinfo=timezone.utc))
+NOW = datetime(2026, 11, 1, 12, 0, 0, tzinfo=timezone.utc)
+
+# jarsigner -strict exit codes as captured: 4 for every signed fixture (the signer certificate is
+# self-signed and chains to no CA, as every Android signing key does), 16 for the unsigned jar.
+JARSIGNER_SELF_SIGNED_EXIT = 4
+JARSIGNER_UNSIGNED_EXIT = 16
+
+
+class ParseKeytoolJarfileCertsTests(unittest.TestCase):
+
+    def test_reads_the_real_signed_capture(self):
+        signers = gate.parse_keytool_jarfile_certs(KEYTOOL_SIGNED)
+        self.assertEqual(
+            signers, [gate.SignerFacts("Signer #1", AAB_DN, AAB_SHA256, AAB_VALID)])
+
+    def test_reads_the_real_debug_signed_capture(self):
+        signers = gate.parse_keytool_jarfile_certs(KEYTOOL_DEBUG)
+        self.assertEqual([s.sha256 for s in signers], [AAB_DEBUG_SHA256])
+        self.assertEqual(signers[0].dn, "CN=Android Debug, O=Android, C=US")
+
+    def test_reads_every_signer_of_the_real_two_signer_capture(self):
+        signers = gate.parse_keytool_jarfile_certs(KEYTOOL_TWO_SIGNERS)
+        self.assertEqual(
+            [(s.label, s.dn, s.sha256) for s in signers],
+            [("Signer #1", AAB_OTHER_DN, AAB_OTHER_SHA256), ("Signer #2", AAB_DN, AAB_SHA256)])
+
+    def test_the_real_unsigned_capture_has_no_signers(self):
+        self.assertEqual(gate.parse_keytool_jarfile_certs(KEYTOOL_UNSIGNED), [])
+
+    def test_empty_output_is_unparseable(self):
+        # keytool says "Not a signed jar file" for an unsigned jar; silence is not that.
+        with self.assertRaises(gate.MalformedKeytoolOutput):
+            gate.parse_keytool_jarfile_certs("")
+
+    def test_only_the_first_certificate_of_a_chain_is_the_signer(self):
+        # A chained signer prints its own certificate first, then its issuers.
+        chained = KEYTOOL_SIGNED.rstrip("\n") + "\n\n" + KEYTOOL_TWO_SIGNERS.split(
+            "Signer #2:")[0].split("Signer #1:")[1].replace("Certificate #1:", "Certificate #2:")
+        signers = gate.parse_keytool_jarfile_certs(chained)
+        self.assertEqual(
+            signers, [gate.SignerFacts("Signer #1", AAB_DN, AAB_SHA256, AAB_VALID)])
+
+    def test_an_unrecognized_line_is_unparseable_not_skipped(self):
+        with self.assertRaises(gate.MalformedKeytoolOutput):
+            gate.parse_keytool_jarfile_certs(
+                KEYTOOL_SIGNED.replace("Version: 3", "Version: 3\nSigner moved: elsewhere"))
+
+    def test_a_signer_without_a_sha256_fingerprint_is_unparseable(self):
+        text = "\n".join(line for line in KEYTOOL_SIGNED.splitlines() if "SHA256:" not in line)
+        with self.assertRaises(gate.MalformedKeytoolOutput):
+            gate.parse_keytool_jarfile_certs(text)
+
+    def test_a_signer_without_an_owner_is_unparseable(self):
+        text = "\n".join(line for line in KEYTOOL_SIGNED.splitlines() if "Owner:" not in line)
+        with self.assertRaises(gate.MalformedKeytoolOutput):
+            gate.parse_keytool_jarfile_certs(text)
+
+    def test_a_certificate_outside_any_signer_is_unparseable(self):
+        with self.assertRaises(gate.MalformedKeytoolOutput):
+            gate.parse_keytool_jarfile_certs(KEYTOOL_SIGNED.split("Signer #1:\n", 1)[1])
+
+    def test_unparseable_errors_carry_the_raw_output(self):
+        with self.assertRaises(gate.MalformedKeytoolOutput) as caught:
+            gate.parse_keytool_jarfile_certs("something keytool never printed\n")
+        self.assertIn("something keytool never printed", str(caught.exception))
+
+
+class AssessAabTests(unittest.TestCase):
+    """The same verdict as for an APK, fed by the keytool parser."""
+
+    def _assess(self, text, pin, now=NOW):
+        return gate.assess(gate.parse_keytool_jarfile_certs(text), pin, now=now)
+
+    def test_the_correctly_signed_aab_passes_with_and_without_a_pin(self):
+        for pin in (AAB_SHA256, AAB_SHA256_KEYTOOL, None):
+            with self.subTest(pin=pin):
+                verdict = self._assess(KEYTOOL_SIGNED, pin)
+                self.assertTrue(verdict.ok, verdict.reasons)
+
+    def test_the_unsigned_aab_fails(self):
+        for pin in (AAB_SHA256, None):
+            with self.subTest(pin=pin):
+                verdict = self._assess(KEYTOOL_UNSIGNED, pin)
+                self.assertFalse(verdict.ok)
+                self.assertIn("unsigned", " ".join(verdict.reasons))
+
+    def test_the_debug_signed_aab_fails_and_is_named(self):
+        for pin in (AAB_SHA256, None):
+            with self.subTest(pin=pin):
+                verdict = self._assess(KEYTOOL_DEBUG, pin)
+                self.assertFalse(verdict.ok)
+                self.assertIn("fell back", " ".join(verdict.reasons))
+
+    def test_the_two_signer_aab_fails_even_beside_the_release_key(self):
+        for pin in (AAB_SHA256, None):
+            with self.subTest(pin=pin):
+                verdict = self._assess(KEYTOOL_TWO_SIGNERS, pin)
+                self.assertFalse(verdict.ok)
+                self.assertIn("2 signing certificates", " ".join(verdict.reasons))
+
+    def test_a_wrong_pin_fails_naming_both(self):
+        verdict = self._assess(KEYTOOL_SIGNED, OTHER_SHA256)
+        self.assertFalse(verdict.ok)
+        self.assertIn(AAB_SHA256, " ".join(verdict.reasons))
+        self.assertIn(OTHER_SHA256, " ".join(verdict.reasons))
+
+
+    def test_a_certificate_outside_its_validity_window_fails(self):
+        # Backstop for jarsigner: keytool's own "Valid from: ... until: ..." of the signer.
+        for text, now in ((KEYTOOL_EXPIRED, NOW),
+                          (KEYTOOL_SIGNED, datetime(2026, 10, 25, 10, 46, 57, tzinfo=timezone.utc)),
+                          (KEYTOOL_SIGNED, datetime(2054, 3, 12, 10, 46, 59, tzinfo=timezone.utc))):
+            with self.subTest(now=now), self.subTest(text=text[:200]):
+                verdict = self._assess(text, None, now=now)
+                self.assertFalse(verdict.ok)
+                self.assertIn("validity", " ".join(verdict.reasons))
+
+    def test_a_certificate_inside_its_validity_window_passes(self):
+        for now in AAB_VALID + (NOW,):
+            with self.subTest(now=now):
+                self.assertTrue(self._assess(KEYTOOL_SIGNED, AAB_SHA256, now=now).ok)
+
+
+class KeytoolValidityTests(unittest.TestCase):
+    """The signer certificate's validity window, read from keytool's `Valid from:` line."""
+
+    def test_reads_the_window_of_the_real_captures(self):
+        self.assertEqual(gate.parse_keytool_jarfile_certs(KEYTOOL_SIGNED)[0].valid, AAB_VALID)
+        self.assertEqual(
+            gate.parse_keytool_jarfile_certs(KEYTOOL_EXPIRED)[0].valid, EXPIRED_VALID)
+
+    def test_the_timezone_token_is_ignored_and_read_as_utc(self):
+        text = KEYTOOL_SIGNED.replace(" UTC ", " GMT ")
+        self.assertEqual(gate.parse_keytool_jarfile_certs(text)[0].valid, AAB_VALID)
+
+    def test_an_unparseable_validity_line_is_unparseable_not_skipped(self):
+        for bad in ("Valid from: 25/10/2026 until: 12/03/2054",
+                    # A German-locale JDK:
+                    "Valid from: So. Okt. 25 10:46:58 UTC 2026 "
+                    "until: Do. M\u00e4rz 12 10:46:58 UTC 2054",
+                    "Valid from: Sun Oct 25 10:46:58 UTC 2026"):
+            with self.subTest(bad=bad), self.assertRaises(gate.MalformedKeytoolOutput):
+                gate.parse_keytool_jarfile_certs(KEYTOOL_SIGNED.replace(
+                    "Valid from: Sun Oct 25 10:46:58 UTC 2026 until: Thu Mar 12 10:46:58 UTC 2054",
+                    bad))
+
+    def test_a_signer_without_a_validity_line_is_unparseable(self):
+        text = "\n".join(line for line in KEYTOOL_SIGNED.splitlines() if "Valid from:" not in line)
+        with self.assertRaises(gate.MalformedKeytoolOutput):
+            gate.parse_keytool_jarfile_certs(text)
+
+
+class JarToolInvocationTests(unittest.TestCase):
+
+    def _completed(self, returncode, stdout, stderr=""):
+        return subprocess.CompletedProcess([], returncode, stdout=stdout, stderr=stderr)
+
+    def test_jarsigner_is_run_with_verify_strict(self):
+        with mock.patch.object(gate.subprocess, "run", return_value=self._completed(
+                JARSIGNER_SELF_SIGNED_EXIT, JARSIGNER_SIGNED)) as run:
+            gate.verify_jar("app.aab", jarsigner="/jdk/bin/jarsigner")
+        self.assertEqual(
+            run.call_args[0][0], ["/jdk/bin/jarsigner", "-verify", "-strict", "app.aab"])
+
+    def test_a_self_signed_release_key_passes_jarsigner(self):
+        # Captured: every signed fixture exits 4 under -strict, only for the self-signed key.
+        for code in (0, JARSIGNER_SELF_SIGNED_EXIT):
+            with self.subTest(code=code), mock.patch.object(
+                    gate.subprocess, "run", return_value=self._completed(code, JARSIGNER_SIGNED)):
+                gate.verify_jar("app.aab", jarsigner="/jdk/bin/jarsigner")
+
+    def test_the_unsigned_capture_fails_jarsigner(self):
+        with mock.patch.object(gate.subprocess, "run", return_value=self._completed(
+                JARSIGNER_UNSIGNED_EXIT, JARSIGNER_UNSIGNED)):
+            with self.assertRaises(gate.JarVerificationFailed) as caught:
+                gate.verify_jar("app.aab", jarsigner="/jdk/bin/jarsigner")
+        self.assertIn("jar is unsigned", str(caught.exception))
+
+    def test_jar_is_unsigned_fails_whatever_the_exit_code(self):
+        for code in (0, JARSIGNER_SELF_SIGNED_EXIT):
+            with self.subTest(code=code), mock.patch.object(
+                    gate.subprocess, "run", return_value=self._completed(code, JARSIGNER_UNSIGNED)):
+                with self.assertRaises(gate.JarVerificationFailed):
+                    gate.verify_jar("app.aab", jarsigner="/jdk/bin/jarsigner")
+
+    def test_any_other_strict_exit_bit_fails(self):
+        # 1: a broken signature (e.g. a digest error); 16: unsigned entries; 8, 32, 64: others.
+        for code in (1, 8, 16, 20, 32, 64):
+            with self.subTest(code=code), mock.patch.object(
+                    gate.subprocess, "run", return_value=self._completed(code, JARSIGNER_SIGNED)):
+                with self.assertRaises(gate.JarVerificationFailed):
+                    gate.verify_jar("app.aab", jarsigner="/jdk/bin/jarsigner")
+
+    def test_output_without_jar_verified_fails(self):
+        with mock.patch.object(gate.subprocess, "run", return_value=self._completed(0, "")):
+            with self.assertRaises(gate.JarVerificationFailed):
+                gate.verify_jar("app.aab", jarsigner="/jdk/bin/jarsigner")
+
+    def _verify(self, code, stdout):
+        with mock.patch.object(gate.subprocess, "run", return_value=self._completed(code, stdout)):
+            gate.verify_jar("app.aab", jarsigner="/jdk/bin/jarsigner")
+
+    def test_the_signed_capture_passes_with_exit_4(self):
+        self._verify(JARSIGNER_SELF_SIGNED_EXIT, JARSIGNER_SIGNED)
+
+    def test_an_expired_signer_certificate_fails_although_it_is_exit_4(self):
+        # Captured: an expired certificate sets the same -strict bit 4 as a self-signed one.
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, JARSIGNER_EXPIRED)
+        self.assertIn("expired", str(caught.exception))
+
+    def test_a_not_yet_valid_signer_certificate_fails_although_it_is_exit_4(self):
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, JARSIGNER_NOT_YET_VALID)
+        self.assertIn("not yet valid", str(caught.exception))
+
+    def test_an_unrecognized_warning_line_fails_closed(self):
+        text = JARSIGNER_SIGNED.replace(
+            "This jar contains signatures that do not include a timestamp.",
+            "This jar contains entries whose signer certificate's KeyUsage extension doesn't "
+            "allow code signing.\nThis jar contains signatures that do not include a timestamp.")
+        self.assertNotEqual(text, JARSIGNER_SIGNED)
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        self.assertIn("KeyUsage", str(caught.exception))
+
+    def test_a_chain_invalid_for_another_reason_fails(self):
+        text = JARSIGNER_SIGNED.replace(
+            "unable to find valid certification path to requested target",
+            "validity check failed")
+        self.assertNotEqual(text, JARSIGNER_SIGNED)
+        with self.assertRaises(gate.JarVerificationFailed):
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+
+    def test_exit_4_without_the_self_signed_line_fails(self):
+        text = JARSIGNER_SIGNED.replace(
+            "This jar contains entries whose signer certificate is self-signed.\n", "")
+        self.assertNotEqual(text, JARSIGNER_SIGNED)
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        self.assertIn("self-signed", str(caught.exception))
+
+    # The real AAB from CI: a POSIX-attributes warning and a JarFile/JarInputStream
+    # inconsistencies section, because bundletool writes META-INF/MANIFEST.MF after the entries.
+
+    _ENTRY_LINE = ("- Entry BUNDLE-METADATA/com.android.tools/d8.json is signed in JarFile but is "
+                   "not signed in JarInputStream")
+
+    def test_the_real_ci_aab_capture_passes_with_exit_4(self):
+        self._verify(JARSIGNER_SELF_SIGNED_EXIT, JARSIGNER_AAB_CI)
+
+    def test_the_reverse_inconsistency_fails_closed(self):
+        # Unsigned in JarFile (what verification reads) is the dangerous direction.
+        for replacement in (
+                "- Entry BUNDLE-METADATA/com.android.tools/d8.json is not signed in JarFile but "
+                "is signed in JarInputStream",
+                "- Entry BUNDLE-METADATA/com.android.tools/d8.json is missing when reading via "
+                "JarFile",
+                "- Manifest is missing when reading via JarFile"):
+            text = JARSIGNER_AAB_CI.replace(self._ENTRY_LINE, replacement)
+            with self.subTest(replacement=replacement):
+                self.assertNotEqual(text, JARSIGNER_AAB_CI)
+                with self.assertRaises(gate.JarVerificationFailed) as caught:
+                    self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+                self.assertIn("unrecognized warning", str(caught.exception))
+
+    def test_an_unrecognized_line_under_the_inconsistencies_header_fails_closed(self):
+        text = JARSIGNER_AAB_CI.replace(
+            "- Manifest is missing when reading via JarInputStream\n",
+            "Something else entirely\n- Manifest is missing when reading via JarInputStream\n")
+        self.assertNotEqual(text, JARSIGNER_AAB_CI)
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        self.assertIn("Something else entirely", str(caught.exception))
+
+    def test_entry_lines_outside_the_inconsistencies_section_fail_closed(self):
+        # The section ends at its blank line; an entry line is accepted only inside it.
+        header = ("This JAR file contains internal inconsistencies that may result in different "
+                  "contents when reading via JarFile and JarInputStream:\n")
+        text = JARSIGNER_AAB_CI.replace(header, "")
+        self.assertNotEqual(text, JARSIGNER_AAB_CI)
+        with self.assertRaises(gate.JarVerificationFailed):
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        text = JARSIGNER_SIGNED.replace(
+            "Re-run with", self._ENTRY_LINE + "\n\nRe-run with")
+        self.assertNotEqual(text, JARSIGNER_SIGNED)
+        with self.assertRaises(gate.JarVerificationFailed):
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+
+    def test_a_line_after_the_inconsistencies_section_is_checked_again(self):
+        text = JARSIGNER_AAB_CI.replace(
+            "\nRe-run with", "\nThis jar contains unsigned entries which have not been "
+            "integrity-checked.\n\nRe-run with")
+        self.assertNotEqual(text, JARSIGNER_AAB_CI)
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        self.assertIn("unsigned entries", str(caught.exception))
+
+    def test_the_ci_capture_with_an_expired_certificate_still_fails(self):
+        expired = [line for line in JARSIGNER_EXPIRED.splitlines() if "expired" in line]
+        self.assertTrue(expired)
+        text = JARSIGNER_AAB_CI.replace(
+            "Warning: \n", "Warning: \n" + "\n".join(expired) + "\n")
+        self.assertNotEqual(text, JARSIGNER_AAB_CI)
+        with self.assertRaises(gate.JarVerificationFailed) as caught:
+            self._verify(JARSIGNER_SELF_SIGNED_EXIT, text)
+        self.assertIn("expired", str(caught.exception))
+
+    def test_keytool_is_run_with_printcert_jarfile_and_returns_stdout(self):
+        with mock.patch.object(gate.subprocess, "run", return_value=self._completed(
+                0, KEYTOOL_SIGNED)) as run:
+            result = gate.print_jar_certs("app.aab", keytool="/jdk/bin/keytool")
+        self.assertEqual(
+            run.call_args[0][0], ["/jdk/bin/keytool", "-printcert", "-jarfile", "app.aab"])
+        self.assertEqual(result, KEYTOOL_SIGNED)
+
+    def test_a_keytool_failure_is_a_failure(self):
+        with mock.patch.object(gate.subprocess, "run", return_value=self._completed(
+                1, "", "keytool error: java.lang.SecurityException: SHA-384 digest error")):
+            with self.assertRaises(gate.MalformedKeytoolOutput) as caught:
+                gate.print_jar_certs("app.aab", keytool="/jdk/bin/keytool")
+        self.assertIn("digest error", str(caught.exception))
+
+
+class FindJdkToolTests(unittest.TestCase):
+
+    def test_prefers_the_tool_on_path(self):
+        with mock.patch.object(gate.shutil, "which", return_value="/usr/bin/keytool"):
+            self.assertEqual(gate.find_jdk_tool("keytool"), "/usr/bin/keytool")
+
+    def test_falls_back_to_java_home_bin(self):
+        expected = os.path.join("/jdk", "bin", "jarsigner")
+        with mock.patch.object(gate.shutil, "which", return_value=None), \
+                mock.patch.dict(os.environ, {"JAVA_HOME": "/jdk"}, clear=False), \
+                mock.patch.object(gate.os.path, "isfile", side_effect=lambda p: p == expected), \
+                mock.patch.object(gate.os, "access", return_value=True):
+            self.assertEqual(gate.find_jdk_tool("jarsigner"), expected)
+
+    def test_not_found_is_an_error(self):
+        env = {k: v for k, v in os.environ.items() if k != "JAVA_HOME"}
+        with mock.patch.object(gate.shutil, "which", return_value=None), \
+                mock.patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(OSError):
+                gate.find_jdk_tool("keytool")
+
+
+class MainAabTests(unittest.TestCase):
+    """main() dispatches on the extension: .aab to the JDK jar tools, .apk to apksigner."""
+
+    def _main(self, argv, keytool_out=KEYTOOL_SIGNED, jarsigner_out=JARSIGNER_SIGNED,
+              jarsigner_exit=JARSIGNER_SELF_SIGNED_EXIT, env_pin=AAB_SHA256):
+        calls = []
+
+        def run(cmd, **_kwargs):
+            calls.append(cmd)
+            tool = os.path.basename(cmd[0])
+            if tool == "jarsigner":
+                return subprocess.CompletedProcess(cmd, jarsigner_exit, jarsigner_out, "")
+            if tool == "keytool":
+                return subprocess.CompletedProcess(cmd, 0, keytool_out, "")
+            if tool == "apksigner":
+                return subprocess.CompletedProcess(cmd, 0, NON_VERBOSE_OUTPUT, "")
+            raise AssertionError("unexpected tool {0}".format(cmd))
+
+        env = dict(os.environ)
+        env.pop(gate.EXPECTED_ENV, None)
+        if env_pin is not None:
+            env[gate.EXPECTED_ENV] = env_pin
+        out = StringIO()
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(gate.shutil, "which", side_effect=lambda n: "/tools/" + n), \
+                mock.patch.object(gate.subprocess, "run", side_effect=run), \
+                mock.patch.object(gate, "_utcnow", return_value=NOW), \
+                redirect_stdout(out):
+            code = gate.main(argv)
+        return code, out.getvalue(), calls
+
+    def test_a_correctly_signed_aab_runs_both_jar_tools_and_passes(self):
+        code, out, calls = self._main(["simple-stretch-1.0.0-release.aab"])
+        self.assertEqual(code, 0, out)
+        self.assertEqual([os.path.basename(c[0]) for c in calls], ["jarsigner", "keytool"])
+        self.assertIn(AAB_SHA256, out)
+
+    def test_the_pin_may_be_in_keytool_form_or_absent(self):
+        for pin in (AAB_SHA256_KEYTOOL, None):
+            with self.subTest(pin=pin):
+                code, out, _ = self._main(["app.aab"], env_pin=pin)
+                self.assertEqual(code, 0, out)
+
+    def test_an_unsigned_aab_fails(self):
+        code, out, _ = self._main(
+            ["app.aab"], keytool_out=KEYTOOL_UNSIGNED, jarsigner_out=JARSIGNER_UNSIGNED,
+            jarsigner_exit=JARSIGNER_UNSIGNED_EXIT)
+        self.assertEqual(code, 1)
+        self.assertIn("::error title=Release signature::app.aab", out)
+
+    def test_a_debug_signed_aab_fails(self):
+        code, out, _ = self._main(["app.aab"], keytool_out=KEYTOOL_DEBUG)
+        self.assertEqual(code, 1)
+        self.assertIn("Android Debug", out)
+
+    def test_a_two_signer_aab_fails(self):
+        code, _, _ = self._main(["app.aab"], keytool_out=KEYTOOL_TWO_SIGNERS)
+        self.assertEqual(code, 1)
+
+    def test_a_wrong_pin_fails(self):
+        code, _, _ = self._main(["app.aab"], env_pin=OTHER_SHA256)
+        self.assertEqual(code, 1)
+
+    def test_a_broken_jar_signature_fails_before_keytool_is_trusted(self):
+        code, _, calls = self._main(["app.aab"], jarsigner_exit=1)
+        self.assertEqual(code, 1)
+        self.assertNotIn("keytool", [os.path.basename(c[0]) for c in calls])
+
+    def test_an_expired_aab_fails_at_jarsigner(self):
+        code, out, calls = self._main(
+            ["app.aab"], keytool_out=KEYTOOL_EXPIRED, jarsigner_out=JARSIGNER_EXPIRED)
+        self.assertEqual(code, 1)
+        self.assertIn("expired", out)
+        self.assertNotIn("keytool", [os.path.basename(c[0]) for c in calls])
+
+    def test_an_expired_certificate_fails_even_if_jarsigner_passed(self):
+        # The keytool backstop: jarsigner's verdict alone is not trusted for validity.
+        code, out, _ = self._main(["app.aab"], keytool_out=KEYTOOL_EXPIRED)
+        self.assertEqual(code, 1)
+        self.assertIn("validity", out)
+
+    def test_apks_and_aabs_are_dispatched_to_their_own_tools(self):
+        code, out, calls = self._main(
+            ["app.apk", "app.aab"], env_pin=None)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(
+            [os.path.basename(c[0]) for c in calls], ["apksigner", "jarsigner", "keytool"])
+
+
 class StandardLibraryOnlyTests(unittest.TestCase):
     """The gate runs on the runner's bare python3, with nothing installed."""
 
     def test_the_gate_imports_only_the_standard_library(self):
-        allowed = {"argparse", "glob", "os", "re", "shutil", "subprocess", "sys", "collections"}
+        allowed = {"argparse", "glob", "os", "re", "shutil", "subprocess", "sys", "collections",
+                   "datetime"}
         with open(gate.__file__, encoding="utf-8") as handle:
             imported = set()
             for line in handle:
