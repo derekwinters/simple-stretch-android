@@ -23,16 +23,19 @@ data safety form" answers, in the same pull request.
 
   Adding or removing a permission is a change to this requirement and to the policy.
 - **PRIV-004** The privacy policy page covers PRIV-001 to PRIV-003 in plain words, and also:
-  that Android's device backup (`allowBackup="true"`) may copy app data to the user's Google
-  account, handled by Android and Google rather than the developer; how to delete the data
-  (clear the app's storage, or uninstall); that the app is not directed at children under 13;
-  how the policy changes and how to get in touch; and the answers recorded for Play's data
-  safety form.
+  that Android's device backup may copy all of the app's data to the user's Google account,
+  and device-to-device transfer may copy it to a new phone, both handled by Android and Google
+  rather than the developer; how to delete the data (clear the app's storage, or uninstall);
+  that the app is not directed at children under 13; how the policy changes and how to get in
+  touch; and the answers recorded for Play's data safety form. Because the backup wording says "all of the app's data", the manifest keeps
+  `android:allowBackup="true"` on `<application>` with no `android:fullBackupContent` and no
+  `android:dataExtractionRules`; `ManifestPermissionsTest` checks this.
 
 ## Build checklist
 
-- [x] `ManifestPermissionsTest` reads the source manifest and asserts no `INTERNET` (PRIV-001)
-      and exactly the three permissions above (PRIV-003).
+- [x] `ManifestPermissionsTest` reads the source manifest and asserts no `INTERNET` (PRIV-001),
+      exactly the three permissions above (PRIV-003), and `allowBackup="true"` with no backup
+      rules (PRIV-004).
 - [x] The policy page lists what is stored, each permission, backup, deletion, children,
       changes and contact, and the data safety answers (PRIV-002, PRIV-004).
 - [ ] The merged manifest is not checked: a library could in theory merge in a permission.

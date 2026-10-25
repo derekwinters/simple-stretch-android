@@ -32,9 +32,12 @@ class ManifestPermissionsTest {
         return found!!
     }
 
+    private fun parseManifest() =
+        DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
+            .newDocumentBuilder().parse(manifest())
+
     private fun declaredPermissions(): Set<String> {
-        val factory = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
-        val doc = factory.newDocumentBuilder().parse(manifest())
+        val doc = parseManifest()
         return listOf("uses-permission", "uses-permission-sdk-23").flatMap { tag ->
             val nodes = doc.getElementsByTagName(tag)
             (0 until nodes.length).map { (nodes.item(it) as Element).getAttributeNS(androidNs, "name") }
@@ -61,6 +64,26 @@ class ManifestPermissionsTest {
                 "android.permission.SCHEDULE_EXACT_ALARM",
             ),
             declaredPermissions(),
+        )
+    }
+
+    // PRIV-004: the policy says Android's device backup covers all of the app's data. That holds
+    // only while allowBackup is "true" with no backup rules; changing either changes the policy.
+    @Test
+    fun backupIsAllowedWithNoBackupRules() {
+        val application = parseManifest().getElementsByTagName("application").item(0) as Element
+        assertEquals(
+            "allowBackup must stay \"true\" (PRIV-004); update docs/privacy.md first",
+            "true",
+            application.getAttributeNS(androidNs, "allowBackup"),
+        )
+        assertFalse(
+            "fullBackupContent must not be set (PRIV-004); update docs/privacy.md first",
+            application.hasAttributeNS(androidNs, "fullBackupContent"),
+        )
+        assertFalse(
+            "dataExtractionRules must not be set (PRIV-004); update docs/privacy.md first",
+            application.hasAttributeNS(androidNs, "dataExtractionRules"),
         )
     }
 }
