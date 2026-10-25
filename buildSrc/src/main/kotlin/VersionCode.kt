@@ -9,7 +9,7 @@
  */
 object VersionCode {
     /** Google Play's largest allowed versionCode. */
-    const val MAX_PLAY_VERSION_CODE = 2_100_000_000L
+    const val PLAY_MAX_CODE = 2_100_000_000L
 
     /** The largest minor or patch this scheme can hold without colliding with the next field. */
     const val MAX_MINOR_OR_PATCH = 99L
@@ -35,11 +35,11 @@ object VersionCode {
         }
         // A major with more digits than the limit has cannot fit; checked before multiplying so
         // nothing overflows.
-        val major = majorText.toLongOrNull()?.takeIf { it <= MAX_PLAY_VERSION_CODE / 10000 }
+        val major = majorText.toLongOrNull()?.takeIf { it <= PLAY_MAX_CODE / 10000 }
         val code = major?.let { it * 10000 + minor * 100 + patch }
-        require(code != null && code <= MAX_PLAY_VERSION_CODE) {
+        require(code != null && code <= PLAY_MAX_CODE) {
             "Version name \"$versionName\" gives a versionCode above Google Play's limit of " +
-                "$MAX_PLAY_VERSION_CODE (docs/adr/0003)."
+                "$PLAY_MAX_CODE (docs/adr/0003)."
         }
         return code.toInt()
     }
