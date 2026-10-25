@@ -39,12 +39,18 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
-      # Standard library only; covers the release-signature gate used below and on release.
-      - name: Run the release-signing gate tests
+      # Standard library only; covers the release-signature gate used below and on release, and
+      # the release version-code guard (docs/adr/0003).
+      - name: Run the release gate tests
         run: python3 -m unittest discover -s .github/scripts/tests -v
 
       - name: Run the unit tests
         run: ./gradlew test --stacktrace
+
+      # buildSrc is a build of its own, and ./gradlew test does not run its tests: the
+      # version-code formula that derives versionCode from VERSION_NAME (docs/adr/0003).
+      - name: Run the version-code formula tests
+        run: ./gradlew -p buildSrc test --stacktrace
 
       # Room exports its schema to app/schemas/ during the build; upload it so a schema change
       # can be reviewed against the committed copy without a local Android build.

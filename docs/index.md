@@ -82,6 +82,13 @@ Both are signed with a stable release key
 signature gate before they are attached, so each sideloaded release upgrades the installed app in
 place and keeps its data.
 
+Each release's version code is derived from its version (0.3.0 is 300; see
+[ADR 0003](adr/0003-version-code-derived-from-version-name.md)), so it rises with every release,
+as Google Play and Android require. Before a release is attached, a guard checks that its code is
+higher than the previous release's. The same check runs on the open release PR after every merge
+to `main`: a release PR whose code is not higher than the last release's gets a failing
+`release-version-code` status.
+
 **One-time step:** builds made before release signing (debug-signed releases, CI or local debug
 APKs) use a different key. Uninstall those once before installing the first release-signed build;
 after that, upgrades are in place.

@@ -38,3 +38,4 @@ nav:
   - Decisions:
       - 0001 Debug signing until a release keystore: adr/0001-debug-signing-until-release-keystore.md
       - 0002 Release signing with a stable keystore: adr/0002-release-signing-with-a-stable-keystore.md
+      - 0003 Version code derived from the version name: adr/0003-version-code-derived-from-version-name.md
