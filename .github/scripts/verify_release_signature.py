@@ -328,6 +328,10 @@ def parse_keytool_jarfile_certs(text):
             certificate = number
             in_extensions = False
             continue
+        # The skip ends only at the next `Signer #N:` or `Certificate #N:` header, which assumes
+        # `Extensions:` is the last block of a certificate in keytool's layout. That was verified
+        # on JDK 21 captures; CI runs JDK 17. A field line keytool printed after `Extensions:`
+        # would be skipped here, harmlessly: no DN or digest is ever read from this block.
         if in_extensions:
             continue  # free-form X.509 extension dump; see the module docstring
         if line == _KEYTOOL_SIGNATURE_LINE and signers and certificate is None:
