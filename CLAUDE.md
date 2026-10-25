@@ -28,14 +28,18 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
 - Gradle wrapper 8.11.1, AGP 8.9.1, Kotlin 2.0.21, compileSdk/targetSdk 36, minSdk 26, Java 17.
 - `./gradlew test` and `./gradlew assembleDebug`. The Android SDK and Google Maven may be
   unreachable from some environments; CI (`pr.yml`) is then the build gate.
-- Version: `VERSION_NAME` / `VERSION_CODE` in `gradle.properties` (release-please owns
-  `VERSION_NAME`). APKs are named `simple-stretch-<versionName>-<buildType>.apk`.
+- Version: `VERSION_NAME` in `gradle.properties`, owned by release-please. The version code is
+  derived from it (`major*10000 + minor*100 + patch`, by `buildSrc/`'s `VersionCode`; its tests
+  are not part of `./gradlew test`, run them with `./gradlew -p buildSrc test`) and checked by the
+  release guard against the previous release (docs/adr/0003). APKs are named `simple-stretch-<versionName>-<buildType>.apk`.
 - Release builds are signed with the stable release keystore from repository secrets
   (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
   `ANDROID_KEY_ALIAS_PASSWORD`; optional pin `ANDROID_KEYSTORE_SHA256`) via env vars read in
   `app/build.gradle.kts` (docs/adr/0002). Without them `release` is left unsigned, never
   debug-signed. The key must never change. `.github/scripts/verify_release_signature.py` gates
-  every release-signed APK; its tests run with `python3 -m unittest discover -s .github/scripts/tests`.
+  every release-signed APK and AAB, and `.github/scripts/check_version_code.py` (the release
+  guard) every release's version code; their tests run with
+  `python3 -m unittest discover -s .github/scripts/tests`.
 - Room schemas are exported to `app/schemas/`; commit changes to them with the entity change.
 
 @.ai-sdlc/house-rules.md

@@ -1,0 +1,1 @@
+bogus.apk: error: failed opening zip: Invalid file.

@@ -15,10 +15,12 @@ plugins {
 val versionNameProperty = (project.findProperty("VERSION_NAME") as String)
     .substringBefore("#")
     .trim()
-val versionCodeProperty = (project.findProperty("VERSION_CODE") as String)
-    .substringBefore("#")
-    .trim()
-    .toInt()
+
+// The version code is derived from the version name, never set by hand: major * 10000 +
+// minor * 100 + patch (0.3.0 is 300), by buildSrc's VersionCode (docs/adr/0003). A version the
+// scheme cannot represent fails the build rather than producing a wrong code. The release guard
+// (.github/scripts/check_version_code.py) checks each release's code is above the previous one.
+val derivedVersionCode = VersionCode.fromVersionName(versionNameProperty)
 
 // Release signing comes from environment variables only, never a committed file or a Gradle
 // property (docs/adr/0002). ANDROID_KEYSTORE_PATH is the path of the keystore a workflow decodes
@@ -48,7 +50,7 @@ android {
         applicationId = "io.github.derekwinters.simple_stretch_android"
         minSdk = 26
         targetSdk = 36
-        versionCode = versionCodeProperty
+        versionCode = derivedVersionCode
         versionName = versionNameProperty
     }
 

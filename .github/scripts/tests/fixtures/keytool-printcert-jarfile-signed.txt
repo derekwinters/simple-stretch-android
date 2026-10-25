@@ -1,0 +1,25 @@
+Signer #1:
+
+Certificate #1:
+Owner: CN=Simple Stretch Test Release, O=Fixture, L=Somewhere, C=US
+Issuer: CN=Simple Stretch Test Release, O=Fixture, L=Somewhere, C=US
+Serial number: efa92c271db6ee6f
+Valid from: Sun Oct 25 10:46:58 UTC 2026 until: Thu Mar 12 10:46:58 UTC 2054
+Certificate fingerprints:
+	 SHA1: CF:80:3D:73:A8:EB:BE:56:3C:48:14:AF:4F:21:FF:10:92:9A:82:71
+	 SHA256: 93:2D:7C:B1:33:0D:C7:12:17:80:67:BB:85:04:75:BF:34:B0:70:02:27:6E:69:2B:51:DB:74:13:6B:71:3B:2B
+Signature algorithm name: SHA384withRSA
+Subject Public Key Algorithm: 2048-bit RSA key
+Version: 3
+
+Extensions: 
+
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 52 00 3D 43 8F CA FB AF   91 71 30 B7 BC 8F 91 FD  R.=C.....q0.....
+0010: 23 3D 03 F0                                        #=..
+]
+]
+
+

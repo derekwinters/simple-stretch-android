@@ -185,16 +185,12 @@ object ReminderScheduler {
         am.cancel(stale)
         stale.cancel()
         val pi = pendingIntent(context, key, triggerAt, action, scheduledAt)
-        try {
-            if (canScheduleExact(context)) {
-                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
-            } else {
-                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
-            }
-        } catch (e: SecurityException) {
-            Log.w(TAG, "Exact alarm refused; falling back to inexact", e)
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
-        }
+        armAlarm(
+            exactAllowed = canScheduleExact(context),
+            setExact = { am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi) },
+            setInexact = { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi) },
+            onExactRefused = { Log.w(TAG, "Exact alarm refused; falling back to inexact", it) },
+        )
     }
 
     private fun cancelAlarm(context: Context, key: Long) {

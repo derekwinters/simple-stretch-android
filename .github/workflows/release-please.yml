@@ -3,17 +3,26 @@ name: release-please
 # Versioning is release-please's, derived from Conventional Commits on main. The VERSION_NAME line
 # in gradle.properties and the manifest are rewritten by it and by nothing else.
 #
-# build-and-attach builds the versioned release APK and attaches it to the release in this same
-# run. A separate tag-triggered workflow would never fire: release-please pushes its tag with the
-# default GITHUB_TOKEN, and GitHub does not start workflow runs from events that token initiated.
+# build-and-attach builds the versioned release APK (for sideloading) and release AAB (for Google
+# Play) and attaches both to the release in this same run. A separate tag-triggered workflow would
+# never fire: release-please pushes its tag with the default GITHUB_TOKEN, and GitHub does not
+# start workflow runs from events that token initiated.
 #
-# The release APK is signed with the stable release keystore (docs/adr/0002). The four keystore
-# secrets are required; the job fails before building if any is missing, and refuses to attach an
-# APK that is unsigned, debug-signed, or (when ANDROID_KEYSTORE_SHA256 is set) signed by any
-# certificate other than the pinned one.
+# The release APK and AAB are signed with the stable release keystore (docs/adr/0002). The four
+# keystore secrets are required; the job fails before building if any is missing, and refuses to
+# attach an APK or AAB that is unsigned, debug-signed, or (when ANDROID_KEYSTORE_SHA256 is set)
+# signed by any certificate other than the pinned one.
 #
-# workflow_dispatch with `backfill_tag` rebuilds and re-attaches the APK for an existing release
-# tag (for example one published before signing was wired up); release-please itself is skipped.
+# The release's versionCode, derived from its version name (docs/adr/0003), must be higher than the
+# previous GitHub release's: .github/scripts/check_version_code.py compares the two APKs before
+# anything is attached. release-pr-guard runs the same check on the open release PR after every
+# push to main and posts the result as the `release-version-code` commit status on its head.
+#
+# workflow_dispatch with `backfill_tag` rebuilds and re-attaches the APK and AAB for an existing
+# release tag (for example one published before signing was wired up); release-please itself is
+# skipped. A backfill of the newest published release is guarded like a release, so it cannot
+# attach what the guard refused; a backfill of an older release skips the version-code guard (it
+# is lower than newer releases by design).
 
 on:
   push:
@@ -21,7 +30,7 @@ on:
   workflow_dispatch:
     inputs:
       backfill_tag:
-        description: Existing release tag to rebuild, sign and (re)attach the APK for.
+        description: Existing release tag to rebuild, sign and (re)attach the APK and AAB for.
         required: true
         type: string
 
@@ -45,7 +54,7 @@ jobs:
           manifest-file: .github/release-please/manifest.json
 
   build-and-attach:
-    name: build and attach the release APK
+    name: build and attach the release APK and AAB
     needs: release-please
     # always() so a manual backfill still runs when release-please was skipped.
     if: >-
@@ -97,7 +106,8 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # build-tools also provides apksigner for the signature gate.
+      # build-tools also provides apksigner for the signature gate and aapt2 for the version-code
+      # guard.
       - name: Set up the Android SDK
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
         with:
@@ -118,34 +128,239 @@ jobs:
           echo "ANDROID_KEYSTORE_PATH=$keystore_path" >> "$GITHUB_ENV"
 
       # app/build.gradle.kts signs release from these env vars plus ANDROID_KEYSTORE_PATH, with
-      # v1/v2/v3 stated, and never falls back to the debug key.
-      - name: Assemble the signed release APK
+      # v1/v2/v3 stated for the APK (an AAB is JAR-signed only), and never falls back to the debug
+      # key. Both are built here, while the decoded keystore exists.
+      - name: Build the signed release APK and AAB
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease bundleRelease
 
       - name: Remove the decoded keystore
         if: always()
         run: rm -f "$RUNNER_TEMP/release.keystore"
 
+      # AGP names the bundle app-release.aab and ignores the APK's outputFileName hook, so it is
+      # renamed to match the APK. VERSION_NAME is read from the checked-out tag's gradle.properties
+      # (so a backfill gets that tag's version), without release-please's trailing marker comment.
+      # Kept identical to the same step in pr.yml; both export the version for later steps.
+      # Unlike pr.yml's copy it has no `if:`, on purpose: this job requires the signing secrets and
+      # has already failed above without them, whereas pr.yml skips its signed steps when the
+      # secrets are absent (fork PRs). Do not add one to make the two "consistent".
+      - name: Name the release AAB
+        run: |
+          version_name="$(sed -n 's/^VERSION_NAME=\([^#]*\).*$/\1/p' gradle.properties | head -n 1 | tr -d '[:space:]')"
+          bundle_dir=app/build/outputs/bundle/release
+          if [ -z "$version_name" ]; then
+            echo "::error title=Release AAB::VERSION_NAME is missing or empty in gradle.properties."
+            exit 1
+          fi
+          if [ ! -f "$bundle_dir/app-release.aab" ]; then
+            echo "::error title=Release AAB::$bundle_dir/app-release.aab was not built."
+            exit 1
+          fi
+          mv "$bundle_dir/app-release.aab" "$bundle_dir/simple-stretch-$version_name-release.aab"
+          echo "RELEASE_VERSION_NAME=$version_name" >> "$GITHUB_ENV"
+
       # Refuses anything unsigned, debug-signed, multi-signed, or (when the optional pin secret is
-      # set) signed by a certificate other than the pinned one. Runs before the upload.
-      - name: Verify the release signature
+      # set) signed by a certificate other than the pinned one, for the APK (apksigner) and the AAB
+      # (jarsigner and keytool) alike. Runs before the upload, so an unsigned or debug-signed AAB is
+      # never attached: a failure here ends the job.
+      - name: Verify the release signatures of the APK and AAB
         env:
           ANDROID_KEYSTORE_SHA256: ${{ secrets.ANDROID_KEYSTORE_SHA256 }}
         run: >-
           python3 verification-gate/.github/scripts/verify_release_signature.py
           app/build/outputs/apk/release/*.apk
+          app/build/outputs/bundle/release/*.aab
+
+      # The versionCode of the APK just built (read with aapt2, never recomputed from the formula)
+      # must be higher than that of the previous release's APK: the newest published release by
+      # publish time, other than RELEASE_TAG, that is neither a draft nor a pre-release
+      # (docs/adr/0003). Runs from the main checkout like the signature gate, and before the
+      # upload, so a release with a lower or equal code gets nothing attached. With no earlier
+      # release it passes with a notice; an earlier release with no APK, or more than one, fails
+      # and names the tag to backfill. Only the APK is read: the AAB is covered because the one
+      # Gradle invocation above builds both with one versionCode, so keep them in one build.
+      # On a backfill, --backfill-tag makes the script decide (with the same release selection):
+      # the newest published release is guarded exactly as with --exclude-tag, so re-attaching
+      # cannot bypass a guard that failed on release; an older release, lower than newer ones by
+      # design, is skipped with a notice.
+      - name: Check the version code is higher than the previous release's
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            tag_option=--backfill-tag
+          else
+            tag_option=--exclude-tag
+          fi
+          python3 verification-gate/.github/scripts/check_version_code.py \
+            --repo "$GITHUB_REPOSITORY" "$tag_option" "$RELEASE_TAG" \
+            app/build/outputs/apk/release/*.apk
 
       # Uses the runner's pre-installed gh CLI rather than another pinned action. --clobber lets a
       # backfill replace an earlier (debug-signed) asset of the same name.
-      - name: Attach the release APK to the GitHub Release
+      - name: Attach the release APK and AAB to the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$RELEASE_TAG" \
             app/build/outputs/apk/release/*.apk \
+            app/build/outputs/bundle/release/*.aab \
             --clobber \
             --repo "${{ github.repository }}"
+
+      # Reads back what the release actually carries: both assets, by their exact names.
+      - name: Check the release carries the named APK and AAB
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          assets="$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' \
+            --repo "${{ github.repository }}")"
+          missing=0
+          for name in "simple-stretch-$RELEASE_VERSION_NAME-release.apk" \
+                      "simple-stretch-$RELEASE_VERSION_NAME-release.aab"; do
+            if ! printf '%s\n' "$assets" | grep -Fxq -- "$name"; then
+              echo "::error title=Release assets::$RELEASE_TAG does not carry $name."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            printf 'Assets on %s:\n%s\n' "$RELEASE_TAG" "$assets"
+            exit 1
+          fi
+
+  # Checks the open release PR before it is merged: builds its head and runs the same version-code
+  # guard, then posts the `release-version-code` commit status on the PR's head commit. Runs on
+  # every push to main, after release-please has updated its PR: release-please pushes the PR with
+  # the default GITHUB_TOKEN, which starts no pull_request workflow, so pr.yml never sees it.
+  # Debug and release builds share the derived versionCode, so the debug APK is checked and no
+  # signing secret is needed.
+  release-pr-guard:
+    name: check the release PR's version code
+    needs: release-please
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # A newer push re-checks the release PR; an older run still in progress is no longer needed.
+    concurrency:
+      group: release-pr-guard
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    env:
+      # release-please's branch for this repository's single component.
+      RELEASE_PR_BRANCH: release-please--branches--main--components--simple-stretch-android
+    steps:
+      - name: Find the open release PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prs="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --base main \
+            --head "$RELEASE_PR_BRANCH" --json number,headRefOid)"
+          count="$(printf '%s' "$prs" | jq 'length')"
+          if [ "$count" -eq 0 ]; then
+            echo "No open release PR; nothing to check."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$count" -ne 1 ]; then
+            echo "::error title=Release version code::$count open PRs from $RELEASE_PR_BRANCH; expected one."
+            exit 1
+          fi
+          {
+            echo "found=true"
+            echo "number=$(printf '%s' "$prs" | jq -r '.[0].number')"
+            echo "sha=$(printf '%s' "$prs" | jq -r '.[0].headRefOid')"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Mark the check as pending
+        if: steps.pr.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" \
+            -f state=pending -f context=release-version-code \
+            -f description="Checking the versionCode against the previous release" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+      - name: Check out the release PR's head
+        if: steps.pr.outputs.found == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ steps.pr.outputs.sha }}
+
+      # The guard runs from main, as on release.
+      - name: Check out main for the version-code guard
+        if: steps.pr.outputs.found == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: verification-gate
+
+      - name: Set up the JDK
+        if: steps.pr.outputs.found == 'true'
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # build-tools also provides aapt2 for the version-code guard.
+      - name: Set up the Android SDK
+        if: steps.pr.outputs.found == 'true'
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+
+      - name: Set up Gradle
+        if: steps.pr.outputs.found == 'true'
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+
+      - name: Assemble the release PR's debug APK
+        if: steps.pr.outputs.found == 'true'
+        run: ./gradlew assembleDebug
+
+      # No --exclude-tag: the release PR's own tag does not exist until it is merged.
+      - name: Check the version code is higher than the previous release's
+        id: guard
+        if: steps.pr.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          python3 verification-gate/.github/scripts/check_version_code.py \
+            --repo "$GITHUB_REPOSITORY" app/build/outputs/apk/debug/*.apk \
+            | tee "$RUNNER_TEMP/version-code-guard.log"
+
+      # success when the guard passed; failure, with the guard's reason, when it ran and failed;
+      # error when it never ran (the build failed first).
+      - name: Post the release-version-code status
+        if: ${{ !cancelled() && steps.pr.outputs.found == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+          GUARD_OUTCOME: ${{ steps.guard.outcome }}
+        run: |
+          case "$GUARD_OUTCOME" in
+            success)
+              state=success
+              description="versionCode is higher than that of the previous release" ;;
+            failure)
+              state=failure
+              # The guard's first error, up to its first sentence; the run log has the rest.
+              description="$(sed -n 's/^::error title=[^:]*:://p' "$RUNNER_TEMP/version-code-guard.log" | head -n 1)"
+              description="${description%%. *}"
+              description="${description:-versionCode is not higher than that of the previous release}" ;;
+            *)
+              state=error
+              description="The versionCode could not be checked: the release PR did not build" ;;
+          esac
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" \
+            -f state="$state" -f context=release-version-code \
+            -f description="${description:0:140}" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

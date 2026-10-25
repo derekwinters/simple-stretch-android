@@ -67,7 +67,9 @@ Every pull request's CI run also uploads its debug APK as the `simple-stretch-de
 workflow artifact (kept for 14 days). Pull requests from branches of this repository also upload
 `simple-stretch-release-apk`, signed with the release key, which installs in place over a release
 of 0.3.0 or later, so a PR can be tried before it is released without losing data. A debug APK and a
-release-signed APK cannot be installed over each other.
+release-signed APK cannot be installed over each other. Those pull requests also upload
+`simple-stretch-release-aab`, the release Android App Bundle signed with the same key; the AAB is
+the upload format for Google Play and cannot be installed directly, so sideload the APK.
 
 On first launch, allow notifications. On Android 12/12L, also allow "Alarms & reminders" if the
 app shows the banner, so reminders arrive on the minute.
@@ -75,10 +77,22 @@ app shows the banner, so reminders arrive on the minute.
 ## Releases
 
 Merging to `main` runs release-please, which keeps a release PR up to date from Conventional
-Commit titles. Merging that PR tags a release and attaches `simple-stretch-<version>-release.apk`.
-Release APKs are signed with a stable release key
-([ADR 0002](adr/0002-release-signing-with-a-stable-keystore.md)), so each release
-upgrades the installed app in place and keeps its data.
+Commit titles. Merging that PR tags a release and attaches two files:
+
+- `simple-stretch-<version>-release.apk`, for sideloading onto a phone;
+- `simple-stretch-<version>-release.aab`, the Android App Bundle for uploading to Google Play.
+
+Both are signed with a stable release key
+([ADR 0002](adr/0002-release-signing-with-a-stable-keystore.md)) and checked by the same
+signature gate before they are attached, so each sideloaded release from 0.3.0 on upgrades the
+installed app in place and keeps its data.
+
+Each release's version code is derived from its version (0.3.0 is 300; see
+[ADR 0003](adr/0003-version-code-derived-from-version-name.md)), so it rises with every release,
+as Google Play and Android require. Before a release is attached, a guard checks that its code is
+higher than the previous release's. The same check runs on the open release PR after every merge
+to `main`: a release PR whose code is not higher than the last release's gets a failing
+`release-version-code` status.
 
 **One-time step:** builds made before release signing (debug-signed releases, CI or local debug
 APKs) use a different key. Uninstall those once before installing the first release-signed build;
@@ -108,8 +122,10 @@ docs/spec/        requirements with IDs; docs/adr/ decisions
 
 ## Notes
 
-- `USE_EXACT_ALARM` is declared so exact reminders work on Android 13+ without a prompt. Google
-  Play restricts that permission to alarm/calendar apps; for a Play listing, drop it and rely on
-  `SCHEDULE_EXACT_ALARM` plus the in-app banner.
+- Exact reminders need the user-granted `SCHEDULE_EXACT_ALARM` ("Alarms & reminders") on
+  Android 12 and later. On Android 14 and later it starts denied on a new install, so reminders
+  are inexact (may arrive a few minutes late) until the user taps **Allow** on the home-screen
+  banner. `USE_EXACT_ALARM` is deliberately not declared: Google Play restricts it to alarm,
+  timer and calendar apps.
 - Some manufacturers aggressively stop background apps; if reminders go missing, exempt the app
   from battery optimisation.
