@@ -52,7 +52,8 @@ versionCode = major * 10000 + minor * 100 + patch
 the previous release's.
 
 - **The previous release** is the newest GitHub release by publish time that is neither a draft
-  nor a pre-release, leaving out the tag being released.
+  nor a pre-release, leaving out the tag being released. It is the newest by publish time, not
+  the one with the highest code.
 - It downloads that release's `simple-stretch-*-release.apk` with
   `gh release download <tag> --pattern 'simple-stretch-*-release.apk'` and reads both codes with
   `aapt2 dump badging`. **Invariant — the new code is read from the APK that was actually built,
@@ -65,12 +66,21 @@ the previous release's.
     points to the `backfill_tag` input of the `release-please` workflow, which re-attaches it;
   - the listing, download or `aapt2` fails, or `aapt2` prints output the parser does not
     recognise: fails (it never passes on a reading it is unsure of);
-  - a manual backfill (`workflow_dispatch` with `backfill_tag`) skips the guard with a notice:
-    it re-attaches an old release, which is lower than newer releases by design.
+  - a manual backfill (`workflow_dispatch` with `backfill_tag`) of the **newest** published
+    release is guarded exactly like a release (`--backfill-tag` decides this with the same
+    release selection, then compares against the release before it), so re-attaching cannot
+    bypass a guard that failed on release. Only a backfill of an **older** release skips the
+    guard, with a notice: it is lower than newer releases by design.
 - **On release:** the `build-and-attach` job of `release-please.yml` runs the guard on the
   signed release APK after the signature gate and before the attach step, from the `main`
-  checkout like the signature gate. **Invariant — a release whose code is not higher than the
-  previous release's gets no APK or AAB attached.**
+  checkout like the signature gate. **Invariant — a release, or a backfill of the newest
+  release, whose APK's code is not higher than the previous release's gets no APK or AAB
+  attached.**
+- **The guard reads only the APK.** The AAB is covered only because the APK and the AAB come out
+  of one Gradle invocation (`assembleRelease bundleRelease`) with one `versionCode`. **Invariant
+  — the release APK and AAB are built in the same Gradle invocation;** splitting the AAB build
+  into a separate step or job leaves it unchecked by this guard, and would need the guard run on
+  the AAB as well.
 - **On the release PR:** the `release-pr-guard` job runs on every push to `main` after
   release-please has updated its PR. When a release PR is open it checks out the PR's head,
   builds the debug APK (same derived code), runs the guard and posts a commit status named
