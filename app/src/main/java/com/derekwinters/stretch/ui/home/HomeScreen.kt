@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -78,6 +79,7 @@ fun HomeScreen(
     onOpenGoals: () -> Unit,
     onOpenTrends: () -> Unit,
     onStretchNow: () -> Unit,
+    onOpenSession: (route: String) -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -231,7 +233,12 @@ fun HomeScreen(
                 }
             }
             items(state.todayReminders, key = { "today-${it.key}" }) { r ->
-                TodayReminderRow(r, dimmed = r.isPast || state.todaySkipped)
+                // HOME-009: every row, past or skipped too, opens what its notification would.
+                TodayReminderRow(
+                    r,
+                    dimmed = r.isPast || state.todaySkipped,
+                    onClick = { onOpenSession(r.sessionRoute(state.today, viewModel.clock.zone)) },
+                )
             }
 
             item { SectionTitle("Schedules") }
@@ -306,10 +313,12 @@ private fun WarningCard(text: String, action: String, onAction: () -> Unit) {
 }
 
 @Composable
-private fun TodayReminderRow(r: TodayReminder, dimmed: Boolean) {
+private fun TodayReminderRow(r: TodayReminder, dimmed: Boolean, onClick: () -> Unit) {
     val context = LocalContext.current
     val color = if (dimmed) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface
     ListItem(
+        // HOME-009: announced as a button that opens the stretch session.
+        modifier = Modifier.clickable(onClickLabel = "Open stretch session", role = Role.Button, onClick = onClick),
         leadingContent = {
             Text(Formatting.time(context, r.time), style = MaterialTheme.typography.titleMedium, color = color)
         },

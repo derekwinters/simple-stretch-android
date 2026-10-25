@@ -12,7 +12,7 @@ tests reference these IDs. Change the spec before the code.
 | [goals.md](goals.md) | GOAL-001 … GOAL-010 | Daily goals per stretch, progress, goal history, database upgrades |
 | [sessions.md](sessions.md) | SESS-001 … SESS-005 | Stretch session screen and the completion log |
 | [trends.md](trends.md) | TREND-001 … TREND-010 | Daily score, week/month trends, streak, day detail |
-| [screens.md](screens.md) | HOME-001 … HOME-008 | Home screen layout |
+| [screens.md](screens.md) | HOME-001 … HOME-009 | Home screen layout |
 | [widgets.md](widgets.md) | WIDGET-001 … WIDGET-010 | Segmented ring home screen widget for today's goals |
 | [privacy.md](privacy.md) | PRIV-001 … PRIV-004 | No internet access, on-device data, the permission set, the privacy policy |
 

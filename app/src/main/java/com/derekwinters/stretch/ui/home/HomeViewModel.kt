@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -39,8 +40,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val app = application as StretchApp
     private val repo = app.repository
 
-    /** SCHED-016: the app clock; every "now" on this screen is read from it. */
-    private val clock = app.clock
+    /**
+     * SCHED-016: the app clock; every "now" on this screen is read from it, and a Today row's
+     * scheduled time is taken in its zone, as the alarms are (HOME-009).
+     */
+    val clock: Clock = app.clock
 
     /**
      * Reads the app clock every 30 seconds so "past" markers and the date stay fresh (HOME-002).
