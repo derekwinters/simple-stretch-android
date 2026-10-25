@@ -7,8 +7,8 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.derekwinters.stretch.goals.GoalHistory
+import java.time.Clock
 import java.time.LocalDate
-import java.time.ZoneId
 
 @Database(
     entities = [
@@ -31,9 +31,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun completionDao(): CompletionDao
 
     companion object {
-        fun build(context: Context): AppDatabase =
+        /** [clock] is the app clock (SCHED-016); the v2 -> v3 migration reads today from it. */
+        fun build(context: Context, clock: Clock): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "stretch.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3(clock))
                 .addCallback(SeedCallback)
                 .build()
     }
@@ -81,13 +82,15 @@ abstract class AppDatabase : RoomDatabase() {
      * current row (same id, stretch and count) in force from [GoalHistory.migratedStartDay], drop
      * the old table (and with it the unique index), rename, and create the plain
      * `index_goals_stretchId`. Nothing references `goals`, so dropping it touches no other table.
+     * Today and the zone come from [clock], the app clock (SCHED-016).
      */
-    object MIGRATION_2_3 : Migration(2, 3) {
+    @Suppress("ClassName") // Named like MIGRATION_1_2, which it sits beside.
+    class MIGRATION_2_3(private val clock: Clock) : Migration(2, 3) {
         override fun migrate(db: SupportSQLiteDatabase) {
             val earliest: Long? = db.query("SELECT MIN(`completedAt`) FROM `completions`").use { c ->
                 if (c.moveToFirst() && !c.isNull(0)) c.getLong(0) else null
             }
-            val fromDay = GoalHistory.migratedStartDay(earliest, LocalDate.now(), ZoneId.systemDefault())
+            val fromDay = GoalHistory.migratedStartDay(earliest, LocalDate.now(clock), clock.zone)
 
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `goals_new` (" +

@@ -104,7 +104,7 @@
       (SCHED-012, SCHED-013).
 - [x] Alarm keys (reminder id / negated schedule id) are pure and unit tested (SCHED-005).
 - [x] Snooze uses its own intent action and never touches the remembered alarms (SCHED-015).
-- [ ] One app clock whose zone is read on every call; a unit test changes the default zone
+- [x] One app clock whose zone is read on every call; a unit test changes the default zone
       after the clock is built and sees the new zone (SCHED-010 invariant, SCHED-016).
 - [ ] No no-argument `now()` / `System.currentTimeMillis()` under `app/src/main` outside the
       clock's file, enforced by a grep step in `pr.yml` (SCHED-016).

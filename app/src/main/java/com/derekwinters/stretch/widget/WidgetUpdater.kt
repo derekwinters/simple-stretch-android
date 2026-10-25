@@ -18,7 +18,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
-import java.time.ZoneId
 
 /**
  * Redraws every segmented ring widget from the completion log (WIDGET-009) and re-arms the
@@ -50,9 +49,11 @@ object WidgetUpdater {
             cancelMidnight(app)
             return@withLock
         }
-        val zone = ZoneId.systemDefault()
+        // SCHED-016: today, the zone and the midnight alarm come from the app clock.
+        val clock = app.clock
+        val zone = clock.zone
         // WIDGET-009: read from the log every time; nothing is kept between redraws.
-        val model = app.repository.goalRingOn(LocalDate.now(zone), zone)
+        val model = app.repository.goalRingOn(LocalDate.now(clock), zone)
         val dynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         val light = WidgetPalette.select(dynamic, dark = false) { dynamicTones(app) }
         val dark = WidgetPalette.select(dynamic, dark = true) { dynamicTones(app) }
@@ -69,7 +70,7 @@ object WidgetUpdater {
             }
             manager.updateAppWidget(id, views)
         }
-        scheduleMidnight(app, GoalRing.nextRedrawAt(System.currentTimeMillis(), zone))
+        scheduleMidnight(app, GoalRing.nextRedrawAt(clock.millis(), zone))
     }
 
     /** WIDGET-001: the square side, from the larger of the portrait and landscape cell areas. */

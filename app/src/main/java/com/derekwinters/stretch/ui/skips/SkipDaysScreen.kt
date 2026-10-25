@@ -48,13 +48,17 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 class SkipDaysViewModel(application: Application) : AndroidViewModel(application) {
-    private val repo = (application as StretchApp).repository
+    private val app = application as StretchApp
+    private val repo = app.repository
+
+    /** Today, from the app clock (SCHED-016). */
+    fun today(): LocalDate = LocalDate.now(app.clock)
 
     /** Today and future skipped dates, soonest first. */
     val upcoming: StateFlow<List<LocalDate>> = repo.skippedDates
         .map { dates ->
-            val today = LocalDate.now()
-            dates.filter { !it.isBefore(today) }.sorted()
+            val from = today()
+            dates.filter { !it.isBefore(from) }.sorted()
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -74,6 +78,7 @@ fun SkipDaysScreen(
     viewModel: SkipDaysViewModel = viewModel(),
 ) {
     val dates by viewModel.upcoming.collectAsStateWithLifecycle()
+    val today = viewModel.today()
     var picking by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -118,7 +123,7 @@ fun SkipDaysScreen(
             items(dates, key = { it.toEpochDay() }) { date ->
                 ListItem(
                     headlineContent = { Text(Formatting.date(date)) },
-                    supportingContent = if (date == LocalDate.now()) {
+                    supportingContent = if (date == today) {
                         { Text("Today") }
                     } else {
                         null
@@ -136,7 +141,7 @@ fun SkipDaysScreen(
 
     if (picking) {
         // Material 3's DatePicker works in UTC-midnight milliseconds.
-        val todayUtcMillis = LocalDate.now().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val todayUtcMillis = today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
         val state = rememberDatePickerState(
             initialSelectedDateMillis = todayUtcMillis,
             selectableDates = object : SelectableDates {

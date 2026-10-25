@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationManagerCompat
+import com.derekwinters.stretch.StretchApp
 import com.derekwinters.stretch.scheduling.ReminderScheduler
 
 /**
@@ -27,8 +28,12 @@ class NotificationActionReceiver : BroadcastReceiver() {
                 } else {
                     null
                 }
-                // SCHED-015: a one-shot alarm; the schedule's own alarm is left alone.
-                if (key != 0L) ReminderScheduler.snooze(context.applicationContext, key, scheduledAt)
+                // SCHED-015: a one-shot alarm; the schedule's own alarm is left alone. SCHED-016:
+                // "now" is the app clock's.
+                if (key != 0L) {
+                    val app = context.applicationContext as StretchApp
+                    ReminderScheduler.snooze(app, key, scheduledAt, app.clock.millis())
+                }
             }
         }
     }

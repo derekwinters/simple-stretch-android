@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -53,9 +54,11 @@ private data class TrendInputs(
 )
 
 class TrendsViewModel(application: Application) : AndroidViewModel(application) {
-    private val repo = (application as StretchApp).repository
-    private val zone: ZoneId = ZoneId.systemDefault()
-    private val today: LocalDate = LocalDate.now()
+    private val app = application as StretchApp
+    private val repo = app.repository
+    // SCHED-016: the zone and today are read from the app clock when the screen opens.
+    private val zone: ZoneId = app.clock.zone
+    private val today: LocalDate = LocalDate.now(app.clock)
     private val period = MutableStateFlow(TrendMath.periodContaining(PeriodKind.WEEK, today))
 
     private val inputs: Flow<TrendInputs> = repo.goalHistory.flatMapLatest { history ->
@@ -128,9 +131,13 @@ class DayDetailViewModel(
     application: Application,
     savedStateHandle: SavedStateHandle,
 ) : AndroidViewModel(application) {
-    private val repo = (application as StretchApp).repository
-    private val zone: ZoneId = ZoneId.systemDefault()
-    val date: LocalDate = LocalDate.ofEpochDay(savedStateHandle.get<Long>(ARG_EPOCH_DAY) ?: LocalDate.now().toEpochDay())
+    private val app = application as StretchApp
+    private val repo = app.repository
+
+    /** SCHED-016: the app clock, also read by the day detail screen for "now". */
+    val clock: Clock = app.clock
+    private val zone: ZoneId = clock.zone
+    val date: LocalDate = LocalDate.ofEpochDay(savedStateHandle.get<Long>(ARG_EPOCH_DAY) ?: LocalDate.now(clock).toEpochDay())
 
     val state: StateFlow<DayDetailState> = combine(
         repo.goalHistory,
@@ -140,7 +147,7 @@ class DayDetailViewModel(
     ) { history, completions, skipped, stretches ->
         val names = stretches.associate { it.id to it.name }
         val counts = completions.groupingBy(CompletionRef::stretchId).eachCount()
-        val score = TrendMath.dailyScore(date, history, counts, date in skipped, LocalDate.now())
+        val score = TrendMath.dailyScore(date, history, counts, date in skipped, LocalDate.now(clock))
         DayDetailState(
             date = date,
             score = score,

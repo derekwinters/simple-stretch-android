@@ -42,8 +42,8 @@ import com.derekwinters.stretch.trends.PeriodKind
 import com.derekwinters.stretch.ui.common.Formatting
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -199,7 +199,9 @@ fun DayDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val zone = ZoneId.systemDefault()
+    // SCHED-016: the zone and "now" come from the app clock.
+    val clock = viewModel.clock
+    val zone = clock.zone
     val title = state.date.format(DateTimeFormatter.ofPattern("EEE, MMM d, yyyy", Locale.getDefault()))
 
     Scaffold(
@@ -256,9 +258,10 @@ fun DayDetailScreen(
             if (state.steps.isNotEmpty()) {
                 item { SectionTitle("Through the day") }
                 item {
+                    val now = LocalDateTime.now(clock)
                     val endSecond = when {
-                        state.date == LocalDate.now() -> LocalTime.now().toSecondOfDay()
-                        state.date.isBefore(LocalDate.now()) -> 24 * 3600
+                        state.date == now.toLocalDate() -> now.toLocalTime().toSecondOfDay()
+                        state.date.isBefore(now.toLocalDate()) -> 24 * 3600
                         else -> 0
                     }
                     val last = state.steps.last().score
