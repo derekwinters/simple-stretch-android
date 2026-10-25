@@ -1,6 +1,13 @@
 # 0002: Sign release builds with a stable release keystore
 
-Status: accepted (supersedes [0001](0001-debug-signing-until-release-keystore.md))
+Status: accepted (supersedes [0001](0001-debug-signing-until-release-keystore.md)); partially
+superseded by [0004](0004-play-app-signing-and-publishing.md)
+
+> **Partially superseded.** The app is now also published on Google Play, with this release key
+> enrolled as both the Play app signing key and the upload key; see
+> [ADR 0004](0004-play-app-signing-and-publishing.md). The statements below that the app is
+> sideloaded with no Play App Signing or key recovery, and that the Play key choice is open, are
+> replaced by it. The rest of this record stands.
 
 ## Context
 
@@ -9,10 +16,11 @@ certificate. Anything else is refused (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`), an
 past it is to uninstall, which deletes the app's schedules, goals, completion log and skipped days.
 
 Under ADR 0001, release APKs were debug-signed, and every CI runner generates its own debug key, so
-consecutive releases could not be relied on to upgrade in place. Simple Stretch is sideloaded:
-there is no Play App Signing to re-sign uploads and no key recovery. The owner has now added a
-release keystore to this repository's secrets, the same way as for the sibling Android apps
-(Interval Trainer, Doggiehood, Chores).
+consecutive releases could not be relied on to upgrade in place. When this was decided, Simple
+Stretch was sideloaded only: there was no Play App Signing to re-sign uploads and no key recovery
+(ADR 0004 now covers Google Play). The owner has now added a release keystore to this
+repository's secrets, the same way as for the sibling Android apps (Interval Trainer, Doggiehood,
+Chores).
 
 ## Decision
 
@@ -70,8 +78,8 @@ secrets, never as a committed file or Gradle property:
 - Local `assembleRelease` or `bundleRelease` without the secrets produces an unsigned APK or AAB,
   by design.
 - An AAB uploaded to Google Play with Play App Signing is re-signed by Google: what users install
-  from Play carries the app-signing key Play holds, not necessarily this one. Whether this key is
-  enrolled as the app-signing key or only as the upload key is a Play Console decision for the
-  first upload, not part of this change; the sideloaded APK is signed with this key either way.
+  from Play carries the app-signing key Play holds. ADR 0004 enrols this key as that app-signing
+  key (and keeps it as the upload key), so Play installs and the GitHub-released APK share one
+  signature.
 - The secret names above were taken from the sibling repositories; if any differs here, the
   release job fails at its first step and names the missing one.

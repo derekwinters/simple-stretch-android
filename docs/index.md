@@ -74,13 +74,15 @@ app shows the banner, so reminders arrive on the minute.
 Merging to `main` runs release-please, which keeps a release PR up to date from Conventional
 Commit titles. Merging that PR tags a release and attaches two files:
 
-- `simple-stretch-<version>-release.apk`, for sideloading onto a phone;
+- `simple-stretch-<version>-release.apk`, for installing directly onto a phone (sideloading);
 - `simple-stretch-<version>-release.aab`, the Android App Bundle for uploading to Google Play.
 
 Both are signed with a stable release key
 ([ADR 0002](adr/0002-release-signing-with-a-stable-keystore.md)) and checked by the same
-signature gate before they are attached, so each sideloaded release upgrades the installed app in
-place and keeps its data.
+signature gate before they are attached, so each release upgrades the installed app in place and
+keeps its data. The same key is Google Play's app signing key
+([ADR 0004](adr/0004-play-app-signing-and-publishing.md)), so an install from Google Play and a
+sideloaded release APK share one signature and can update each other in place.
 
 Each release's version code is derived from its version (0.3.0 is 300; see
 [ADR 0003](adr/0003-version-code-derived-from-version-name.md)), so it rises with every release,
