@@ -83,7 +83,8 @@
 - [x] Request code = reminder id; stale alarms cancelled from the remembered set (SCHED-005).
 - [x] Every repository write that affects timing calls `rescheduleAll` (SCHED-006).
 - [x] Receiver re-checks schedule enabled + day of week before notifying (SCHED-003 invariant).
-- [x] SecurityException from exact alarms falls back to inexact (SCHED-007 invariant).
+- [x] SecurityException from exact alarms falls back to inexact; the decision is the pure
+      `armAlarm` (ExactAlarmFallback.kt), unit tested (SCHED-007 invariant).
 - [x] The manifest declares no `USE_EXACT_ALARM`, and `SCHEDULE_EXACT_ALARM` has no
       `maxSdkVersion`; a unit test parses the manifest to check both (SCHED-007).
 - [x] `RepeatingSlots.forDay` and `NextOccurrence.computeAny` are pure and unit tested: the
