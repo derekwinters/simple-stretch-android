@@ -16,7 +16,6 @@ import kotlinx.coroutines.sync.withLock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 
 /**
  * Keeps exactly one alarm per active reminder time and per active repeating schedule, set for
@@ -64,8 +63,10 @@ object ReminderScheduler {
         val app = context.applicationContext as StretchApp
         val db = app.database
         val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val zone = ZoneId.systemDefault()
-        val nowMillis = System.currentTimeMillis()
+        // SCHED-016: one read of the app clock; its zone is the device's current one (SCHED-010).
+        val clock = app.clock
+        val zone = clock.zone
+        val nowMillis = clock.millis()
         val now = LocalDateTime.ofInstant(Instant.ofEpochMilli(nowMillis), zone)
 
         // SKIP-007: past skipped dates are kept; trends leave skipped days out (TREND-003).
@@ -139,13 +140,13 @@ object ReminderScheduler {
      * own action) that is never written to the remembered alarms, so the schedule's own next
      * alarm is untouched and no reschedule cancels the snooze. [scheduledAt] is the reminder's
      * original scheduled time, carried through so the re-post keeps it (NOTIF-008 invariant);
-     * null when the notification predates it.
+     * null when the notification predates it. [nowMillis] is read from the app clock (SCHED-016).
      */
     fun snooze(
         context: Context,
         key: Long,
         scheduledAt: Long?,
-        nowMillis: Long = System.currentTimeMillis(),
+        nowMillis: Long,
     ) {
         val triggerAt = nowMillis + SNOOZE_MILLIS
         setAlarm(context, key, triggerAt, ACTION_SNOOZE_FIRE, scheduledAt)

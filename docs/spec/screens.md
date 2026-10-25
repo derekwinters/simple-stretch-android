@@ -40,7 +40,9 @@
 
 ## Build checklist
 
-- [x] Home state is derived from Room flows plus a 30-second clock tick (HOME-002).
+- [x] Home state is derived from Room flows plus a 30-second tick that reads the app clock
+      (HOME-002, SCHED-016).
+- [x] Today rows' past/dimmed state is unit tested with a fixed clock (HOME-002).
 - [x] Banners re-check permissions on resume (HOME-005).
 - [x] The exact-alarm banner is the only place the user is asked for exact alarms: no prompt at
       first launch or on first schedule save (HOME-005, SCHED-007).

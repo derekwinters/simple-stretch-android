@@ -15,6 +15,7 @@ import com.derekwinters.stretch.widget.RingModel
 import com.derekwinters.stretch.widget.WidgetUpdater
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -22,10 +23,14 @@ import java.time.ZoneId
  * Single entry point for reading and changing app data. Every write that can change when a
  * reminder fires is followed by a full reschedule (SCHED-006), and every write that can change
  * today's goals or progress by a widget redraw (WIDGET-010).
+ *
+ * The current date, time and zone come from [clock], the app clock (SCHED-016): a zone left out
+ * by a caller is the clock's zone at the time of the call (SCHED-010 invariant).
  */
 class StretchRepository(
     context: Context,
     private val db: AppDatabase,
+    private val clock: Clock,
 ) {
     private val appContext = context.applicationContext
 
@@ -42,19 +47,19 @@ class StretchRepository(
         .map { rows -> rows.map { GoalPeriod(it.stretchId, it.timesPerDay, it.effectiveFromEpochDay, it.effectiveToEpochDay) } }
 
     /** Every completion on [date], oldest first (TREND-007, TREND-008). */
-    fun completionsOn(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Flow<List<CompletionRef>> {
+    fun completionsOn(date: LocalDate, zone: ZoneId = clock.zone): Flow<List<CompletionRef>> {
         val (from, to) = GoalMath.dayBounds(date, zone)
         return db.completionDao().observeBetween(from, to).map { rows -> rows.map { CompletionRef(it.stretchId, it.completedAt) } }
     }
 
     /** Every completion from the start of [date] on, oldest first (TREND-005, TREND-006). */
-    fun completionsSince(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Flow<List<CompletionRef>> {
+    fun completionsSince(date: LocalDate, zone: ZoneId = clock.zone): Flow<List<CompletionRef>> {
         val (from, _) = GoalMath.dayBounds(date, zone)
         return db.completionDao().observeSince(from).map { rows -> rows.map { CompletionRef(it.stretchId, it.completedAt) } }
     }
 
     /** Completions per stretch id on [date] (GOAL-003). */
-    fun countsOn(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Flow<Map<Long, Int>> {
+    fun countsOn(date: LocalDate, zone: ZoneId = clock.zone): Flow<Map<Long, Int>> {
         val (from, to) = GoalMath.dayBounds(date, zone)
         return db.completionDao().observeCountsBetween(from, to)
             .map { rows -> rows.associate { it.stretchId to it.count } }
@@ -66,7 +71,7 @@ class StretchRepository(
     }
 
     /** One-shot goal progress for [date], used by notifications (NOTIF-001). */
-    suspend fun goalProgressOn(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): List<GoalProgress> =
+    suspend fun goalProgressOn(date: LocalDate, zone: ZoneId = clock.zone): List<GoalProgress> =
         GoalMath.progress(
             db.stretchDao().getAll().map { StretchRef(it.id, it.name) },
             db.goalDao().getCurrent().map { GoalRef(it.stretchId, it.timesPerDay) },
@@ -80,7 +85,7 @@ class StretchRepository(
     suspend fun sessionLayout(
         date: LocalDate,
         reminderStretchIds: List<Long>?,
-        zone: ZoneId = ZoneId.systemDefault(),
+        zone: ZoneId = clock.zone,
     ): SessionLayout =
         GoalMath.sessionLayout(
             db.stretchDao().getAll().map { StretchRef(it.id, it.name) },
@@ -90,7 +95,7 @@ class StretchRepository(
         )
 
     /** One-shot segmented ring for [date], from the goals screen's calculation (WIDGET-009). */
-    suspend fun goalRingOn(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): RingModel =
+    suspend fun goalRingOn(date: LocalDate, zone: ZoneId = clock.zone): RingModel =
         GoalRing.fromLog(
             db.stretchDao().getAll().map { StretchRef(it.id, it.name) },
             db.goalDao().getCurrent().map { GoalRef(it.stretchId, it.timesPerDay) },
@@ -102,20 +107,24 @@ class StretchRepository(
      * `GoalHistory.planSet`, not only in the UI). The new count applies from today; earlier days
      * keep theirs.
      */
-    suspend fun setGoal(stretchId: Long, timesPerDay: Int, today: LocalDate = LocalDate.now()) {
-        db.goalDao().setGoal(stretchId, timesPerDay, today)
+    suspend fun setGoal(stretchId: Long, timesPerDay: Int) {
+        db.goalDao().setGoal(stretchId, timesPerDay, LocalDate.now(clock))
         redrawWidgets()
     }
 
     /** GOAL-006/009: removing a goal keeps the completion history and the goal's past versions. */
-    suspend fun removeGoal(stretchId: Long, today: LocalDate = LocalDate.now()) {
-        db.goalDao().removeGoal(stretchId, today)
+    suspend fun removeGoal(stretchId: Long) {
+        db.goalDao().removeGoal(stretchId, LocalDate.now(clock))
         redrawWidgets()
     }
 
-    /** SESS-003: one completion per stretch, one timestamp, one transaction; append only. */
-    suspend fun logCompletions(stretchIds: Collection<Long>, atMillis: Long = System.currentTimeMillis()) {
+    /**
+     * SESS-003: one completion per stretch, one timestamp (now, from the app clock), one
+     * transaction; append only.
+     */
+    suspend fun logCompletions(stretchIds: Collection<Long>) {
         if (stretchIds.isEmpty()) return
+        val atMillis = clock.millis()
         db.withTransaction {
             db.completionDao().insertAll(stretchIds.distinct().map { Completion(stretchId = it, completedAt = atMillis) })
         }
