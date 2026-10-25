@@ -67,7 +67,6 @@ import com.derekwinters.stretch.goals.GoalProgress
 import com.derekwinters.stretch.notifications.Notifications
 import com.derekwinters.stretch.scheduling.ReminderScheduler
 import com.derekwinters.stretch.ui.common.Formatting
-import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -237,7 +236,7 @@ fun HomeScreen(
                 TodayReminderRow(
                     r,
                     dimmed = r.isPast || state.todaySkipped,
-                    onClick = { onOpenSession(r.sessionRoute(state.today, ZoneId.systemDefault())) },
+                    onClick = { onOpenSession(r.sessionRoute(state.today, viewModel.clock.zone)) },
                 )
             }
 
