@@ -65,8 +65,8 @@ empty, and the old one can be uninstalled whenever you like.
 
 Every pull request's CI run also uploads its debug APK as the `simple-stretch-debug-apk`
 workflow artifact (kept for 14 days). Pull requests from branches of this repository also upload
-`simple-stretch-release-apk`, signed with the release key, which installs over a released app from
-0.3.0 on in place, so a PR can be tried before it is released without losing data. A debug APK and a
+`simple-stretch-release-apk`, signed with the release key, which installs in place over a release
+of 0.3.0 or later, so a PR can be tried before it is released without losing data. A debug APK and a
 release-signed APK cannot be installed over each other.
 
 On first launch, allow notifications. On Android 12/12L, also allow "Alarms & reminders" if the
