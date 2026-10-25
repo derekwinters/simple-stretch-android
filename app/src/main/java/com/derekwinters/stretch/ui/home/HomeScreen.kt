@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -316,7 +317,8 @@ private fun TodayReminderRow(r: TodayReminder, dimmed: Boolean, onClick: () -> U
     val context = LocalContext.current
     val color = if (dimmed) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface
     ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
+        // HOME-009: announced as a button that opens the stretch session.
+        modifier = Modifier.clickable(onClickLabel = "Open stretch session", role = Role.Button, onClick = onClick),
         leadingContent = {
             Text(Formatting.time(context, r.time), style = MaterialTheme.typography.titleMedium, color = color)
         },
