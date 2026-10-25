@@ -58,10 +58,15 @@ adb install -r app/build/outputs/apk/debug/simple-stretch-*-debug.apk
 
 Or copy the APK to the phone and open it (allow installs from that source when asked).
 
+**Application ID:** from 0.3.0 the application ID is `io.github.derekwinters.simple_stretch_android`.
+An install of 0.1.0 or 0.2.0 (`com.derekwinters.stretch`) is a separate app: it will not update to
+new builds and keeps its own data until uninstalled. Nothing is carried over, so the new app starts
+empty, and the old one can be uninstalled whenever you like.
+
 Every pull request's CI run also uploads its debug APK as the `simple-stretch-debug-apk`
 workflow artifact (kept for 14 days). Pull requests from branches of this repository also upload
-`simple-stretch-release-apk`, signed with the release key, which installs over the released app in
-place, so a PR can be tried before it is released without losing data. A debug APK and a
+`simple-stretch-release-apk`, signed with the release key, which installs in place over a release
+of 0.3.0 or later, so a PR can be tried before it is released without losing data. A debug APK and a
 release-signed APK cannot be installed over each other. Those pull requests also upload
 `simple-stretch-release-aab`, the release Android App Bundle signed with the same key; the AAB is
 the upload format for Google Play and cannot be installed directly, so sideload the APK.
@@ -79,8 +84,8 @@ Commit titles. Merging that PR tags a release and attaches two files:
 
 Both are signed with a stable release key
 ([ADR 0002](adr/0002-release-signing-with-a-stable-keystore.md)) and checked by the same
-signature gate before they are attached, so each release upgrades the installed app in place and
-keeps its data. The same key is Google Play's app signing key
+signature gate before they are attached, so each release from 0.3.0 on upgrades the installed app
+in place and keeps its data. The same key is Google Play's app signing key
 ([ADR 0004](adr/0004-play-app-signing-and-publishing.md)), so an install from Google Play and a
 sideloaded release APK share one signature and can update each other in place.
 
@@ -93,7 +98,9 @@ to `main`: a release PR whose code is not higher than the last release's gets a 
 
 **One-time step:** builds made before release signing (debug-signed releases, CI or local debug
 APKs) use a different key. Uninstall those once before installing the first release-signed build;
-after that, upgrades are in place.
+after that, upgrades are in place. The same applies to moving from the old application ID: 0.1.0
+and 0.2.0 (`com.derekwinters.stretch`) do not upgrade to 0.3.0 or later, which install alongside
+them as a new, empty app; uninstall the old one when you no longer need it.
 
 ## Project layout
 

@@ -5,9 +5,10 @@ name: pr
 # come from Google's servers, which not every development environment can reach.
 #
 # For a pull request from a branch of this repository (never a fork) it also builds the APK signed
-# with the stable release keystore (docs/adr/0002), so the PR can be installed over the released
-# app in place, and the release AAB signed with the same key. Fork PRs get no secrets from GitHub,
-# and the steps are skipped for them outright.
+# with the stable release keystore (docs/adr/0002), so the PR can be installed in place over a
+# release of 0.3.0 or later (the application ID changed in 0.3.0, #42), and the release AAB signed
+# with the same key. Fork PRs get no secrets from GitHub, and the steps are skipped for them
+# outright.
 
 # Every pull request, whatever its base branch, so stacked PRs are built too.
 on:
@@ -66,8 +67,56 @@ jobs:
       - name: Assemble the debug APK
         run: ./gradlew assembleDebug
 
+      # Issue #42 invariant: the application ID is exactly
+      # `io.github.derekwinters.simple_stretch_android` (it matches the Play Console registration
+      # and can never change after the first Play upload). Reads the built APK itself with aapt2,
+      # found as in check_version_code.py: PATH, else the newest $ANDROID_HOME build-tools copy.
+      - name: Check the application ID of the debug APK
+        run: |
+          expected='io.github.derekwinters.simple_stretch_android'
+          shopt -s nullglob
+          apks=(app/build/outputs/apk/debug/*.apk)
+          if [ "${#apks[@]}" -ne 1 ]; then
+            echo "::error::expected exactly one debug APK, found ${#apks[@]}"
+            exit 1
+          fi
+          aapt2="$(command -v aapt2 || true)"
+          if [ -z "$aapt2" ] && [ -n "${ANDROID_HOME:-}" ]; then
+            candidates=("$ANDROID_HOME"/build-tools/*/aapt2)
+            if [ "${#candidates[@]}" -gt 0 ]; then
+              aapt2="$(printf '%s\n' "${candidates[@]}" | sort -V | tail -n 1)"
+            fi
+          fi
+          if [ -z "$aapt2" ]; then
+            echo "::error::aapt2 not found on PATH or under \$ANDROID_HOME/build-tools"
+            exit 1
+          fi
+          # Captured first, never piped: a reader that stops early (head) would SIGPIPE aapt2 and
+          # pipefail would fail the step.
+          if ! badging="$("$aapt2" dump badging "${apks[0]}")"; then
+            echo "::error::aapt2 dump badging failed for ${apks[0]}"
+            exit 1
+          fi
+          package_line="$(grep -m 1 '^package:' <<<"$badging" || true)"
+          echo "$package_line"
+          # aapt2 prints name first on the package line; the whole quoted value is compared, not a
+          # prefix.
+          re="^package: name='([^']*)'( |$)"
+          if [[ ! "$package_line" =~ $re ]]; then
+            echo "::error::no package name in the aapt2 output for ${apks[0]}"
+            exit 1
+          fi
+          actual="${BASH_REMATCH[1]}"
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::the debug APK's application ID is '$actual'," \
+              "expected exactly '$expected' (issue #42)"
+            exit 1
+          fi
+          echo "OK: the application ID is $expected."
+
       # A debug build: separate debug key, so it cannot be installed over a release-signed build
-      # (uninstall first). The release-signed artifact below is the one that upgrades in place.
+      # (uninstall first). The release-signed artifact below is the one that installs in place
+      # over a release of 0.3.0 or later (the application ID changed in 0.3.0, #42).
       - name: Upload the debug APK
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -151,7 +200,8 @@ jobs:
           app/build/outputs/apk/release/*.apk
           app/build/outputs/bundle/release/*.aab
 
-      # Signed by the same key as GitHub Releases, so it installs over the released app in place.
+      # Signed by the same key as GitHub Releases, so it installs in place over a release of
+      # 0.3.0 or later (the application ID changed in 0.3.0, #42).
       - name: Upload the release-signed APK
         if: steps.signing.outputs.available == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
