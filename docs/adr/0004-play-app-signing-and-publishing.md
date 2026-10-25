@@ -53,6 +53,8 @@ invariant, and the signature gate on every APK and AAB.
 
 - **One key both uploads and signs what users install.** If it leaks, the key every install trusts
   is exposed, not only the upload path. It stays only in repository secrets and with the owner.
+  If it leaks, register a new upload key through Play at once; installs keep trusting the leaked
+  key.
 - **The key must never change**, as in ADR 0002, now for Play installs as well as sideloaded ones.
 - **The choice cannot be undone after the first Play release.** Once Play has delivered builds
   signed with this key, the app signing key is fixed for everyone who installed them.
