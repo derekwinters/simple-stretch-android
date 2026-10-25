@@ -67,6 +67,7 @@ import com.derekwinters.stretch.goals.GoalProgress
 import com.derekwinters.stretch.notifications.Notifications
 import com.derekwinters.stretch.scheduling.ReminderScheduler
 import com.derekwinters.stretch.ui.common.Formatting
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +79,7 @@ fun HomeScreen(
     onOpenGoals: () -> Unit,
     onOpenTrends: () -> Unit,
     onStretchNow: () -> Unit,
+    onOpenSession: (route: String) -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -231,7 +233,12 @@ fun HomeScreen(
                 }
             }
             items(state.todayReminders, key = { "today-${it.key}" }) { r ->
-                TodayReminderRow(r, dimmed = r.isPast || state.todaySkipped)
+                // HOME-009: every row, past or skipped too, opens what its notification would.
+                TodayReminderRow(
+                    r,
+                    dimmed = r.isPast || state.todaySkipped,
+                    onClick = { onOpenSession(r.sessionRoute(state.today, ZoneId.systemDefault())) },
+                )
             }
 
             item { SectionTitle("Schedules") }
@@ -306,10 +313,11 @@ private fun WarningCard(text: String, action: String, onAction: () -> Unit) {
 }
 
 @Composable
-private fun TodayReminderRow(r: TodayReminder, dimmed: Boolean) {
+private fun TodayReminderRow(r: TodayReminder, dimmed: Boolean, onClick: () -> Unit) {
     val context = LocalContext.current
     val color = if (dimmed) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface
     ListItem(
+        modifier = Modifier.clickable(onClick = onClick),
         leadingContent = {
             Text(Formatting.time(context, r.time), style = MaterialTheme.typography.titleMedium, color = color)
         },

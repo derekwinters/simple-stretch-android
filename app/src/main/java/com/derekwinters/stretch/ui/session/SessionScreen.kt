@@ -38,6 +38,7 @@ import com.derekwinters.stretch.goals.SessionEntry
 import com.derekwinters.stretch.goals.SessionHeadings
 import com.derekwinters.stretch.goals.SessionLayout
 import com.derekwinters.stretch.goals.SessionTop
+import com.derekwinters.stretch.ui.SessionRoute
 import com.derekwinters.stretch.ui.common.Formatting
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -101,9 +102,9 @@ class SessionViewModel(
     }
 
     companion object {
-        const val ARG_IDS = "ids"
-        const val ARG_SCHEDULE = "schedule"
-        const val ARG_AT = "at"
+        const val ARG_IDS = SessionRoute.ARG_IDS
+        const val ARG_SCHEDULE = SessionRoute.ARG_SCHEDULE
+        const val ARG_AT = SessionRoute.ARG_AT
     }
 }
 

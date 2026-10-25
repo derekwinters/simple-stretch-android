@@ -1,6 +1,5 @@
 package com.derekwinters.stretch.ui
 
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavType
@@ -8,7 +7,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.derekwinters.stretch.goals.ReminderOrigin
 import com.derekwinters.stretch.ui.goals.GoalsScreen
 import com.derekwinters.stretch.ui.home.HomeScreen
 import com.derekwinters.stretch.ui.schedule.ScheduleEditScreen
@@ -28,20 +26,14 @@ object Routes {
     const val SKIPS = "skips"
     const val GOALS = "goals"
     /** SESS-001: optional reminder origin (named stretch ids, schedule name, scheduled time). */
-    const val SESSION = "session?ids={${SessionViewModel.ARG_IDS}}" +
-        "&schedule={${SessionViewModel.ARG_SCHEDULE}}&at={${SessionViewModel.ARG_AT}}"
+    const val SESSION = SessionRoute.PATTERN
     const val TRENDS = "trends"
     const val TREND_DAY = "trends/day/{${DayDetailViewModel.ARG_EPOCH_DAY}}"
     fun schedule(id: Long) = "schedule/$id"
     fun trendDay(date: LocalDate) = "trends/day/${date.toEpochDay()}"
 
-    /** "Stretch now", or a reminder without stretches: no named list. */
-    fun session() = "session"
-
-    /** A reminder naming [stretchIds], from schedule [scheduleName], scheduled for [scheduledAt]. */
-    fun session(stretchIds: List<Long>, scheduleName: String, scheduledAt: Long) =
-        "session?ids=${ReminderOrigin.formatIds(stretchIds)}" +
-            "&schedule=${Uri.encode(scheduleName)}&at=$scheduledAt"
+    /** "Stretch now": no named list. */
+    fun session() = SessionRoute.BASE
 }
 
 /**
@@ -64,6 +56,8 @@ fun StretchNavHost(
                 onOpenGoals = { nav.navigate(Routes.GOALS) },
                 onOpenTrends = { nav.navigate(Routes.TRENDS) },
                 onStretchNow = { nav.navigate(Routes.session()) { launchSingleTop = true } },
+                // HOME-009: a Today row opens the route its notification would.
+                onOpenSession = { route -> nav.navigate(route) { launchSingleTop = true } },
             )
         }
         composable(

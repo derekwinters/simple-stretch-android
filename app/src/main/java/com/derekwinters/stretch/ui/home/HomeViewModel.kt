@@ -34,8 +34,9 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 /**
- * One row of HOME-002. A set reminder time has [stretchNames]; a repeating schedule has a
- * [repeatRule] and shows its next slot today (or its last, once all have passed).
+ * One row of HOME-002. A set reminder time has [stretchNames] and their [stretchIds], in the
+ * reminder's order (HOME-009); a repeating schedule has a [repeatRule], no stretches, and shows
+ * its next slot today (or its last, once all have passed).
  */
 data class TodayReminder(
     val key: String,
@@ -45,6 +46,7 @@ data class TodayReminder(
     val isPast: Boolean,
     val repeatRule: RepeatRule? = null,
     val slotsLeft: Int = 0,
+    val stretchIds: List<Long> = emptyList(),
 )
 
 data class HomeState(
@@ -117,6 +119,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                             scheduleName = s.schedule.name,
                             stretchNames = r.stretches.map { it.name },
                             isPast = !r.reminder.time.isAfter(nowTime),
+                            // HOME-009: the same ids, in the same order, as its notification.
+                            stretchIds = r.stretches.map { it.id },
                         )
                     }
                 }

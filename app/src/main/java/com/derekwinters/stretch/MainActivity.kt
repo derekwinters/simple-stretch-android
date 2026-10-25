@@ -12,6 +12,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.lifecycleScope
 import com.derekwinters.stretch.scheduling.ReminderScheduler
 import com.derekwinters.stretch.ui.Routes
+import com.derekwinters.stretch.ui.SessionRoute
 import com.derekwinters.stretch.ui.StretchNavHost
 import com.derekwinters.stretch.ui.theme.StretchTheme
 import kotlinx.coroutines.launch
@@ -53,15 +54,13 @@ class MainActivity : ComponentActivity() {
         if (intent?.action != ACTION_OPEN_SESSION) return
         val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, Int.MIN_VALUE)
         if (notificationId != Int.MIN_VALUE) NotificationManagerCompat.from(this).cancel(notificationId)
-        // SESS-001: a reminder that names stretches opens the session with them as its own section.
-        val stretchIds = intent.getLongArrayExtra(EXTRA_STRETCH_IDS)?.toList().orEmpty()
-        val scheduleName = intent.getStringExtra(EXTRA_SCHEDULE_NAME)
-        val scheduledAt = intent.getLongExtra(EXTRA_SCHEDULED_AT, -1L)
-        pendingRoute = if (stretchIds.isNotEmpty() && scheduleName != null && scheduledAt >= 0) {
-            Routes.session(stretchIds, scheduleName, scheduledAt)
-        } else {
-            Routes.session()
-        }
+        // SESS-001: a reminder that names stretches opens the session with them as its own
+        // section. HOME-009 invariant: a Today row builds its route with the same function.
+        pendingRoute = SessionRoute.of(
+            stretchIds = intent.getLongArrayExtra(EXTRA_STRETCH_IDS)?.toList().orEmpty(),
+            scheduleName = intent.getStringExtra(EXTRA_SCHEDULE_NAME),
+            scheduledAt = intent.getLongExtra(EXTRA_SCHEDULED_AT, -1L),
+        )
     }
 
     override fun onResume() {
