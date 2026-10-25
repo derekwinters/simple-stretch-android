@@ -14,6 +14,7 @@ tests reference these IDs. Change the spec before the code.
 | [trends.md](trends.md) | TREND-001 … TREND-010 | Daily score, week/month trends, streak, day detail |
 | [screens.md](screens.md) | HOME-001 … HOME-008 | Home screen layout |
 | [widgets.md](widgets.md) | WIDGET-001 … WIDGET-010 | Segmented ring home screen widget for today's goals |
+| [privacy.md](privacy.md) | PRIV-001 … PRIV-004 | No internet access, on-device data, the permission set, the privacy policy |
 
 A bold **Invariant — …** sentence marks a rule a technically-correct implementation could still
 break; treat it as a hard constraint on *how* the behaviour is built, not only what it outputs.
