@@ -1,5 +1,5 @@
 // Plugin versions live in gradle/libs.versions.toml and are applied in :app.
-// AGP 8.7.3 matches the Gradle 8.11.1 wrapper (same pairing as the sibling Android repos).
+// AGP 8.9.1 runs on the Gradle 8.11.1 wrapper (AGP 8.9 needs Gradle 8.11.1 or newer).
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false

@@ -38,12 +38,12 @@ val hasReleaseSigningConfig = !releaseKeystorePath.isNullOrBlank() &&
 
 android {
     namespace = "com.derekwinters.stretch"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.derekwinters.stretch"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = versionCodeProperty
         versionName = versionNameProperty
     }

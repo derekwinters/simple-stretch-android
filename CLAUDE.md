@@ -25,7 +25,7 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
 
 ## Build
 
-- Gradle wrapper 8.11.1, AGP 8.7.3, Kotlin 2.0.21, compileSdk/targetSdk 35, minSdk 26, Java 17.
+- Gradle wrapper 8.11.1, AGP 8.9.1, Kotlin 2.0.21, compileSdk/targetSdk 36, minSdk 26, Java 17.
 - `./gradlew test` and `./gradlew assembleDebug`. The Android SDK and Google Maven may be
   unreachable from some environments; CI (`pr.yml`) is then the build gate.
 - Version: `VERSION_NAME` / `VERSION_CODE` in `gradle.properties` (release-please owns
