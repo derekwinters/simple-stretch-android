@@ -13,9 +13,14 @@ name: release-please
 # attach an APK or AAB that is unsigned, debug-signed, or (when ANDROID_KEYSTORE_SHA256 is set)
 # signed by any certificate other than the pinned one.
 #
+# The release's versionCode, derived from its version name (docs/adr/0003), must be higher than the
+# previous GitHub release's: .github/scripts/check_version_code.py compares the two APKs before
+# anything is attached. release-pr-guard runs the same check on the open release PR after every
+# push to main and posts the result as the `release-version-code` commit status on its head.
+#
 # workflow_dispatch with `backfill_tag` rebuilds and re-attaches the APK and AAB for an existing
 # release tag (for example one published before signing was wired up); release-please itself is
-# skipped.
+# skipped, and so is the version-code guard (an old release is lower than newer ones by design).
 
 on:
   push:
@@ -99,7 +104,8 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # build-tools also provides apksigner for the signature gate.
+      # build-tools also provides apksigner for the signature gate and aapt2 for the version-code
+      # guard.
       - name: Set up the Android SDK
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
         with:
@@ -167,6 +173,26 @@ jobs:
           app/build/outputs/apk/release/*.apk
           app/build/outputs/bundle/release/*.aab
 
+      # The versionCode of the APK just built (read with aapt2, never recomputed from the formula)
+      # must be higher than that of the previous release's APK: the newest published release
+      # other than RELEASE_TAG that is neither a draft nor a pre-release (docs/adr/0003). Runs from
+      # the main checkout like the signature gate, and before the upload, so a release with a lower
+      # or equal code gets nothing attached. With no earlier release it passes with a notice; an
+      # earlier release with no APK, or more than one, fails and names the tag to backfill. A
+      # backfill re-attaches an old release, which is lower than newer ones by design, so the
+      # guard is skipped for it.
+      - name: Check the version code is higher than the previous release's
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "::notice title=Release version code::Backfill of $RELEASE_TAG: the version-code guard is skipped."
+            exit 0
+          fi
+          python3 verification-gate/.github/scripts/check_version_code.py \
+            --repo "$GITHUB_REPOSITORY" --exclude-tag "$RELEASE_TAG" \
+            app/build/outputs/apk/release/*.apk
+
       # Uses the runner's pre-installed gh CLI rather than another pinned action. --clobber lets a
       # backfill replace an earlier (debug-signed) asset of the same name.
       - name: Attach the release APK and AAB to the GitHub Release
@@ -198,3 +224,136 @@ jobs:
             printf 'Assets on %s:\n%s\n' "$RELEASE_TAG" "$assets"
             exit 1
           fi
+
+  # Checks the open release PR before it is merged: builds its head and runs the same version-code
+  # guard, then posts the `release-version-code` commit status on the PR's head commit. Runs on
+  # every push to main, after release-please has updated its PR: release-please pushes the PR with
+  # the default GITHUB_TOKEN, which starts no pull_request workflow, so pr.yml never sees it.
+  # Debug and release builds share the derived versionCode, so the debug APK is checked and no
+  # signing secret is needed.
+  release-pr-guard:
+    name: check the release PR's version code
+    needs: release-please
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # A newer push re-checks the release PR; an older run still in progress is no longer needed.
+    concurrency:
+      group: release-pr-guard
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    env:
+      # release-please's branch for this repository's single component.
+      RELEASE_PR_BRANCH: release-please--branches--main--components--simple-stretch-android
+    steps:
+      - name: Find the open release PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prs="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --base main \
+            --head "$RELEASE_PR_BRANCH" --json number,headRefOid)"
+          count="$(printf '%s' "$prs" | jq 'length')"
+          if [ "$count" -eq 0 ]; then
+            echo "No open release PR; nothing to check."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$count" -ne 1 ]; then
+            echo "::error title=Release version code::$count open PRs from $RELEASE_PR_BRANCH; expected one."
+            exit 1
+          fi
+          {
+            echo "found=true"
+            echo "number=$(printf '%s' "$prs" | jq -r '.[0].number')"
+            echo "sha=$(printf '%s' "$prs" | jq -r '.[0].headRefOid')"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Mark the check as pending
+        if: steps.pr.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" \
+            -f state=pending -f context=release-version-code \
+            -f description="Checking the versionCode against the previous release" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+      - name: Check out the release PR's head
+        if: steps.pr.outputs.found == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ steps.pr.outputs.sha }}
+
+      # The guard runs from main, as on release.
+      - name: Check out main for the version-code guard
+        if: steps.pr.outputs.found == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: verification-gate
+
+      - name: Set up the JDK
+        if: steps.pr.outputs.found == 'true'
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # build-tools also provides aapt2 for the version-code guard.
+      - name: Set up the Android SDK
+        if: steps.pr.outputs.found == 'true'
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+
+      - name: Set up Gradle
+        if: steps.pr.outputs.found == 'true'
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+
+      - name: Assemble the release PR's debug APK
+        if: steps.pr.outputs.found == 'true'
+        run: ./gradlew assembleDebug
+
+      # No --exclude-tag: the release PR's own tag does not exist until it is merged.
+      - name: Check the version code is higher than the previous release's
+        id: guard
+        if: steps.pr.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          python3 verification-gate/.github/scripts/check_version_code.py \
+            --repo "$GITHUB_REPOSITORY" app/build/outputs/apk/debug/*.apk \
+            | tee "$RUNNER_TEMP/version-code-guard.log"
+
+      # success when the guard passed; failure, with the guard's reason, when it ran and failed;
+      # error when it never ran (the build failed first).
+      - name: Post the release-version-code status
+        if: ${{ !cancelled() && steps.pr.outputs.found == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+          GUARD_OUTCOME: ${{ steps.guard.outcome }}
+        run: |
+          case "$GUARD_OUTCOME" in
+            success)
+              state=success
+              description="versionCode is higher than that of the previous release" ;;
+            failure)
+              state=failure
+              # The guard's first error, up to its first sentence; the run log has the rest.
+              description="$(sed -n 's/^::error title=[^:]*:://p' "$RUNNER_TEMP/version-code-guard.log" | head -n 1)"
+              description="${description%%. *}"
+              description="${description:-versionCode is not higher than that of the previous release}" ;;
+            *)
+              state=error
+              description="The versionCode could not be checked: the release PR did not build" ;;
+          esac
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" \
+            -f state="$state" -f context=release-version-code \
+            -f description="${description:0:140}" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
