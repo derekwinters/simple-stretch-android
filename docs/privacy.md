@@ -3,7 +3,7 @@
 **Effective date: 25 October 2026**
 
 Simple Stretch keeps everything you enter on your phone. It has no accounts, no analytics and
-no ads, and it cannot connect to the internet. Nothing is collected by, or shared with, the
+no ads, and it does not ask for internet permission. Nothing is collected by, or shared with, the
 developer.
 
 ## What the app stores
@@ -19,11 +19,13 @@ The app stores the following, on your device only:
 - the scheduler's own settings: when each reminder alarm is next due and when the last reminder
   was shown, so a reminder is not shown twice.
 
-This data stays in the app's private storage on your phone. Other apps cannot read it.
+This data stays in the app's private storage on your phone. Android keeps it private to the
+app; other apps on the phone do not have access to it. (Android's device backup, below, is a
+separate copy.)
 
 ## What the app does not do
 
-- It has no internet permission, so it cannot send anything anywhere.
+- It has no internet permission, so it does not send anything anywhere itself.
 - It has no accounts or sign-in.
 - It contains no analytics, advertising, crash reporting or other third-party software
   development kits (SDKs).
