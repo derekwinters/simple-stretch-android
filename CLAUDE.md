@@ -29,9 +29,9 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
 - `./gradlew test` and `./gradlew assembleDebug`. The Android SDK and Google Maven may be
   unreachable from some environments; CI (`pr.yml`) is then the build gate.
 - Version: `VERSION_NAME` in `gradle.properties`, owned by release-please. The version code is
-  derived from it (`major*10000 + minor*100 + patch`, by `buildSrc/`'s `VersionCode`, whose tests
-  run in every Gradle build) and checked by the release guard against the previous release
-  (docs/adr/0003). APKs are named `simple-stretch-<versionName>-<buildType>.apk`.
+  derived from it (`major*10000 + minor*100 + patch`, by `buildSrc/`'s `VersionCode`; its tests
+  are not part of `./gradlew test`, run them with `./gradlew -p buildSrc test`) and checked by the
+  release guard against the previous release (docs/adr/0003). APKs are named `simple-stretch-<versionName>-<buildType>.apk`.
 - Release builds are signed with the stable release keystore from repository secrets
   (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
   `ANDROID_KEY_ALIAS_PASSWORD`; optional pin `ANDROID_KEYSTORE_SHA256`) via env vars read in

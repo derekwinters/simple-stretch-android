@@ -98,5 +98,6 @@ the previous release's.
   publishing a wrong code.
 - Pre-release versions (`0.3.0-beta`) cannot be built; release-please is configured for plain
   releases only.
-- The formula tests run as part of compiling `buildSrc`, so any Gradle invocation, including
-  `./gradlew test` and every CI build, runs them, and a failing formula test fails the build.
+- The formula tests are not part of `./gradlew test`: buildSrc is a separate build whose tests
+  Gradle does not run for the main build. They run with `./gradlew -p buildSrc test`, which
+  `pr.yml` runs on every pull request.

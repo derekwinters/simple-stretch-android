@@ -44,10 +44,13 @@ jobs:
       - name: Run the release gate tests
         run: python3 -m unittest discover -s .github/scripts/tests -v
 
-      # Also runs buildSrc's version-code formula tests, which every Gradle build runs before it
-      # derives the versionCode from VERSION_NAME (docs/adr/0003).
       - name: Run the unit tests
         run: ./gradlew test --stacktrace
+
+      # buildSrc is a build of its own, and ./gradlew test does not run its tests: the
+      # version-code formula that derives versionCode from VERSION_NAME (docs/adr/0003).
+      - name: Run the version-code formula tests
+        run: ./gradlew -p buildSrc test --stacktrace
 
       # Room exports its schema to app/schemas/ during the build; upload it so a schema change
       # can be reviewed against the committed copy without a local Android build.
