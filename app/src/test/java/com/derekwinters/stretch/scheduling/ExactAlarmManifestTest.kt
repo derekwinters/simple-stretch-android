@@ -13,7 +13,12 @@ class ExactAlarmManifestTest {
 
     private val androidNs = "http://schemas.android.com/apk/res/android"
 
-    /** Unit tests run with the module directory (app/) as the working directory. */
+    /**
+     * Unit tests run with the module directory (app/) as the working directory.
+     *
+     * This reads the source manifest only, not the merged one: a dependency's manifest could in
+     * theory merge USE_EXACT_ALARM in, and that is not covered here.
+     */
     private fun usesPermissions(): List<Element> {
         val manifest = File("src/main/AndroidManifest.xml")
         assertTrue("manifest not found at ${manifest.absolutePath}", manifest.isFile)
