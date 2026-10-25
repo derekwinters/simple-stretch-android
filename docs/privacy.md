@@ -94,6 +94,8 @@ answers in Play Console. If the assumption is wrong, the answers change: the fir
 becomes "Yes", the stored data types are listed as collected, and the deletion answer becomes
 "Yes: clear the app's storage or uninstall".
 
-*Maintainer note:* these answers are copied into Play Console by hand. They must change, in
-the same pull request, whenever this policy or the app's permissions or network access change
-(PRIV-004 in the [privacy specification](spec/privacy.md)).
+<!--
+Maintainer note: these answers are copied into Play Console by hand. They must change, in the
+same pull request, whenever this policy or the app's permissions or network access change
+(PRIV-004 in the privacy specification, docs/spec/privacy.md).
+-->
