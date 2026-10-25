@@ -5,10 +5,12 @@ Status: accepted
 ## Context
 
 Android and Google Play order builds by `versionCode`, an integer, not by the version name. Play
-rejects any upload whose `versionCode` is not higher than every code it has seen for the app, and
-a device refuses to install an update with a lower code than the installed one. Until now the code
-was a hand-set `VERSION_CODE=1` in `gradle.properties` that nothing bumped: releases 0.1.0 and
-0.2.0 both shipped as code 1, and the second Play upload would have been refused.
+rejects an upload whose `versionCode` it has already seen for the app, and will not offer a build
+with a lower code than the installed one as an update; a device refuses to install such an
+update too. Until now the code was a hand-set `VERSION_CODE=1` in `gradle.properties` that nothing
+bumped: releases 0.1.0 and 0.2.0 both shipped as code 1, and the second Play upload would have
+been refused. The guard below requires each release's code to be strictly higher than the
+previous release's, which satisfies all of these.
 
 release-please already owns the version name (`VERSION_NAME` in `gradle.properties`, rewritten from
 Conventional Commit titles). A second number kept in step by hand is a number that drifts.
@@ -95,6 +97,8 @@ the previous release's.
   release, is invisible to it, and a later release could pass the guard yet still be refused by
   Play. Checking Play itself needs a Play Developer API credential, which is part of automated
   upload (#26). Until then, **every Play upload should be a GitHub release asset.**
+- 0.3.0 (code 300) is the first code above the 1 that v0.1.0 and v0.2.0 shipped with. The jump
+  from 1 to 300 is intentional and permanent: codes never go back down.
 - Minor and patch stop at 99 until the escape hatch is taken; the build says so rather than
   publishing a wrong code.
 - Pre-release versions (`0.3.0-beta`) cannot be built; release-please is configured for plain
