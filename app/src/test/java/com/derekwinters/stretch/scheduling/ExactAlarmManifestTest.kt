@@ -33,7 +33,10 @@ class ExactAlarmManifestTest {
     // SCHED-007: USE_EXACT_ALARM is deliberately not declared (Play restricts it).
     @Test
     fun manifestDoesNotDeclareUseExactAlarm() {
-        assertEquals(emptyList<Element>(), named("android.permission.USE_EXACT_ALARM"))
+        assertTrue(
+            "USE_EXACT_ALARM must not be declared (SCHED-007)",
+            named("android.permission.USE_EXACT_ALARM").isEmpty(),
+        )
     }
 
     // SCHED-007: SCHEDULE_EXACT_ALARM is the only exact-alarm permission, on every API level.
