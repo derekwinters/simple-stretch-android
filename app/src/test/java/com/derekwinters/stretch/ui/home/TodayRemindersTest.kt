@@ -98,6 +98,29 @@ class TodayRemindersTest {
         assertFalse(inNewYork.single().isPast)
     }
 
+    // HOME-009: a set-time row carries its reminder's stretch ids in the reminder's own order
+    // (not sorted), so it opens the same session as its notification; a repeating schedule's row
+    // names no stretches (SCHED-011), so its stretchIds is empty.
+    @Test
+    fun rowsCarryTheReminderStretchIdsInOrder() {
+        val named = ScheduleWithReminders(
+            schedule = Schedule(id = 1, name = "Set 1", daysMask = everyDay),
+            reminders = listOf(
+                ReminderWithStretches(
+                    reminder = Reminder(id = 100, scheduleId = 1, minuteOfDay = 9 * 60),
+                    stretches = listOf(
+                        Stretch(id = 3, name = "Hamstring stretch"),
+                        Stretch(id = 1, name = "Neck rolls"),
+                        Stretch(id = 2, name = "Calf stretch"),
+                    ),
+                ),
+            ),
+        )
+        val rows = TodayReminders.of(listOf(named, repeating(2)), nowAt("12:30"))
+        assertEquals(listOf(3L, 1L, 2L), rows.single { it.key == "reminder-100" }.stretchIds)
+        assertEquals(emptyList<Long>(), rows.single { it.key == "repeat-2" }.stretchIds)
+    }
+
     // HOME-002: disabled schedules and schedules not on today's weekday are left out.
     @Test
     fun disabledAndOtherDaySchedulesAreLeftOut() {
