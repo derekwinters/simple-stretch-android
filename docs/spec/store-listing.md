@@ -93,7 +93,8 @@ and qualifiers pinned), with no clock, locale or data involved.
 - **STORE-ICON-001** The store icon is `fastlane/metadata/android/en-US/images/icon.png`:
   exactly 512 x 512 px, a 32-bit PNG with an alpha channel (8-bit RGBA, PNG colour type 6). It
   is a full square: no rounded corners, mask, shadow or margin of its own (Google Play applies
-  its own mask).
+  its own mask). The file is at most 1024 KB (1,048,576 bytes), Google Play's limit for the
+  store icon.
 - **STORE-ICON-002** It is drawn from the app's real adaptive launcher icon: the test inflates
   `@mipmap/ic_launcher` and draws its background layer (`@color/ic_launcher_background`,
   #FFFFFF) and then its foreground layer (`@drawable/ic_launcher_foreground`). The monochrome
@@ -148,7 +149,8 @@ and qualifiers pinned), with no clock, locale or data involved.
   - plain `./gradlew test` renders both images and writes and compares nothing.
 - **STORE-ICON-005** On every run except a recording, a test reads the committed `icon.png` and
   `featureGraphic.png` and fails unless each exists with exactly the size and PNG colour type of
-  STORE-ICON-001 and STORE-GRAPHIC-001.
+  STORE-ICON-001 and STORE-GRAPHIC-001, and unless `icon.png` is within STORE-ICON-001's
+  1024 KB limit. The feature graphic has no file size check.
 
 ## Recording and verifying
 
@@ -272,9 +274,9 @@ rewrites or records listing text or screenshots.
 - [x] The test writes the icon as RGBA and the feature graphic as RGB, records only in a
       recording run, compares exactly in a verify run and writes `<name>_actual.png` to
       `app/build/outputs/roborazzi/` on a failure (STORE-ICON-004).
-- [x] A test checks the committed images' size and PNG colour type, skipped only in a recording
-      run (STORE-ICON-005).
-- [ ] `icon.png` and `featureGraphic.png` are recorded and committed, and
+- [x] A test checks the committed images' size and PNG colour type, and the icon's 1024 KB
+      limit, skipped only in a recording run (STORE-ICON-005).
+- [x] `icon.png` and `featureGraphic.png` are recorded and committed, and
       `verifyRoborazziDebug` passes against them (STORE-ICON-001, STORE-GRAPHIC-001).
 - [ ] The owner has reviewed the rendered images in the pull request (the mockup review of
       STORE-GRAPHIC-003 to STORE-GRAPHIC-005).

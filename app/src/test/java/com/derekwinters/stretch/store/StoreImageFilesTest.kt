@@ -26,9 +26,26 @@ class StoreImageFilesTest {
     @Test
     fun committedIconIs512SquareRgba() = assertCommitted(StoreImage.ICON)
 
+    // STORE-ICON-005 / STORE-ICON-001: icon.png is within Google Play's 1024 KB store icon limit.
+    @Test
+    fun committedIconIsWithinPlaysSizeLimit() {
+        val file = StoreImages.file(StoreImage.ICON)
+        assertTrue("$file is missing (${StoreImage.ICON.id})", file.isFile)
+        assertTrue(
+            "${StoreImage.ICON.id}: ${file.name} is ${file.length()} bytes, over Google Play's " +
+                "$ICON_MAX_BYTES-byte (1024 KB) limit",
+            file.length() <= ICON_MAX_BYTES,
+        )
+    }
+
     // STORE-ICON-005 / STORE-GRAPHIC-001: featureGraphic.png is committed as a 1024 x 500 RGB PNG.
     @Test
     fun committedFeatureGraphicIs1024x500Rgb() = assertCommitted(StoreImage.FEATURE_GRAPHIC)
+
+    private companion object {
+        /** STORE-ICON-001: Google Play's store icon limit, 1024 KB. */
+        const val ICON_MAX_BYTES = 1024L * 1024L
+    }
 
     private fun assertCommitted(image: StoreImage) {
         val file = StoreImages.file(image)
