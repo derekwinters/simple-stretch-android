@@ -182,11 +182,13 @@ class ParseSpecPageTest(unittest.TestCase):
         page = store_listing.parse_spec_page(OMIT + "# X\n\n- **STORE-SHOT-001** Home.\n")
         self.assertEqual({"STORE-SHOT-001"}, page.live_ids)
 
-    def test_a_page_without_a_marker_on_its_first_line_has_none(self):
+    def test_a_page_without_a_marker_line_and_a_blank_line_has_none(self):
         for text in ("# Goals\n\n- **GOAL-001** A goal.\n",
                      "# Goals\n<!-- store: headline -->\n",
                      "<!-- store: maybe -->\n\n# Goals\n",
-                     "<!--store:headline-->\n\n# Goals\n"):
+                     "<!--store:headline-->\n\n# Goals\n",
+                     "<!-- store: headline -->\n# Goals\n",
+                     "<!-- store: headline -->"):
             with self.subTest(text=text):
                 self.assertIsNone(store_listing.parse_spec_page(text).marker)
 
@@ -240,6 +242,12 @@ class CheckTest(_Repo):
         # STORE-LIST-002
         self.write("docs/spec/library.md", "# Stretch library\n\n- **LIB-001** Stretches.\n")
         self.assertProblem("library.md")
+
+    def test_a_marker_not_followed_by_a_blank_line_fails(self):
+        # STORE-LIST-002: without the blank line MkDocs does not render the page's `# Title`.
+        self.write("docs/spec/goals.md", GOALS_PAGE.replace(HEADLINE, "<!-- store: headline -->\n"))
+        self.assertProblem("docs/spec/goals.md has no store marker")
+        self.assertProblem("followed by a blank line")
 
     def test_the_spec_readme_needs_no_marker(self):
         # STORE-LIST-002

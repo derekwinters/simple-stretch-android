@@ -17,7 +17,7 @@ What it does.
 - With `--check` (CI, on every pull request and at the release tag) it writes nothing and fails
   when:
   - a spec page (every `docs/spec/*.md` except `README.md`) does not start with the marker line
-    `<!-- store: headline -->` or `<!-- store: omit -->`;
+    `<!-- store: headline -->` or `<!-- store: omit -->` followed by a blank line;
   - a tag cites an ID that no spec page defines, or one the spec marks `_Retired._`;
   - a `headline` page has no claim citing any of the IDs it defines;
   - a compiled file is over Google Play's limit (title 30, short description 80, full
@@ -179,10 +179,10 @@ def compile_listing(listing):
 
 def parse_spec_page(text):
     """The `SpecPage` in one spec page's text: its store marker (None without a valid one on the
-    first line) and the IDs it defines, live and retired."""
+    first line followed by a blank line) and the IDs it defines, live and retired."""
     lines = text.splitlines()
     marker = None
-    if lines:
+    if len(lines) >= 2 and not lines[1].strip():
         match = _MARKER_LINE.match(lines[0])
         if match:
             marker = match.group(1)
@@ -213,7 +213,8 @@ def spec_problems(pages, claims):
         if page.marker is None:
             problems.append(
                 "docs/spec/{0} has no store marker: its first line must be "
-                "`<!-- store: headline -->` or `<!-- store: omit -->` (STORE-LIST-002)".format(name))
+                "`<!-- store: headline -->` or `<!-- store: omit -->`, followed by a blank line "
+                "(STORE-LIST-002)".format(name))
         for requirement in page.live_ids:
             live[requirement] = name
         for requirement in page.retired_ids:
