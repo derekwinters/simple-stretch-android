@@ -80,8 +80,9 @@ The Google Play screenshots are rendered from the app's screens on the JVM, not 
 phone ([store listing specification](spec/store-listing.md)), and committed under
 `fastlane/metadata/android/en-US/images/phoneScreenshots/`; their captions are in
 [store/captions.md](store/captions.md). The store icon (`images/icon.png`, drawn from the app's
-launcher icon) and the feature graphic (`images/featureGraphic.png`) are rendered and checked the
-same way, by the same commands.
+launcher icon) and the feature graphic (`images/featureGraphic.png`: a headline, whose text is
+also in `captions.md`, beside the Home and stretch session screens on two tilted phones) are
+rendered and checked the same way, by the same commands.
 
 ```sh
 ./gradlew verifyRoborazziDebug   # compare with the committed store images (what CI runs)
