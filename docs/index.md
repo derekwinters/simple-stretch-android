@@ -80,6 +80,19 @@ them. To re-record, either:
 
 Either way the new images are reviewed in the pull request's diff.
 
+The listing's text (title, short description and full description) is written by hand in
+[store/listing.md](store/listing.md), one claim per line, each citing the requirement IDs it rests
+on. After editing it, compile it into `fastlane/metadata/android/en-US/` and commit the result:
+
+```sh
+python3 .github/scripts/store_listing.py           # write title.txt, short_description.txt, full_description.txt
+python3 .github/scripts/store_listing.py --check   # what CI runs; writes nothing
+```
+
+Every pull request's CI run fails when a claim cites a missing or retired requirement, a headline
+feature page (marked `<!-- store: headline -->`) has no claim, a text is over Google Play's limit,
+or the committed files differ from the listing.
+
 Or copy the APK to the phone and open it (allow installs from that source when asked).
 
 **Application ID:** from 0.3.0 the application ID is `io.github.derekwinters.simple_stretch_android`.
@@ -101,10 +114,13 @@ app shows the banner, so reminders arrive on the minute.
 ## Releases
 
 Merging to `main` runs release-please, which keeps a release PR up to date from Conventional
-Commit titles. Merging that PR tags a release and attaches two files:
+Commit titles. Merging that PR tags a release and attaches three files:
 
 - `simple-stretch-<version>-release.apk`, for installing directly onto a phone (sideloading);
-- `simple-stretch-<version>-release.aab`, the Android App Bundle for uploading to Google Play.
+- `simple-stretch-<version>-release.aab`, the Android App Bundle for uploading to Google Play;
+- `store-listing-<version>.zip`, the reviewed Google Play listing (text and screenshots) as
+  committed at the release, under `fastlane/metadata/android/`. The release only checks and
+  packages it; it never writes listing text.
 
 Both are signed with a stable release key
 ([ADR 0002](adr/0002-release-signing-with-a-stable-keystore.md)) and checked by the same
@@ -144,8 +160,9 @@ app/src/main/java/com/derekwinters/stretch/
 app/src/test/     JVM unit tests (next occurrence, repeating slots, goal maths, goal history,
                   trends, widget ring and palette) and the store screenshot tests (store/)
 app/schemas/      exported Room schemas
-docs/spec/        requirements with IDs; docs/adr/ decisions; docs/store/ screenshot captions
-fastlane/         Google Play listing images (the store screenshots)
+docs/spec/        requirements with IDs; docs/adr/ decisions; docs/store/ listing text and
+                  screenshot captions
+fastlane/         Google Play listing text (compiled from docs/store/listing.md) and images
 ```
 
 ## Notes

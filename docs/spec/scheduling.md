@@ -1,3 +1,5 @@
+<!-- store: headline -->
+
 # Scheduling
 
 - **SCHED-001** The user can create any number of schedules. Each schedule has a name, an
@@ -109,3 +111,5 @@
 - [x] No no-argument `now()` / `System.currentTimeMillis()` / `Clock.system*` under `app/src/main`
       outside the clock's file, enforced by a grep step in `pr.yml` (SCHED-016).
 - [ ] Instrumented test of alarm registration (not yet; needs an emulator in CI).
+- [x] Store listing reviewed: every claim in `docs/store/listing.md` that cites this page is
+      still true, and at least one does (`store: headline`; STORE-LIST-003, STORE-LIST-004).

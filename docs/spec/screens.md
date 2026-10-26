@@ -1,3 +1,5 @@
+<!-- store: omit -->
+
 # Screens
 
 - **HOME-001** The home screen shows today's date at the top. There is no skip card; skipping
@@ -70,3 +72,5 @@
 - [x] Today rows build their session route with the same pure, unit-tested function as the
       notification intent, from the reminder's stretch ids, schedule name and today's time
       (HOME-009 invariant).
+- [x] Store listing reviewed: this page is `store: omit`, and any claim in
+      `docs/store/listing.md` that cites it is still true (STORE-LIST-002, STORE-LIST-003).

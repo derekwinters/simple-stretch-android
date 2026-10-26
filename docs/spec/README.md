@@ -15,7 +15,11 @@ tests reference these IDs. Change the spec before the code.
 | [screens.md](screens.md) | HOME-001 … HOME-009 | Home screen layout |
 | [widgets.md](widgets.md) | WIDGET-001 … WIDGET-010 | Segmented ring home screen widget for today's goals |
 | [privacy.md](privacy.md) | PRIV-001 … PRIV-004 | No internet access, on-device data, the permission set, the privacy policy |
-| [store-listing.md](store-listing.md) | STORE-SHOT-001 … STORE-SHOT-014 | Google Play phone screenshots: the shots, their frozen inputs, layout, recording (on a deliberate label) and verifying |
+| [store-listing.md](store-listing.md) | STORE-SHOT-001 … STORE-SHOT-014, STORE-LIST-001 … STORE-LIST-007 | Google Play phone screenshots: the shots, their frozen inputs, layout, recording (on a deliberate label) and verifying; the listing text, its claims' requirement IDs, the drift check and the release's listing zip |
+
+Every page except this one starts with a store marker line, `<!-- store: headline -->` or
+`<!-- store: omit -->`, saying whether the Google Play listing must mention it
+([STORE-LIST-002](store-listing.md#listing-text)).
 
 A bold **Invariant — …** sentence marks a rule a technically-correct implementation could still
 break; treat it as a hard constraint on *how* the behaviour is built, not only what it outputs.

@@ -1,3 +1,5 @@
+<!-- store: omit -->
+
 # Skipping days
 
 - **SKIP-001** The "Today" heading row on the home screen has a "Skip today" text button at its
@@ -29,3 +31,5 @@
       schedule rolling a week (SKIP-001, SKIP-002, SKIP-004, SKIP-006).
 - [x] The Today row's skip/resume button state is a pure function of "today skipped" and
       "reminders left today", unit-tested (SKIP-001, HOME-002).
+- [x] Store listing reviewed: this page is `store: omit`, and any claim in
+      `docs/store/listing.md` that cites it is still true (STORE-LIST-002, STORE-LIST-003).

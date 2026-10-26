@@ -1,3 +1,5 @@
+<!-- store: headline -->
+
 # Trends
 
 How well the daily goals (goals.md) were kept, by week or month, with a drill-down into one day.
@@ -79,3 +81,5 @@ the skipped dates (SKIP-007); nothing is stored.
 - [x] Only completions since the first goal day are read for the trends screen (earlier ones
       can never score).
 - [ ] Compose UI test of the chart semantics (needs an emulator in CI).
+- [x] Store listing reviewed: every claim in `docs/store/listing.md` that cites this page is
+      still true, and at least one does (`store: headline`; STORE-LIST-003, STORE-LIST-004).
