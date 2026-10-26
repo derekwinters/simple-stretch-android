@@ -37,6 +37,7 @@ nav:
       - Store listing: spec/store-listing.md
   - Privacy policy: privacy.md
   - Store listing text: store/listing.md
+  - Play Console listing details: store/play-console.md
   - Store screenshot captions: store/captions.md
   - Decisions:
       - 0001 Debug signing until a release keystore: adr/0001-debug-signing-until-release-keystore.md
