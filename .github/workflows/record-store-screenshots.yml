@@ -23,8 +23,12 @@ permissions:
   contents: write
   pull-requests: write
 
+# One recording at a time per pull request. The label name is part of the group because the
+# group is joined before the job's `if:` is evaluated: without it, applying any other label to the
+# pull request would start a run that cancels an in-progress recording (whose always() step would
+# then remove the label too).
 concurrency:
-  group: record-store-screenshots-${{ github.event.pull_request.number }}
+  group: record-store-screenshots-${{ github.event.pull_request.number }}-${{ github.event.label.name }}
   cancel-in-progress: true
 
 jobs:
