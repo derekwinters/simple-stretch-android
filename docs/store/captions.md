@@ -6,8 +6,8 @@ lives: the screenshot test reads it, and a caption that does not fit (at most 3 
 and 2 supporting lines, as rendered) fails that test (STORE-SHOT-012, STORE-SHOT-014).
 
 Each entry is a `##` heading with the shot ID, then a `Headline:` line and a `Supporting:` line.
-Changing a caption changes its image, which is then re-recorded with
-`./gradlew recordRoborazziDebug` in the same pull request.
+Changing a caption changes its image, which is then re-recorded in the same pull request (the
+`record-store-screenshots` label, or `./gradlew recordRoborazziDebug` locally; STORE-SHOT-009).
 
 ## STORE-SHOT-001
 

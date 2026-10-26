@@ -15,7 +15,7 @@ tests reference these IDs. Change the spec before the code.
 | [screens.md](screens.md) | HOME-001 … HOME-009 | Home screen layout |
 | [widgets.md](widgets.md) | WIDGET-001 … WIDGET-010 | Segmented ring home screen widget for today's goals |
 | [privacy.md](privacy.md) | PRIV-001 … PRIV-004 | No internet access, on-device data, the permission set, the privacy policy |
-| [store-listing.md](store-listing.md) | STORE-SHOT-001 … STORE-SHOT-014 | Google Play phone screenshots: the shots, their frozen inputs, layout, recording and verifying |
+| [store-listing.md](store-listing.md) | STORE-SHOT-001 … STORE-SHOT-014 | Google Play phone screenshots: the shots, their frozen inputs, layout, recording (on a deliberate label) and verifying |
 
 A bold **Invariant — …** sentence marks a rule a technically-correct implementation could still
 break; treat it as a hard constraint on *how* the behaviour is built, not only what it outputs.

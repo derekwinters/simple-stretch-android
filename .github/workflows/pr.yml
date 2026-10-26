@@ -74,9 +74,11 @@ jobs:
 
       # STORE-SHOT (docs/spec/store-listing.md): renders the Google Play screenshots and compares
       # them with the images committed in fastlane/metadata/android/en-US/images/phoneScreenshots/.
-      # A changed or missing image fails the job. Invariant: a store screenshot is never
-      # re-recorded by CI, so no workflow runs recordRoborazziDebug; a person records them with
-      # `./gradlew recordRoborazziDebug` and commits the images in the pull request.
+      # A changed or missing image fails the job. This workflow only verifies (STORE-SHOT-008);
+      # recording happens only when a person asks for it: the `record-store-screenshots` label
+      # (record-store-screenshots.yml, which pushes to a side branch, never to the PR branch) or
+      # `./gradlew recordRoborazziDebug` locally. The new images then arrive in the PR by a
+      # person's push, which runs this workflow to verify them.
       - name: Verify the store screenshots
         run: ./gradlew verifyRoborazziDebug --stacktrace
 

@@ -67,9 +67,18 @@ phone ([store listing specification](spec/store-listing.md)), and committed unde
 ```
 
 Every pull request's CI run verifies them; a changed or missing image fails the run and uploads
-the new and diff images as the `store-screenshot-diffs` workflow artifact. CI never records them:
-record on Linux with JDK 17 (as CI runs) and commit the images in the pull request, where the
-diff is reviewed.
+the new and diff images as the `store-screenshot-diffs` workflow artifact. That run never records
+them. To re-record, either:
+
+- apply the `record-store-screenshots` label to the pull request. CI records the images and pushes
+  them as one commit to the branch `store-screenshots/pr-<number>` (never to the pull request's
+  branch), says so in its job summary and removes the label. Bring that commit in with your own
+  push (`git fetch origin store-screenshots/pr-<number> && git merge --ff-only FETCH_HEAD`), so the
+  pull request's CI run verifies it; or
+- run `./gradlew recordRoborazziDebug` locally, on Linux with JDK 17 as CI runs, and commit the
+  images.
+
+Either way the new images are reviewed in the pull request's diff.
 
 Or copy the APK to the phone and open it (allow installs from that source when asked).
 

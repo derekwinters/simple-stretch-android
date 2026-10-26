@@ -128,7 +128,8 @@ room {
 // Store screenshots (docs/spec/store-listing.md): Roborazzi reads and writes the reference images
 // in fastlane supply's folder, so `verifyRoborazziDebug` (what CI runs) compares against the
 // committed images and fails on a changed or missing one. Its actual and _compare images go to
-// app/build/outputs/roborazzi/. Only a person runs `recordRoborazziDebug`; no workflow does.
+// app/build/outputs/roborazzi/. `recordRoborazziDebug` runs only when a person asks: locally, or
+// through the `record-store-screenshots` label (record-store-screenshots.yml, STORE-SHOT-009).
 roborazzi {
     outputDir.set(rootProject.layout.projectDirectory.dir("fastlane/metadata/android/en-US/images/phoneScreenshots"))
 }

@@ -39,7 +39,8 @@ import java.util.TimeZone
  * - `./gradlew verifyRoborazziDebug` (what CI runs) compares each shot with the committed image
  *   in fastlane/metadata/android/en-US/images/phoneScreenshots/ and fails on any change or on a
  *   missing image; the actual and `_compare` images land in app/build/outputs/roborazzi/.
- * - `./gradlew recordRoborazziDebug` re-records them, deliberately, for a pull request.
+ * - `./gradlew recordRoborazziDebug` re-records them, only when a person asks: locally, or via
+ *   the `record-store-screenshots` label on a pull request (STORE-SHOT-009).
  * - Under plain `./gradlew test` each shot is still composed and its caption checked, but no
  *   image is written or compared.
  *

@@ -72,12 +72,30 @@ All sizes are pixels of the final image.
 
 ## Recording and verifying
 
-**Invariant — A store screenshot is never re-recorded by CI.** CI only verifies the committed
-images (`./gradlew verifyRoborazziDebug`, which fails on any changed or missing image); a
-changed image arrives only in a pull request, recorded deliberately with
-`./gradlew recordRoborazziDebug`, where a person sees the diff. Record on Linux with JDK 17, as
-CI runs: Robolectric draws with its own fonts and renderer, but the host's JDK formats dates and
-times, and anti-aliasing can differ between operating systems.
+**Invariant — A store screenshot is recorded only when a person asks for it, and reaches the
+default branch only through a pull request whose diff shows the new image.**
+
+- **STORE-SHOT-008** Every pull request's build (`pr.yml`) only verifies the committed images
+  (`./gradlew verifyRoborazziDebug`, which fails on any changed or missing image) and, when it
+  fails, uploads the rendered and diff images as the `store-screenshot-diffs` artifact. It never
+  records.
+- **STORE-SHOT-009** Recording happens in one of two ways, both started by a person:
+  - **In CI:** a person applies the `record-store-screenshots` label to a pull request from a
+    branch of this repository (never a fork). `record-store-screenshots.yml` runs
+    `./gradlew recordRoborazziDebug` on the pull request's head, commits only the files in the
+    `phoneScreenshots` folder as `github-actions[bot]`, and force-pushes that commit to the side
+    branch `store-screenshots/pr-<number>`, based on the pull request's head. If no image changed
+    it pushes nothing. Its job summary says which commit to bring in, and it always removes the
+    label afterwards, so the label can be applied again for another recording.
+  - **Locally:** `./gradlew recordRoborazziDebug`, on Linux with JDK 17 as CI runs. Robolectric
+    draws with its own fonts and renderer, but the host's JDK formats dates and times, and
+    anti-aliasing can differ between operating systems.
+
+  **Invariant — The recording workflow never pushes to the pull request's branch.** A push made
+  with the workflow's token starts no `pr.yml` run, so a person brings the side branch's commit
+  into the pull request with their own push (`git fetch origin store-screenshots/pr-<number> &&
+  git merge --ff-only FETCH_HEAD`, or a cherry-pick). That push runs `pr.yml`, which verifies the
+  new images, and the pull request's diff shows them for review.
 
 ## Build checklist
 
@@ -97,7 +115,11 @@ times, and anti-aliasing can differ between operating systems.
 - [x] A unit test measures captions as rendered lines and fails a too-long one (STORE-SHOT-012,
       STORE-SHOT-014 invariant).
 - [x] `pr.yml` runs `verifyRoborazziDebug` and uploads `app/build/outputs/roborazzi/` (the actual
-      and `_compare` images) when it fails; no workflow runs `recordRoborazziDebug` (recording
+      and `_compare` images) when it fails; it never records (STORE-SHOT-008).
+- [x] `record-store-screenshots.yml` runs only on the `record-store-screenshots` label on a
+      same-repository pull request, commits only the `phoneScreenshots` folder, pushes to
+      `store-screenshots/pr-<number>` and never to the pull request's branch, and always removes
+      the label; the label is defined in `.github/labels.repo.yml` (STORE-SHOT-009 and its
       invariant).
-- [ ] The five images are recorded and committed (needs a machine that can run the Android
-      build).
+- [ ] The five images are recorded and committed (apply the `record-store-screenshots` label,
+      then bring the side branch's commit into the pull request).
