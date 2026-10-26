@@ -1,0 +1,5 @@
+- Make your own reminder schedules: pick the days, then set times or a repeat, like every hour from 9 to 5.
+- Set a daily goal for each stretch and see today's progress on the home screen.
+- Tap a reminder to open your stretches, check off what you did and save it.
+- See how well you kept your goals by week or month, with your current streak.
+- Add a home screen widget with a ring that fills as you meet today's goals.

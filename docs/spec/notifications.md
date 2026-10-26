@@ -1,3 +1,5 @@
+<!-- store: omit -->
+
 # Notifications
 
 - **NOTIF-001** A reminder notification's title is the stretch name(s); its expanded text lists
@@ -68,3 +70,5 @@
 - [x] The receiver returns before posting, but `onAlarmHandled` still runs, so the next alarm
       is armed (NOTIF-010 invariant).
 - [ ] Robolectric test for notification content (not yet).
+- [x] Store listing reviewed: this page is `store: omit`, and any claim in
+      `docs/store/listing.md` that cites it is still true (STORE-LIST-002, STORE-LIST-003).

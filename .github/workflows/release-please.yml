@@ -18,6 +18,11 @@ name: release-please
 # anything is attached. release-pr-guard runs the same check on the open release PR after every
 # push to main and posts the result as the `release-version-code` commit status on its head.
 #
+# It also attaches store-listing-<version>.zip, the committed fastlane/metadata/android folder (the
+# Google Play listing text and screenshots) as it is at the tag, after re-running the listing's
+# drift check there (STORE-LIST-007, docs/spec/store-listing.md). The listing is never generated
+# here: it is written and reviewed in pull requests, and this run only verifies and packages it.
+#
 # workflow_dispatch with `backfill_tag` rebuilds and re-attaches the APK and AAB for an existing
 # release tag (for example one published before signing was wired up); release-please itself is
 # skipped. A backfill of the newest published release is guarded like a release, so it cannot
@@ -92,6 +97,27 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ env.RELEASE_TAG }}
+
+      # STORE-LIST-007: the tag's own listing check, before anything is built. It writes nothing
+      # (--check): the listing text and screenshots were reviewed in pull requests and are only
+      # packaged here. A backfill of a tag older than the listing text skips it (and the zip)
+      # with a notice; a release without it fails.
+      - name: Check the store listing text at the release tag
+        id: listing
+        run: |
+          if [ ! -f docs/store/listing.md ] || [ ! -f .github/scripts/store_listing.py ]; then
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+              echo "::notice title=Store listing::$RELEASE_TAG predates the store listing text" \
+                "(STORE-LIST-007), so no store listing is checked or attached."
+              echo "attach=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error title=Store listing::$RELEASE_TAG has no docs/store/listing.md or" \
+              ".github/scripts/store_listing.py (STORE-LIST-007)."
+            exit 1
+          fi
+          python3 .github/scripts/store_listing.py --check
+          echo "attach=true" >> "$GITHUB_OUTPUT"
 
       # The signature gate runs from main, so backfilling an older tag still runs the current gate.
       - name: Check out main for the release-signature gate
@@ -200,28 +226,54 @@ jobs:
             --repo "$GITHUB_REPOSITORY" "$tag_option" "$RELEASE_TAG" \
             app/build/outputs/apk/release/*.apk
 
+      # STORE-LIST-007: zips the committed fastlane/metadata/android folder, paths kept from the
+      # repository root, exactly as checked out at the tag. The build above must not have
+      # touched it; a changed or untracked file there fails instead of being packaged.
+      - name: Package the store listing
+        if: steps.listing.outputs.attach == 'true'
+        run: |
+          changed="$(git status --porcelain --untracked-files=all -- fastlane/metadata/android)"
+          if [ -n "$changed" ]; then
+            printf '%s\n' "$changed"
+            echo "::error title=Store listing::fastlane/metadata/android differs from the" \
+              "release tag; only committed, reviewed files are packaged (STORE-LIST-007)."
+            exit 1
+          fi
+          listing_zip="$RUNNER_TEMP/store-listing-$RELEASE_VERSION_NAME.zip"
+          rm -f "$listing_zip"
+          zip -r -X -q "$listing_zip" fastlane/metadata/android
+          unzip -l "$listing_zip"
+          echo "LISTING_ZIP=$listing_zip" >> "$GITHUB_ENV"
+
       # Uses the runner's pre-installed gh CLI rather than another pinned action. --clobber lets a
       # backfill replace an earlier (debug-signed) asset of the same name.
-      - name: Attach the release APK and AAB to the GitHub Release
+      - name: Attach the release APK, AAB and store listing to the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "$RELEASE_TAG" \
-            app/build/outputs/apk/release/*.apk \
-            app/build/outputs/bundle/release/*.aab \
+          assets=(app/build/outputs/apk/release/*.apk app/build/outputs/bundle/release/*.aab)
+          if [ -n "${LISTING_ZIP:-}" ]; then
+            assets+=("$LISTING_ZIP")
+          fi
+          gh release upload "$RELEASE_TAG" "${assets[@]}" \
             --clobber \
             --repo "${{ github.repository }}"
 
-      # Reads back what the release actually carries: both assets, by their exact names.
-      - name: Check the release carries the named APK and AAB
+      # Reads back what the release actually carries: every asset, by its exact name.
+      - name: Check the release carries the named APK, AAB and store listing
         env:
           GH_TOKEN: ${{ github.token }}
+          LISTING_ATTACHED: ${{ steps.listing.outputs.attach }}
         run: |
           assets="$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' \
             --repo "${{ github.repository }}")"
+          expected=("simple-stretch-$RELEASE_VERSION_NAME-release.apk"
+                    "simple-stretch-$RELEASE_VERSION_NAME-release.aab")
+          if [ "$LISTING_ATTACHED" = "true" ]; then
+            expected+=("store-listing-$RELEASE_VERSION_NAME.zip")
+          fi
           missing=0
-          for name in "simple-stretch-$RELEASE_VERSION_NAME-release.apk" \
-                      "simple-stretch-$RELEASE_VERSION_NAME-release.aab"; do
+          for name in "${expected[@]}"; do
             if ! printf '%s\n' "$assets" | grep -Fxq -- "$name"; then
               echo "::error title=Release assets::$RELEASE_TAG does not carry $name."
               missing=1

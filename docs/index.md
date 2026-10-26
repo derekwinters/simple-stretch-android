@@ -56,6 +56,26 @@ Behaviour is set out in the [specification](spec/README.md).
 adb install -r app/build/outputs/apk/debug/simple-stretch-*-debug.apk
 ```
 
+Or copy the APK to the phone and open it (allow installs from that source when asked).
+
+**Application ID:** from 0.3.0 the application ID is `io.github.derekwinters.simple_stretch_android`.
+An install of 0.1.0 or 0.2.0 (`com.derekwinters.stretch`) is a separate app: it will not update to
+new builds and keeps its own data until uninstalled. Nothing is carried over, so the new app starts
+empty, and the old one can be uninstalled whenever you like.
+
+Every pull request's CI run also uploads its debug APK as the `simple-stretch-debug-apk`
+workflow artifact (kept for 14 days). Pull requests from branches of this repository also upload
+`simple-stretch-release-apk`, signed with the release key, which installs in place over a release
+of 0.3.0 or later, so a PR can be tried before it is released without losing data. A debug APK and a
+release-signed APK cannot be installed over each other. Those pull requests also upload
+`simple-stretch-release-aab`, the release Android App Bundle signed with the same key; the AAB is
+the upload format for Google Play and cannot be installed directly, so sideload the APK.
+
+On first launch, allow notifications. On Android 12/12L, also allow "Alarms & reminders" if the
+app shows the banner, so reminders arrive on the minute.
+
+## Store listing
+
 The Google Play screenshots are rendered from the app's screens on the JVM, not captured on a
 phone ([store listing specification](spec/store-listing.md)), and committed under
 `fastlane/metadata/android/en-US/images/phoneScreenshots/`; their captions are in
@@ -80,31 +100,29 @@ them. To re-record, either:
 
 Either way the new images are reviewed in the pull request's diff.
 
-Or copy the APK to the phone and open it (allow installs from that source when asked).
+The listing's text (title, short description and full description) is written by hand in
+[store/listing.md](store/listing.md), one claim per line, each citing the requirement IDs it rests
+on. After editing it, compile it into `fastlane/metadata/android/en-US/` and commit the result:
 
-**Application ID:** from 0.3.0 the application ID is `io.github.derekwinters.simple_stretch_android`.
-An install of 0.1.0 or 0.2.0 (`com.derekwinters.stretch`) is a separate app: it will not update to
-new builds and keeps its own data until uninstalled. Nothing is carried over, so the new app starts
-empty, and the old one can be uninstalled whenever you like.
+```sh
+python3 .github/scripts/store_listing.py           # write title.txt, short_description.txt, full_description.txt
+python3 .github/scripts/store_listing.py --check   # what CI runs; writes nothing
+```
 
-Every pull request's CI run also uploads its debug APK as the `simple-stretch-debug-apk`
-workflow artifact (kept for 14 days). Pull requests from branches of this repository also upload
-`simple-stretch-release-apk`, signed with the release key, which installs in place over a release
-of 0.3.0 or later, so a PR can be tried before it is released without losing data. A debug APK and a
-release-signed APK cannot be installed over each other. Those pull requests also upload
-`simple-stretch-release-aab`, the release Android App Bundle signed with the same key; the AAB is
-the upload format for Google Play and cannot be installed directly, so sideload the APK.
-
-On first launch, allow notifications. On Android 12/12L, also allow "Alarms & reminders" if the
-app shows the banner, so reminders arrive on the minute.
+Every pull request's CI run fails when a claim cites a missing or retired requirement, a headline
+feature page (marked `<!-- store: headline -->`) has no claim, a text is over Google Play's limit,
+or the committed files differ from the listing.
 
 ## Releases
 
 Merging to `main` runs release-please, which keeps a release PR up to date from Conventional
-Commit titles. Merging that PR tags a release and attaches two files:
+Commit titles. Merging that PR tags a release and attaches three files:
 
 - `simple-stretch-<version>-release.apk`, for installing directly onto a phone (sideloading);
-- `simple-stretch-<version>-release.aab`, the Android App Bundle for uploading to Google Play.
+- `simple-stretch-<version>-release.aab`, the Android App Bundle for uploading to Google Play;
+- `store-listing-<version>.zip`, the reviewed Google Play listing (text and screenshots) as
+  committed at the release, under `fastlane/metadata/android/`. The release only checks and
+  packages it; it never writes listing text.
 
 Both are signed with a stable release key
 ([ADR 0002](adr/0002-release-signing-with-a-stable-keystore.md)) and checked by the same
@@ -144,8 +162,9 @@ app/src/main/java/com/derekwinters/stretch/
 app/src/test/     JVM unit tests (next occurrence, repeating slots, goal maths, goal history,
                   trends, widget ring and palette) and the store screenshot tests (store/)
 app/schemas/      exported Room schemas
-docs/spec/        requirements with IDs; docs/adr/ decisions; docs/store/ screenshot captions
-fastlane/         Google Play listing images (the store screenshots)
+docs/spec/        requirements with IDs; docs/adr/ decisions; docs/store/ listing text and
+                  screenshot captions
+fastlane/         Google Play listing text (compiled from docs/store/listing.md) and images
 ```
 
 ## Notes

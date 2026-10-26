@@ -1,3 +1,5 @@
+<!-- store: omit -->
+
 # Stretch library
 
 - **LIB-001** The user can add, edit and delete stretches. A stretch has a name, optional
@@ -34,3 +36,5 @@
 - [x] `goals` and `completions` foreign keys cascade on stretch delete (LIB-005).
 - [x] One shared `StretchEditDialog` composable serves the library, the goals screen and the schedule picker (LIB-007).
 - [x] The repository's insert returns the new id so the picker can select it (LIB-007).
+- [x] Store listing reviewed: this page is `store: omit`, and any claim in
+      `docs/store/listing.md` that cites it is still true (STORE-LIST-002, STORE-LIST-003).

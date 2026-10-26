@@ -1,3 +1,5 @@
+<!-- store: headline -->
+
 # Goals
 
 - **GOAL-001** A goal says how many times a day the user wants to do one stretch, e.g. 3
@@ -102,3 +104,5 @@
       roles named in GOAL-002.
 - [ ] Instrumented migration tests (1→2, 2→3) with `MigrationTestHelper` (need an emulator
       and the committed `1.json` / `2.json` schemas).
+- [x] Store listing reviewed: every claim in `docs/store/listing.md` that cites this page is
+      still true, and at least one does (`store: headline`; STORE-LIST-003, STORE-LIST-004).

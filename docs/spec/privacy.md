@@ -1,3 +1,5 @@
+<!-- store: omit -->
+
 # Privacy
 
 The app keeps everything on the phone. The user-facing [privacy policy](../privacy.md) says so
@@ -39,3 +41,5 @@ data safety form" answers, in the same pull request.
 - [x] The policy page lists what is stored, each permission, backup, deletion, children,
       changes and contact, and the data safety answers (PRIV-002, PRIV-004).
 - [ ] The merged manifest is not checked: a library could in theory merge in a permission.
+- [x] Store listing reviewed: this page is `store: omit`, and any claim in
+      `docs/store/listing.md` that cites it is still true (STORE-LIST-002, STORE-LIST-003).

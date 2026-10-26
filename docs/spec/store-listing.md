@@ -1,9 +1,17 @@
+<!-- store: omit -->
+
 # Store listing
 
-The phone screenshots on the Google Play listing. They are rendered from the app's own screens
-on the JVM (Robolectric, through Roborazzi), never captured by hand from a device, so they
-change only when the screens or the captions do, and every change is reviewed as an image diff
-in a pull request.
+The Google Play listing: its text (title, short description and full description) and its phone
+screenshots. Both are made only in pull requests and reviewed there; a release ships what was
+reviewed and makes nothing of its own.
+
+The phone screenshots are rendered from the app's own screens on the JVM (Robolectric, through
+Roborazzi), never captured by hand from a device, so they change only when the screens or the
+captions do, and every change is reviewed as an image diff in a pull request (STORE-SHOT-001 to
+STORE-SHOT-014). The text is hand-written, one claim per line, and each claim names the
+requirements it rests on, so the listing can never promise what the specification does not say
+(STORE-LIST-001 to STORE-LIST-007).
 
 ## The shots
 
@@ -97,6 +105,57 @@ default branch only through a pull request whose diff shows the new image.**
   git merge --ff-only FETCH_HEAD`, or a cherry-pick). That push runs `pr.yml`, which verifies the
   new images, and the pull request's diff shows them for review.
 
+## Listing text
+
+**Invariant — The listing is never generated at release time.** The release run only verifies and
+packages text and images that were already reviewed in pull requests: nothing in it writes,
+rewrites or records listing text or screenshots.
+
+- **STORE-LIST-001** The listing text is written by hand in
+  [docs/store/listing.md](../store/listing.md), in three sections, exactly these and in this
+  order: `## Title`, `## Short description` and `## Full description`. Text before `## Title`
+  explains the page and is not part of the listing. The title and the short description are one
+  line each. Every non-blank line of the full description is one **claim**: a paragraph line or
+  a `- ` list item, ending with one tag that lists the requirement IDs it rests on, for example
+  `- Set a daily goal for each stretch. <!-- GOAL-001 -->`. The title and the short description
+  may carry a tag as well. `.github/scripts/store_listing.py` compiles the page into
+  `fastlane/metadata/android/en-US/title.txt`, `short_description.txt` and
+  `full_description.txt` (fastlane supply's layout), with the tags removed, the claims' text
+  kept as written, and runs of blank lines collapsed into one paragraph break. The three files
+  are committed with the listing change that produced them; they are never edited by hand.
+- **STORE-LIST-002** Every page in `docs/spec/` except this folder's `README.md` (the index,
+  which defines no requirements) starts with a store marker as its **first line**, followed by a
+  blank line, in exactly one of two forms: `<!-- store: headline -->` or
+  `<!-- store: omit -->`. The marker is an HTML comment, so MkDocs renders nothing for it. A
+  `headline` page describes a feature the listing must mention; an `omit` page need not be
+  mentioned (its IDs may still be cited). The headline pages are scheduling, goals, sessions,
+  trends and widgets; skipping, notifications, library, screens, privacy and this page are
+  `omit` (privacy and the store listing are not app features).
+- **STORE-LIST-003** A tag may cite only an ID that a spec page defines (a top-level list item
+  opening with the bold ID, `- **GOAL-001** …`) and that is not retired (a definition whose text
+  opens with `_Retired._`). An ID mentioned only in prose is not defined.
+- **STORE-LIST-004** Every `headline` page has at least one claim citing at least one of the IDs
+  it defines.
+- **STORE-LIST-005** The compiled files keep within Google Play's limits, counted in characters
+  (not bytes), without the one trailing newline each file ends with: title 30, short description
+  80, full description 4,000.
+- **STORE-LIST-006** `python3 .github/scripts/store_listing.py --check` writes nothing and fails,
+  with a workflow error naming each problem, when any of STORE-LIST-001 to STORE-LIST-005 is
+  broken or a committed file is missing or differs from what the script compiles. Every pull
+  request's build (`pr.yml`) runs it. Without `--check` the script writes the three files, and
+  writes nothing when any of STORE-LIST-001 to STORE-LIST-005 is broken.
+- **STORE-LIST-007** When release-please publishes a release, `build-and-attach` in
+  `release-please.yml` runs the same check on the release tag's checkout (the tag's own script),
+  before anything is built or attached, and attaches `store-listing-<version>.zip` to the GitHub
+  Release beside the APK and AAB. The zip holds the committed `fastlane/metadata/android` folder
+  as it is at the tag (text and screenshots, under that path), and the job then reads back that
+  the release carries it. The zip's screenshots are the ones committed under
+  `fastlane/metadata/android`; they are verified only in pull requests (`verifyRoborazziDebug`,
+  STORE-SHOT-008), and the release run does not re-verify them (it re-checks
+  only the listing text). It needs no secret beyond those the job already uses. A manual
+  backfill of a tag older than this requirement (one without `docs/store/listing.md`) skips the
+  check and the zip with a notice; any other failure of the check fails the job.
+
 ## Build checklist
 
 - [x] One screenshot test per shot, each naming its STORE-SHOT ID (STORE-SHOT-001 to
@@ -123,3 +182,14 @@ default branch only through a pull request whose diff shows the new image.**
       invariant).
 - [x] The five images are recorded and committed in the `phoneScreenshots` folder, and
       `verifyRoborazziDebug` passes against them (STORE-SHOT-007).
+- [x] Every spec page except `README.md` starts with `<!-- store: headline -->` or
+      `<!-- store: omit -->` and a blank line (STORE-LIST-002).
+- [x] `store_listing.py` is standard-library Python with unit tests citing the STORE-LIST IDs
+      they cover, run by `pr.yml` with the other script tests (STORE-LIST-001 to
+      STORE-LIST-006).
+- [x] `pr.yml` runs `store_listing.py --check` (STORE-LIST-006).
+- [x] `build-and-attach` runs the check at the tag and attaches and reads back
+      `store-listing-<version>.zip`; no step in it writes listing text (STORE-LIST-007 and the
+      invariant).
+- [x] Store listing reviewed: the draft text in `docs/store/listing.md` claims only what the
+      cited requirements say (STORE-LIST-003, STORE-LIST-004).

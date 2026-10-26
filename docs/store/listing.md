@@ -1,0 +1,39 @@
+# Store listing text
+
+The text of the Google Play listing: its title, short description and full description. This
+page is the only place it is written; `.github/scripts/store_listing.py` compiles it into
+`fastlane/metadata/android/en-US/` (`title.txt`, `short_description.txt` and
+`full_description.txt`), and CI fails when those files, this page and the
+[specification](../spec/README.md) are out of step
+([store listing specification](../spec/store-listing.md#listing-text), STORE-LIST-001 to
+STORE-LIST-007).
+
+How to write it:
+
+- Keep exactly the three sections below, in this order. Everything above `## Title` (this
+  explanation) is not part of the listing.
+- The title (at most 30 characters) and the short description (at most 80) are one line each.
+- Every line of the full description (at most 4,000 characters) is one claim, written as plain
+  text and ending with the requirement IDs it rests on as an HTML comment, e.g.
+  `<!-- GOAL-001, HOME-006 -->`. The comment does not show on this page or in the listing; view
+  the page's source to see the IDs. Only claim what the cited requirements say.
+- Every spec page marked `<!-- store: headline -->` needs at least one claim citing one of its
+  IDs.
+- After editing, run `python3 .github/scripts/store_listing.py` and commit the three files it
+  writes with this page.
+
+## Title
+
+Simple Stretch
+
+## Short description
+
+Stretch reminders on your own schedule, with daily goals and trends. <!-- SCHED-001, GOAL-001, TREND-004 -->
+
+## Full description
+
+- Make your own reminder schedules: pick the days, then set times or a repeat, like every hour from 9 to 5. <!-- SCHED-001, SCHED-011, SCHED-012 -->
+- Set a daily goal for each stretch and see today's progress on the home screen. <!-- GOAL-001, GOAL-003, HOME-006 -->
+- Tap a reminder to open your stretches, check off what you did and save it. <!-- SESS-001, SESS-002, SESS-003, NOTIF-002 -->
+- See how well you kept your goals by week or month, with your current streak. <!-- TREND-004, TREND-005, TREND-006 -->
+- Add a home screen widget with a ring that fills as you meet today's goals. <!-- WIDGET-001, WIDGET-002, WIDGET-003 -->

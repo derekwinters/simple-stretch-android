@@ -1,3 +1,5 @@
+<!-- store: headline -->
+
 # Widgets
 
 A home screen widget shows today's goals at a glance. The segmented ring is the first widget;
@@ -112,3 +114,5 @@ the mat-bar and goal-list widgets are later alternatives.
 - [x] Tapping opens home with any screen above it closed (WIDGET-007).
 - [ ] On a device: light and dark, dynamic colour on and off, resize, tap, and the midnight
       reset (human-only issue).
+- [x] Store listing reviewed: every claim in `docs/store/listing.md` that cites this page is
+      still true, and at least one does (`store: headline`; STORE-LIST-003, STORE-LIST-004).

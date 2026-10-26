@@ -1,3 +1,5 @@
+<!-- store: headline -->
+
 # Stretch sessions
 
 - **SESS-001** The stretch session screen is where the user records what they stretched. It
@@ -48,3 +50,5 @@
 - [x] The checked set starts empty for every way of opening (SESS-002 invariant).
 - [x] All completions of one save are inserted in one transaction with one timestamp (SESS-003).
 - [x] `completions` has indices on `stretchId` and `completedAt` (SESS-004, GOAL-003).
+- [x] Store listing reviewed: every claim in `docs/store/listing.md` that cites this page is
+      still true, and at least one does (`store: headline`; STORE-LIST-003, STORE-LIST-004).

@@ -1,7 +1,8 @@
 name: pr
 
 # The build gate for a pull request: the unit tests must pass, the store screenshots must match
-# the committed images, and the app must assemble. This is also where the Android build is
+# the committed images, the store listing text must be in step with the spec, and the app must
+# assemble. This is also where the Android build is
 # verified at all: the Android SDK and the Android Gradle Plugin come from Google's servers, which
 # not every development environment can reach.
 #
@@ -49,6 +50,15 @@ jobs:
           fi
           echo "OK: outside $clock_file, nothing under app/src/main reads the system clock directly."
 
+      # STORE-LIST-006 (docs/spec/store-listing.md): the Google Play listing text is hand-written
+      # in docs/store/listing.md, each claim citing the requirement IDs it rests on, and compiled
+      # into fastlane/metadata/android/en-US/*.txt. Fails when a claim cites a missing or retired
+      # ID, a `store: headline` spec page has no claim, a spec page has no store marker, a file is
+      # over Google Play's limit, or the committed files differ from what the script compiles
+      # (run `python3 .github/scripts/store_listing.py` and commit). Writes nothing.
+      - name: Check the store listing text against the spec
+        run: python3 .github/scripts/store_listing.py --check
+
       - name: Set up the JDK
         uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         with:
@@ -64,9 +74,10 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
-      # Standard library only; covers the release-signature gate used below and on release, and
-      # the release version-code guard (docs/adr/0003).
-      - name: Run the release gate tests
+      # Standard library only; covers the release-signature gate used below and on release, the
+      # release version-code guard (docs/adr/0003) and the store listing check (STORE-LIST-001
+      # to STORE-LIST-006).
+      - name: Run the release gate and store listing tests
         run: python3 -m unittest discover -s .github/scripts/tests -v
 
       # Every unit test, debug and release, as `./gradlew test` would, without running the debug

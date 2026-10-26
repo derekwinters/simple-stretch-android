@@ -50,5 +50,8 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
   PR branch; bring that commit into the PR with your own push so `pr.yml` verifies it), or run
   `./gradlew recordRoborazziDebug` locally on Linux with JDK 17. Either way the images reach
   `main` only through the PR diff.
+- Store listing text is hand-written in `docs/store/listing.md`, each claim citing spec IDs; after
+  editing it run `python3 .github/scripts/store_listing.py` and commit the generated
+  `fastlane/metadata/android/en-US/*.txt` (CI runs it with `--check`; docs/spec/store-listing.md).
 
 @.ai-sdlc/house-rules.md
