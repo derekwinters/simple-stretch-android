@@ -35,7 +35,7 @@ Stretch reminders on your own schedule, with daily goals and trends. <!-- SCHED-
 
 ## Full description
 
-Simple Stretch reminds you to stretch during the day, on a schedule you choose. <!-- SCHED-001, NOTIF-001 -->
+Simple Stretch reminds you to stretch during the day, on a schedule you choose. <!-- SCHED-001 -->
 
 - Make your own reminder schedules: pick the days, then set times or a repeat, like every hour from 9 to 5. <!-- SCHED-001, SCHED-011, SCHED-012 -->
 - Start with a set of common stretches, and add or edit your own. <!-- LIB-001, LIB-002 -->
