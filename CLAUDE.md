@@ -43,7 +43,11 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
 - Room schemas are exported to `app/schemas/`; commit changes to them with the entity change.
 - Store screenshots (docs/spec/store-listing.md) are rendered by Roborazzi on Robolectric from
   `ShowcaseFixture` and committed in `fastlane/metadata/android/en-US/images/phoneScreenshots/`;
-  captions are in `docs/store/captions.md`. CI runs `./gradlew verifyRoborazziDebug`, which fails
+  captions are in `docs/store/captions.md`. The Play store icon (`images/icon.png`, drawn from the
+  real launcher icon resources) and feature graphic (`images/featureGraphic.png`, in the committed
+  Roboto Bold from `app/src/test/resources/store/fonts/`) are rendered by `StoreArtTest` on the same
+  setup; it writes and compares them itself, honouring Roborazzi's record/verify mode, because
+  Roborazzi writes only RGBA. CI runs `./gradlew verifyRoborazziDebug`, which fails
   on a changed or missing image and uploads the diffs; it never records. Recording is always
   deliberate: apply the `record-store-screenshots` label to the PR (`record-store-screenshots.yml`
   records and pushes the images to the side branch `store-screenshots/pr-<number>`, never to the

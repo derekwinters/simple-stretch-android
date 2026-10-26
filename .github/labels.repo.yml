@@ -6,4 +6,4 @@ labels:
   # record-store-screenshots.yml; the workflow removes it when it finishes.
   - name: record-store-screenshots
     color: "1361A7"
-    description: Re-record the store screenshots in CI; the result is reviewed in this PR
+    description: Re-record the store screenshots, icon and feature graphic in CI; reviewed in this PR
