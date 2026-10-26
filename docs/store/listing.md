@@ -42,7 +42,7 @@ Simple Stretch reminds you to stretch during the day, on a schedule you choose. 
 - Tap a reminder to open your stretches, check off what you did and save it. <!-- SESS-001, SESS-002, SESS-003, NOTIF-002 -->
 - Not a good moment? Snooze a reminder for 5 minutes. <!-- NOTIF-008 -->
 - Set a daily goal for each stretch and see today's progress on the home screen. <!-- GOAL-001, GOAL-003, HOME-006 -->
-- Reminders stop while all of today's goals are met. <!-- GOAL-005, NOTIF-010 -->
+- Reminders go quiet while all of today's goals are met. <!-- GOAL-005, NOTIF-010 -->
 - Skip today, or any day ahead, without changing your schedules. <!-- SKIP-001, SKIP-002, SKIP-006 -->
 - See how well you kept your goals by week or month, with your current streak. <!-- TREND-004, TREND-005, TREND-006 -->
 - Add a home screen widget with a ring that fills as you meet today's goals. <!-- WIDGET-001, WIDGET-002, WIDGET-003 -->
