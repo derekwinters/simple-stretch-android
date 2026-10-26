@@ -69,20 +69,21 @@ jobs:
       - name: Run the release gate tests
         run: python3 -m unittest discover -s .github/scripts/tests -v
 
-      - name: Run the unit tests
-        run: ./gradlew test --stacktrace
+      # Every unit test, debug and release, as `./gradlew test` would, without running the debug
+      # ones twice: verifyRoborazziDebug runs testDebugUnitTest itself, with the verify setting.
+      #
+      # STORE-SHOT (docs/spec/store-listing.md): that verify run renders the Google Play
+      # screenshots and compares them with the images committed in
+      # fastlane/metadata/android/en-US/images/phoneScreenshots/. A changed or missing image fails
+      # the job. This workflow only verifies (STORE-SHOT-008); recording happens only when a
+      # person asks for it: the `record-store-screenshots` label (record-store-screenshots.yml,
+      # which pushes to a side branch, never to the PR branch) or `./gradlew recordRoborazziDebug`
+      # locally. The new images then arrive in the PR by a person's push, which runs this workflow
+      # to verify them.
+      - name: Run the unit tests and verify the store screenshots
+        run: ./gradlew testReleaseUnitTest verifyRoborazziDebug --stacktrace
 
-      # STORE-SHOT (docs/spec/store-listing.md): renders the Google Play screenshots and compares
-      # them with the images committed in fastlane/metadata/android/en-US/images/phoneScreenshots/.
-      # A changed or missing image fails the job. This workflow only verifies (STORE-SHOT-008);
-      # recording happens only when a person asks for it: the `record-store-screenshots` label
-      # (record-store-screenshots.yml, which pushes to a side branch, never to the PR branch) or
-      # `./gradlew recordRoborazziDebug` locally. The new images then arrive in the PR by a
-      # person's push, which runs this workflow to verify them.
-      - name: Verify the store screenshots
-        run: ./gradlew verifyRoborazziDebug --stacktrace
-
-      # On a failed verify, the rendered (_actual) and diff (_compare) images, so a reviewer can
+      # On a failure (a test or the verify), the rendered (_actual) and diff (_compare) images, so a reviewer can
       # see what changed without a local build.
       - name: Upload the store screenshot diffs
         if: failure()
