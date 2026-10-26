@@ -1,5 +1,12 @@
+Simple Stretch reminds you to stretch during the day, on a schedule you choose.
+
 - Make your own reminder schedules: pick the days, then set times or a repeat, like every hour from 9 to 5.
-- Set a daily goal for each stretch and see today's progress on the home screen.
+- Start with a set of common stretches, and add or edit your own.
 - Tap a reminder to open your stretches, check off what you did and save it.
+- Not a good moment? Snooze a reminder for 5 minutes.
+- Set a daily goal for each stretch and see today's progress on the home screen.
+- Reminders go quiet while all of today's goals are met.
+- Skip today, or any day ahead, without changing your schedules.
 - See how well you kept your goals by week or month, with your current streak.
 - Add a home screen widget with a ring that fills as you meet today's goals.
+- No account, no ads and no internet access: the app never goes online, so it never sends what you record anywhere itself.

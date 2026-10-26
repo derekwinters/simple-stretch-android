@@ -4,7 +4,9 @@
 
 The Google Play listing: its text (title, short description and full description) and its phone
 screenshots. Both are made only in pull requests and reviewed there; a release ships what was
-reviewed and makes nothing of its own.
+reviewed and makes nothing of its own. The listing's category, tags, website and contact email
+are entered in Play Console by the owner, not compiled from this repository; they are recorded
+in [Play Console listing details](../store/play-console.md).
 
 The phone screenshots are rendered from the app's own screens on the JVM (Robolectric, through
 Roborazzi), never captured by hand from a device, so they change only when the screens or the
