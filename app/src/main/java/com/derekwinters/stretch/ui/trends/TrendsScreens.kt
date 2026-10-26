@@ -75,6 +75,30 @@ fun TrendsScreen(
     viewModel: TrendsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    TrendsContent(
+        state = state,
+        onBack = onBack,
+        onOpenDay = onOpenDay,
+        onSetKind = viewModel::setKind,
+        onPrevious = viewModel::previous,
+        onNext = viewModel::next,
+    )
+}
+
+/**
+ * TREND-004..006: the Trends screen drawn from its state alone. [TrendsScreen] feeds it from
+ * [TrendsViewModel]; the store screenshots feed it directly (STORE-SHOT-005).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TrendsContent(
+    state: TrendsState,
+    onBack: () -> Unit,
+    onOpenDay: (LocalDate) -> Unit,
+    onSetKind: (PeriodKind) -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+) {
     val unit = if (state.period.kind == PeriodKind.WEEK) "week" else "month"
 
     Scaffold(
@@ -98,19 +122,19 @@ fun TrendsScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
                         selected = state.period.kind == PeriodKind.WEEK,
-                        onClick = { viewModel.setKind(PeriodKind.WEEK) },
+                        onClick = { onSetKind(PeriodKind.WEEK) },
                         label = { Text("Week") },
                     )
                     FilterChip(
                         selected = state.period.kind == PeriodKind.MONTH,
-                        onClick = { viewModel.setKind(PeriodKind.MONTH) },
+                        onClick = { onSetKind(PeriodKind.MONTH) },
                         label = { Text("Month") },
                     )
                 }
             }
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = viewModel::previous, enabled = state.canGoPrevious) {
+                    IconButton(onClick = onPrevious, enabled = state.canGoPrevious) {
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous $unit")
                     }
                     Text(
@@ -119,7 +143,7 @@ fun TrendsScreen(
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center,
                     )
-                    IconButton(onClick = viewModel::next, enabled = state.canGoNext) {
+                    IconButton(onClick = onNext, enabled = state.canGoNext) {
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next $unit")
                     }
                 }

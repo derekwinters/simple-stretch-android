@@ -125,6 +125,37 @@ fun GoalsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var creating by remember { mutableStateOf(false) }
 
+    GoalsContent(
+        state = state,
+        onBack = onBack,
+        onTap = viewModel::tap,
+        onNewStretch = { creating = true },
+    )
+
+    if (creating) {
+        StretchEditDialog(
+            initial = Stretch(name = ""),
+            onDismiss = { creating = false },
+            onSave = { newStretch ->
+                creating = false
+                viewModel.createStretch(newStretch)
+            },
+        )
+    }
+}
+
+/**
+ * GOAL-002: the goals screen drawn from its state alone. [GoalsScreen] feeds it from
+ * [GoalsViewModel]; the store screenshots feed it directly (STORE-SHOT-003).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GoalsContent(
+    state: GoalsState,
+    onBack: () -> Unit,
+    onTap: (stretchId: Long, tap: StepperTap) -> Unit,
+    onNewStretch: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -161,7 +192,7 @@ fun GoalsScreen(
                     trailingContent = {
                         GoalStepperControl(
                             row = row,
-                            onTap = { tap -> viewModel.tap(row.stretchId, tap) },
+                            onTap = { tap -> onTap(row.stretchId, tap) },
                         )
                     },
                 )
@@ -171,7 +202,7 @@ fun GoalsScreen(
                 item {
                     // LIB-007: the library's editor; the new stretch then appears above at 0.
                     TextButton(
-                        onClick = { creating = true },
+                        onClick = onNewStretch,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = null)
@@ -181,17 +212,6 @@ fun GoalsScreen(
                 }
             }
         }
-    }
-
-    if (creating) {
-        StretchEditDialog(
-            initial = Stretch(name = ""),
-            onDismiss = { creating = false },
-            onSave = { newStretch ->
-                creating = false
-                viewModel.createStretch(newStretch)
-            },
-        )
     }
 }
 
