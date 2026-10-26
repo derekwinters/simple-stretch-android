@@ -28,7 +28,7 @@ Simple Stretch
 
 ## Short description
 
-Stretch reminders on your own schedule, with daily goals and trends.
+Stretch reminders on your own schedule, with daily goals and trends. <!-- SCHED-001, GOAL-001, TREND-004 -->
 
 ## Full description
 
