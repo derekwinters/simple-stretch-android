@@ -6,11 +6,13 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.roborazziSystemPropertyCompareOutputDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType
-import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
 import java.io.File
-import javax.imageio.ImageIO
+import java.util.zip.CRC32
+import java.util.zip.DataFormatException
+import java.util.zip.Deflater
+import java.util.zip.Inflater
 
 /**
  * The two store images beside the screenshots (docs/spec/store-listing.md): their requirement,
@@ -64,7 +66,10 @@ class ArgbImage(val width: Int, val height: Int, val pixels: IntArray) {
 /** The fields of a PNG's IHDR chunk that the store images are checked against. */
 data class PngHeader(val width: Int, val height: Int, val bitDepth: Int, val colorType: Int)
 
-/** Encodes, decodes and inspects PNGs with the JDK's own encoder (STORE-ICON-004). */
+/**
+ * Encodes, decodes and inspects PNGs (STORE-ICON-004) with java.util.zip only: Android unit tests
+ * compile against android.jar's API surface, which has no java.awt or javax.imageio.
+ */
 object Png {
     const val COLOR_TYPE_RGB = 2
     const val COLOR_TYPE_RGBA = 6
@@ -73,34 +78,182 @@ object Png {
 
     /**
      * 8-bit RGBA (colour type 6) when [alpha], else 8-bit RGB (colour type 2) with the alpha
-     * dropped. The JDK's PNG writer picks the colour type from the image type.
+     * dropped. Non-interlaced, every row with filter type 0 (none), one IDAT chunk.
      */
     fun encode(image: ArgbImage, alpha: Boolean): ByteArray {
-        val buffered = BufferedImage(
-            image.width,
-            image.height,
-            if (alpha) BufferedImage.TYPE_INT_ARGB else BufferedImage.TYPE_INT_RGB,
-        )
-        buffered.setRGB(0, 0, image.width, image.height, image.pixels, 0, image.width)
+        val channels = if (alpha) 4 else 3
+        val rowBytes = image.width * channels
+        val raw = ByteArray((rowBytes + 1) * image.height)
+        var at = 0
+        for (y in 0 until image.height) {
+            raw[at++] = 0 // filter type: none
+            for (x in 0 until image.width) {
+                val argb = image[x, y]
+                raw[at++] = (argb ushr 16).toByte()
+                raw[at++] = (argb ushr 8).toByte()
+                raw[at++] = argb.toByte()
+                if (alpha) raw[at++] = (argb ushr 24).toByte()
+            }
+        }
+
+        val ihdr = ByteArrayOutputStream()
+        DataOutputStream(ihdr).apply {
+            writeInt(image.width)
+            writeInt(image.height)
+            writeByte(8) // bit depth
+            writeByte(if (alpha) COLOR_TYPE_RGBA else COLOR_TYPE_RGB)
+            writeByte(0) // compression: deflate
+            writeByte(0) // filter method: adaptive
+            writeByte(0) // interlace: none
+        }
+
         val out = ByteArrayOutputStream()
-        check(ImageIO.write(buffered, "png", out)) { "no PNG writer" }
+        out.write(SIGNATURE)
+        writeChunk(out, "IHDR", ihdr.toByteArray())
+        writeChunk(out, "IDAT", deflate(raw))
+        writeChunk(out, "IEND", ByteArray(0))
         return out.toByteArray()
     }
 
-    /** ARGB pixels of a PNG; a PNG without alpha decodes as opaque. */
+    /**
+     * ARGB pixels of an 8-bit, non-interlaced RGB or RGBA PNG; RGB decodes as opaque. Rows may use
+     * any of the five standard filter types, so a file re-saved by another PNG writer still
+     * compares. Anything else is rejected with an [IllegalArgumentException].
+     */
     fun decode(png: ByteArray): ArgbImage {
-        val buffered = ImageIO.read(ByteArrayInputStream(png)) ?: throw IllegalArgumentException("not a readable PNG")
-        val pixels = buffered.getRGB(0, 0, buffered.width, buffered.height, null, 0, buffered.width)
-        return ArgbImage(buffered.width, buffered.height, pixels)
+        val header = header(png)
+        require(header.bitDepth == 8) { "unsupported bit depth ${header.bitDepth}" }
+        val channels = when (header.colorType) {
+            COLOR_TYPE_RGB -> 3
+            COLOR_TYPE_RGBA -> 4
+            else -> throw IllegalArgumentException("unsupported colour type ${header.colorType}")
+        }
+        require(png[28].toInt() == 0) { "interlaced PNGs are not supported" }
+
+        val idat = ByteArrayOutputStream()
+        var at = 8
+        while (at + 8 <= png.size) {
+            val length = readInt(png, at)
+            val type = String(png, at + 4, 4, Charsets.US_ASCII)
+            require(length >= 0 && at + 12 + length <= png.size) { "truncated $type chunk" }
+            if (type == "IDAT") idat.write(png, at + 8, length)
+            if (type == "IEND") break
+            at += 12 + length
+        }
+
+        val width = header.width
+        val height = header.height
+        val rowBytes = width * channels
+        val raw = inflate(idat.toByteArray(), (rowBytes + 1) * height)
+        val pixels = IntArray(width * height)
+        var previous = ByteArray(rowBytes)
+        var current = ByteArray(rowBytes)
+        for (y in 0 until height) {
+            val rowStart = y * (rowBytes + 1)
+            val filter = raw[rowStart].toInt() and 0xFF
+            for (i in 0 until rowBytes) {
+                val x = raw[rowStart + 1 + i].toInt() and 0xFF
+                val a = if (i >= channels) current[i - channels].toInt() and 0xFF else 0
+                val b = previous[i].toInt() and 0xFF
+                val c = if (i >= channels) previous[i - channels].toInt() and 0xFF else 0
+                val value = when (filter) {
+                    0 -> x
+                    1 -> x + a
+                    2 -> x + b
+                    3 -> x + (a + b) / 2
+                    4 -> x + paeth(a, b, c)
+                    else -> throw IllegalArgumentException("unknown filter type $filter in row $y")
+                }
+                current[i] = value.toByte()
+            }
+            for (px in 0 until width) {
+                val o = px * channels
+                val r = current[o].toInt() and 0xFF
+                val g = current[o + 1].toInt() and 0xFF
+                val bl = current[o + 2].toInt() and 0xFF
+                val alpha = if (channels == 4) current[o + 3].toInt() and 0xFF else 0xFF
+                pixels[y * width + px] = (alpha shl 24) or (r shl 16) or (g shl 8) or bl
+            }
+            val swap = previous
+            previous = current
+            current = swap
+        }
+        return ArgbImage(width, height, pixels)
     }
 
     /** Reads the IHDR chunk, which the PNG format requires to come first after the signature. */
     fun header(png: ByteArray): PngHeader {
-        require(png.size >= 26 && png.copyOfRange(0, 8).contentEquals(SIGNATURE)) { "not a PNG" }
+        require(png.size >= 33 && png.copyOfRange(0, 8).contentEquals(SIGNATURE)) { "not a PNG" }
         require(String(png, 12, 4, Charsets.US_ASCII) == "IHDR") { "PNG does not start with IHDR" }
-        fun int(at: Int) = ((png[at].toInt() and 0xFF) shl 24) or ((png[at + 1].toInt() and 0xFF) shl 16) or
-            ((png[at + 2].toInt() and 0xFF) shl 8) or (png[at + 3].toInt() and 0xFF)
-        return PngHeader(width = int(16), height = int(20), bitDepth = png[24].toInt() and 0xFF, colorType = png[25].toInt() and 0xFF)
+        return PngHeader(
+            width = readInt(png, 16),
+            height = readInt(png, 20),
+            bitDepth = png[24].toInt() and 0xFF,
+            colorType = png[25].toInt() and 0xFF,
+        )
+    }
+
+    private fun readInt(bytes: ByteArray, at: Int): Int =
+        ((bytes[at].toInt() and 0xFF) shl 24) or ((bytes[at + 1].toInt() and 0xFF) shl 16) or
+            ((bytes[at + 2].toInt() and 0xFF) shl 8) or (bytes[at + 3].toInt() and 0xFF)
+
+    private fun writeChunk(out: ByteArrayOutputStream, type: String, data: ByteArray) {
+        val typeBytes = type.toByteArray(Charsets.US_ASCII)
+        val crc = CRC32().apply {
+            update(typeBytes)
+            update(data)
+        }
+        DataOutputStream(out).apply {
+            writeInt(data.size)
+            write(typeBytes)
+            write(data)
+            writeInt(crc.value.toInt())
+        }
+    }
+
+    private fun deflate(data: ByteArray): ByteArray {
+        val deflater = Deflater(Deflater.BEST_COMPRESSION)
+        try {
+            deflater.setInput(data)
+            deflater.finish()
+            val out = ByteArrayOutputStream()
+            val buffer = ByteArray(64 * 1024)
+            while (!deflater.finished()) out.write(buffer, 0, deflater.deflate(buffer))
+            return out.toByteArray()
+        } finally {
+            deflater.end()
+        }
+    }
+
+    private fun inflate(data: ByteArray, expected: Int): ByteArray {
+        val inflater = Inflater()
+        try {
+            inflater.setInput(data)
+            val out = ByteArray(expected)
+            var read = 0
+            while (read < expected) {
+                val n = inflater.inflate(out, read, expected - read)
+                if (n == 0) {
+                    require(!inflater.finished() && !inflater.needsInput() && !inflater.needsDictionary()) {
+                        "image data ends after $read of $expected bytes"
+                    }
+                }
+                read += n
+            }
+            return out
+        } catch (e: DataFormatException) {
+            throw IllegalArgumentException("corrupt image data", e)
+        } finally {
+            inflater.end()
+        }
+    }
+
+    private fun paeth(a: Int, b: Int, c: Int): Int {
+        val p = a + b - c
+        val pa = kotlin.math.abs(p - a)
+        val pb = kotlin.math.abs(p - b)
+        val pc = kotlin.math.abs(p - c)
+        return if (pa <= pb && pa <= pc) a else if (pb <= pc) b else c
     }
 }
 

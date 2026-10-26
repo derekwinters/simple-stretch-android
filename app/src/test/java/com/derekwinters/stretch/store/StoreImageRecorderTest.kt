@@ -63,6 +63,22 @@ class StoreImageRecorderTest {
         assertArrayEquals(pixels, Png.decode(Png.encode(image, alpha = true)).pixels)
     }
 
+    // STORE-ICON-004: a committed file re-saved by another PNG writer, with rows filtered by
+    // Sub, Up, Average and Paeth as well as None, still decodes to the same pixels.
+    @Test
+    fun decodeUndoesEveryStandardRowFilter() {
+        val width = 7
+        val height = 10
+        for (alpha in listOf(true, false)) {
+            val pixels = IntArray(width * height) { i ->
+                val a = if (alpha) (i * 37) and 0xFF else 0xFF
+                (a shl 24) or (((i * 53) and 0xFF) shl 16) or (((i * 91) and 0xFF) shl 8) or ((i * 13) and 0xFF)
+            }
+            val png = FilteredPng.encode(ArgbImage(width, height, pixels), alpha)
+            assertArrayEquals("alpha=$alpha", pixels, Png.decode(png).pixels)
+        }
+    }
+
     @Test
     fun notAPngIsRejected() {
         assertThrows(IllegalArgumentException::class.java) { Png.header("not a png".toByteArray()) }
@@ -149,5 +165,76 @@ class StoreImageRecorderTest {
         assertThrows(IllegalArgumentException::class.java) {
             recorder(RoborazziTaskType.Record).apply(StoreImage.ICON, solid(StoreImage.FEATURE_GRAPHIC, blue))
         }
+    }
+}
+
+/**
+ * A test-only PNG writer that filters row y with filter type y % 5 (None, Sub, Up, Average,
+ * Paeth), as other PNG writers do, to check [Png.decode] undoes each.
+ */
+private object FilteredPng {
+    fun encode(image: ArgbImage, alpha: Boolean): ByteArray {
+        val channels = if (alpha) 4 else 3
+        val rowBytes = image.width * channels
+        val rows = Array(image.height) { y ->
+            ByteArray(rowBytes).also { row ->
+                for (x in 0 until image.width) {
+                    val argb = image[x, y]
+                    row[x * channels] = (argb ushr 16).toByte()
+                    row[x * channels + 1] = (argb ushr 8).toByte()
+                    row[x * channels + 2] = argb.toByte()
+                    if (alpha) row[x * channels + 3] = (argb ushr 24).toByte()
+                }
+            }
+        }
+        val raw = java.io.ByteArrayOutputStream()
+        for (y in 0 until image.height) {
+            val filter = y % 5
+            raw.write(filter)
+            val row = rows[y]
+            val up = if (y > 0) rows[y - 1] else ByteArray(rowBytes)
+            for (i in 0 until rowBytes) {
+                val x = row[i].toInt() and 0xFF
+                val a = if (i >= channels) row[i - channels].toInt() and 0xFF else 0
+                val b = up[i].toInt() and 0xFF
+                val c = if (i >= channels) up[i - channels].toInt() and 0xFF else 0
+                val predictor = when (filter) {
+                    0 -> 0
+                    1 -> a
+                    2 -> b
+                    3 -> (a + b) / 2
+                    else -> {
+                        val p = a + b - c
+                        val pa = kotlin.math.abs(p - a)
+                        val pb = kotlin.math.abs(p - b)
+                        val pc = kotlin.math.abs(p - c)
+                        if (pa <= pb && pa <= pc) a else if (pb <= pc) b else c
+                    }
+                }
+                raw.write((x - predictor) and 0xFF)
+            }
+        }
+        val out = java.io.ByteArrayOutputStream()
+        out.write(byteArrayOf(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte(), 13, 10, 26, 10))
+        val ihdr = java.nio.ByteBuffer.allocate(13).putInt(image.width).putInt(image.height)
+            .put(8).put((if (alpha) 6 else 2).toByte()).put(0).put(0).put(0).array()
+        chunk(out, "IHDR", ihdr)
+        val idat = java.io.ByteArrayOutputStream()
+        java.util.zip.DeflaterOutputStream(idat).use { it.write(raw.toByteArray()) }
+        // Split the image data over two IDAT chunks, as streaming writers do.
+        val data = idat.toByteArray()
+        chunk(out, "IDAT", data.copyOfRange(0, data.size / 2))
+        chunk(out, "IDAT", data.copyOfRange(data.size / 2, data.size))
+        chunk(out, "IEND", ByteArray(0))
+        return out.toByteArray()
+    }
+
+    private fun chunk(out: java.io.ByteArrayOutputStream, type: String, data: ByteArray) {
+        val typeBytes = type.toByteArray(Charsets.US_ASCII)
+        val crc = java.util.zip.CRC32().apply { update(typeBytes); update(data) }
+        out.write(java.nio.ByteBuffer.allocate(4).putInt(data.size).array())
+        out.write(typeBytes)
+        out.write(data)
+        out.write(java.nio.ByteBuffer.allocate(4).putInt(crc.value.toInt()).array())
     }
 }
