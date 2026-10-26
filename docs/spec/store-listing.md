@@ -121,5 +121,5 @@ default branch only through a pull request whose diff shows the new image.**
       `store-screenshots/pr-<number>` and never to the pull request's branch, and always removes
       the label; the label is defined in `.github/labels.repo.yml` (STORE-SHOT-009 and its
       invariant).
-- [ ] The five images are recorded and committed (apply the `record-store-screenshots` label,
-      then bring the side branch's commit into the pull request).
+- [x] The five images are recorded and committed in the `phoneScreenshots` folder, and
+      `verifyRoborazziDebug` passes against them (STORE-SHOT-007).
