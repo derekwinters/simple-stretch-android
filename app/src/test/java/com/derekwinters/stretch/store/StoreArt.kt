@@ -19,9 +19,10 @@ import kotlin.math.roundToInt
  * the final image. Sizes and formats are in [StoreImage].
  */
 object StoreArtSpec {
-    // STORE-ICON-003: the launcher icon's canvas and the safe zone that fills the store icon.
+    // STORE-ICON-003: the launcher icon's canvas and the viewport (its central 72 dp) that fills
+    // the store icon.
     const val LAUNCHER_CANVAS_DP = 108
-    const val LAUNCHER_SAFE_ZONE_DP = 72
+    const val LAUNCHER_VIEWPORT_DP = 72
 
     /** STORE-GRAPHIC-002: the one background colour. */
     const val BACKGROUND = 0xFF1361A7.toInt()
@@ -55,7 +56,7 @@ data class FeatureGraphicLayout(val tileLeft: Int, val nameLeft: Int, val nameWi
  */
 object StoreArt {
 
-    /** STORE-ICON-001 to STORE-ICON-003: the launcher icon's safe zone at 512 x 512 px. */
+    /** STORE-ICON-001 to STORE-ICON-003: the launcher icon's 72 dp viewport at 512 x 512 px. */
     fun icon(context: Context): ArgbImage =
         render(StoreImage.ICON) { canvas -> drawLauncherIcon(context, canvas, StoreImage.ICON.width) }
 
@@ -107,14 +108,14 @@ object StoreArt {
 
     /**
      * STORE-ICON-002 / STORE-ICON-003: draws the real adaptive launcher icon, background layer
-     * then foreground layer, with its 72 dp safe zone filling [sizePx] x [sizePx] at the canvas
+     * then foreground layer, with its 72 dp viewport filling [sizePx] x [sizePx] at the canvas
      * origin. The 108 dp canvas is scaled to sizePx * 108 / 72 and offset so the outer 18 dp on
      * each side falls outside. The icon is inflated from its resources, never copied (the
      * STORE-ICON-002 invariant), and no mask is applied.
      */
     fun drawLauncherIcon(context: Context, canvas: Canvas, sizePx: Int) {
-        val canvasPx = sizePx * StoreArtSpec.LAUNCHER_CANVAS_DP / StoreArtSpec.LAUNCHER_SAFE_ZONE_DP
-        require(canvasPx * StoreArtSpec.LAUNCHER_SAFE_ZONE_DP == sizePx * StoreArtSpec.LAUNCHER_CANVAS_DP) {
+        val canvasPx = sizePx * StoreArtSpec.LAUNCHER_CANVAS_DP / StoreArtSpec.LAUNCHER_VIEWPORT_DP
+        require(canvasPx * StoreArtSpec.LAUNCHER_VIEWPORT_DP == sizePx * StoreArtSpec.LAUNCHER_CANVAS_DP) {
             "$sizePx px does not scale the launcher canvas to whole pixels"
         }
         val inset = (canvasPx - sizePx) / 2

@@ -68,7 +68,7 @@ class StoreArtTest {
         assertTrue("every pixel is opaque", icon.pixels.all { it ushr 24 == 0xFF })
     }
 
-    // STORE-ICON-002 / STORE-ICON-003: the launcher foreground is drawn with its 72 dp safe zone
+    // STORE-ICON-002 / STORE-ICON-003: the launcher foreground is drawn with its 72 dp viewport
     // scaled to 512 px: a launcher point at (x dp, y dp) lands at ((x - 18) * 512 / 72) px.
     @Test
     fun iconDrawsTheLauncherForegroundScaledFromTheSafeZone() {
@@ -78,7 +78,7 @@ class StoreArtTest {
         assertEquals(blue, icon[px(70f), px(47.5f)])
         // The mat, a #818589 line 5 dp thick along y = 74 dp, here at x = 40 dp.
         assertEquals(matGrey, icon[px(40f), px(74f)])
-        // Inside the safe zone but away from the figure: the white background layer.
+        // Inside the viewport but away from the figure: the white background layer.
         assertEquals(white, icon[px(24f), px(24f)])
     }
 

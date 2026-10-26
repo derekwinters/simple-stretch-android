@@ -103,8 +103,9 @@ and qualifiers pinned), with no clock, locale or data involved.
   The test inflates the launcher icon's own resources rather than a copy of their geometry or
   colours, so any change to the launcher icon changes the rendered store icon and fails the
   verify (STORE-ICON-004) until the store icon is re-recorded.
-- **STORE-ICON-003** The launcher icon's central 72 x 72 dp safe zone fills the image. The
-  layers' 108 x 108 dp canvas is scaled by 512 / 72 px per dp, to 768 x 768 px, and drawn
+- **STORE-ICON-003** The launcher icon's viewport, its central 72 x 72 dp (the most a
+  launcher's mask can show; the smaller 66 dp safe zone is what no mask clips), fills the image.
+  The layers' 108 x 108 dp canvas is scaled by 512 / 72 px per dp, to 768 x 768 px, and drawn
   offset by -128 px on both axes, so the outer 18 dp on each side falls outside the image.
 
 ### Feature graphic
@@ -263,7 +264,7 @@ rewrites or records listing text or screenshots.
 - [x] The five images are recorded and committed in the `phoneScreenshots` folder, and
       `verifyRoborazziDebug` passes against them (STORE-SHOT-007).
 - [x] `StoreArtTest` inflates `@mipmap/ic_launcher` and draws its background and foreground
-      layers, with the 72 dp safe zone scaled to 512 px (STORE-ICON-002, STORE-ICON-003 and the
+      layers, with the 72 dp viewport scaled to 512 px (STORE-ICON-002, STORE-ICON-003 and the
       invariant).
 - [x] The feature graphic is drawn on the same pinned device with the committed Roboto Bold
       file, its layout values in one place (`StoreArtSpec`) (STORE-GRAPHIC-002 to
