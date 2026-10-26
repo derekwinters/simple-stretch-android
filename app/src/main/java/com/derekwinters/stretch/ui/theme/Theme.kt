@@ -23,11 +23,20 @@ private val DarkColors = darkColorScheme(
     tertiary = Color(0xFFF0BD8B),
 )
 
+/**
+ * The app theme. [darkTheme] and [dynamicColor] default to the system's dark mode and to
+ * wallpaper colours where Android has them (12+); the store screenshots pass both explicitly to
+ * get the fixed schemes below (STORE-SHOT-006).
+ */
 @Composable
-fun StretchTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
+fun StretchTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val dark = darkTheme
     val colors = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }

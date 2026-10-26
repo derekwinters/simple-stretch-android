@@ -1,0 +1,114 @@
+name: record-store-screenshots
+
+# STORE-SHOT-009 (docs/spec/store-listing.md): re-records the Google Play store screenshots when a
+# person applies the `record-store-screenshots` label to a pull request from a branch of this
+# repository. Never for a fork: this job runs with a token that can push.
+#
+# Invariant: this workflow never pushes to the pull request's branch. A push made with
+# GITHUB_TOKEN starts no pr.yml run, so a commit pushed there would leave the pull request's head
+# unverified. Instead the recording is committed (images only) onto the pull request's head and
+# force-pushed to the bot-owned side branch `store-screenshots/pr-<number>`. A person brings that
+# commit into the pull request with their own push, which runs pr.yml (verify only) and shows the
+# new images in the pull request's diff.
+#
+# It is triggered by pull_request (labeled), not workflow_dispatch or issue_comment, so it runs the
+# workflow file of the pull request itself. The label is always removed at the end, so applying it
+# again records again.
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# One recording at a time per pull request. The label name is part of the group because the
+# group is joined before the job's `if:` is evaluated: without it, applying any other label to the
+# pull request would start a run that cancels an in-progress recording (whose always() step would
+# then remove the label too).
+concurrency:
+  group: record-store-screenshots-${{ github.event.pull_request.number }}-${{ github.event.label.name }}
+  cancel-in-progress: true
+
+jobs:
+  record:
+    name: record the store screenshots
+    if: >-
+      github.event.label.name == 'record-store-screenshots' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      SHOTS_DIR: fastlane/metadata/android/en-US/images/phoneScreenshots
+      SIDE_BRANCH: store-screenshots/pr-${{ github.event.pull_request.number }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - name: Check out the pull request's head branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Set up the JDK
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up the Android SDK
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+
+      - name: Record the store screenshots
+        run: ./gradlew recordRoborazziDebug --stacktrace
+
+      # Only the phoneScreenshots folder is committed; anything else the build touched is left
+      # out. Nothing is pushed when no image changed.
+      - name: Commit the images to the side branch
+        id: commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$SHOTS_DIR"
+          if git diff --cached --quiet -- "$SHOTS_DIR"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "## Store screenshots"
+              echo
+              echo "Recorded on \`$HEAD_REF\` at \`$(git rev-parse --short HEAD)\`: no image changed, so nothing was pushed."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -q -m "test(store): record the store screenshots" -- "$SHOTS_DIR"
+          git push --force origin "HEAD:refs/heads/$SIDE_BRANCH"
+          sha="$(git rev-parse HEAD)"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Store screenshots"
+            echo
+            echo "Recorded commit \`$sha\` is on branch \`$SIDE_BRANCH\`, on top of \`$HEAD_REF\`."
+            echo "It is not on the pull request yet. Bring it in with your own push, so pr.yml verifies it and the diff shows the images:"
+            echo
+            echo '```sh'
+            echo "git fetch origin $SIDE_BRANCH"
+            echo "git checkout $HEAD_REF"
+            echo "git merge --ff-only FETCH_HEAD   # or: git cherry-pick $sha"
+            echo "git push"
+            echo '```'
+            echo
+            echo "Changed files:"
+            echo
+            git show --stat --format= HEAD | sed 's/^/    /'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Always, so the label can be applied again to record again.
+      - name: Remove the label
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --remove-label record-store-screenshots

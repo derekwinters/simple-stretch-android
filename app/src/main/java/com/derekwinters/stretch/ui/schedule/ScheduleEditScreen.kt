@@ -55,14 +55,44 @@ import com.derekwinters.stretch.ui.common.Formatting
 import com.derekwinters.stretch.ui.stretches.StretchEditDialog
 import java.time.LocalTime
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ScheduleEditScreen(
     onDone: () -> Unit,
     viewModel: ScheduleEditViewModel = viewModel(),
 ) {
-    val context = LocalContext.current
     val stretches by viewModel.allStretches.collectAsStateWithLifecycle()
+    ScheduleEditContent(
+        form = viewModel.form,
+        stretches = stretches,
+        isNew = viewModel.isNew,
+        loading = viewModel.loading,
+        canSave = viewModel.canSave,
+        onBack = onDone,
+        onSave = { viewModel.save(onDone) },
+        onDelete = { viewModel.delete(onDone) },
+        onCreateStretch = viewModel::createStretch,
+    )
+}
+
+/**
+ * SCHED-001 / SCHED-011 / SCHED-012: the schedule editor drawn from its [form] and the stretch
+ * library. [ScheduleEditScreen] feeds it from [ScheduleEditViewModel]; the store screenshots feed
+ * it directly (STORE-SHOT-004).
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun ScheduleEditContent(
+    form: ScheduleEditForm,
+    stretches: List<Stretch>,
+    isNew: Boolean,
+    loading: Boolean,
+    canSave: Boolean,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
+    onCreateStretch: (Stretch, (Long) -> Unit) -> Unit,
+) {
+    val context = LocalContext.current
 
     // Which dialog is open: time picker for a reminder (key) or for a new one (-1), stretch picker.
     // Special keys for the repeating window's start and end times.
@@ -73,35 +103,35 @@ fun ScheduleEditScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (viewModel.isNew) "New schedule" else "Edit schedule") },
+                title = { Text(if (isNew) "New schedule" else "Edit schedule") },
                 navigationIcon = {
-                    IconButton(onClick = onDone) {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    if (!viewModel.isNew) {
+                    if (!isNew) {
                         IconButton(onClick = { confirmDelete = true }) {
                             Icon(Icons.Filled.Delete, contentDescription = "Delete schedule")
                         }
                     }
                     TextButton(
-                        onClick = { viewModel.save(onDone) },
-                        enabled = viewModel.canSave && !viewModel.loading,
+                        onClick = onSave,
+                        enabled = canSave && !loading,
                     ) { Text("Save") }
                 },
             )
         },
     ) { padding ->
-        if (!viewModel.loading) LazyColumn(
+        if (!loading) LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
                 OutlinedTextField(
-                    value = viewModel.name,
-                    onValueChange = { viewModel.name = it },
+                    value = form.name,
+                    onValueChange = { form.name = it },
                     label = { Text("Name (e.g. Workday)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -110,7 +140,7 @@ fun ScheduleEditScreen(
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Enabled", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-                    Switch(checked = viewModel.enabled, onCheckedChange = { viewModel.enabled = it })
+                    Switch(checked = form.enabled, onCheckedChange = { form.enabled = it })
                 }
             }
             item {
@@ -119,13 +149,13 @@ fun ScheduleEditScreen(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Formatting.orderedDays().forEach { day ->
                             FilterChip(
-                                selected = day in viewModel.days,
-                                onClick = { viewModel.toggleDay(day) },
+                                selected = day in form.days,
+                                onClick = { form.toggleDay(day) },
                                 label = { Text(Formatting.shortDay(day)) },
                             )
                         }
                     }
-                    if (viewModel.days.isEmpty()) {
+                    if (form.days.isEmpty()) {
                         Text(
                             "Pick at least one day, or this schedule will never remind you.",
                             style = MaterialTheme.typography.bodySmall,
@@ -140,28 +170,28 @@ fun ScheduleEditScreen(
                     Text("Reminders", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(
-                            selected = !viewModel.repeating,
-                            onClick = { viewModel.repeating = false },
+                            selected = !form.repeating,
+                            onClick = { form.repeating = false },
                             label = { Text("Set times") },
                         )
                         FilterChip(
-                            selected = viewModel.repeating,
-                            onClick = { viewModel.repeating = true },
+                            selected = form.repeating,
+                            onClick = { form.repeating = true },
                             label = { Text("Repeating") },
                         )
                     }
                 }
             }
-            if (viewModel.repeating) {
+            if (form.repeating) {
                 item {
                     RepeatingSection(
-                        viewModel = viewModel,
+                        form = form,
                         onPickStart = { timeDialogFor = KEY_WINDOW_START },
                         onPickEnd = { timeDialogFor = KEY_WINDOW_END },
                     )
                 }
             }
-            if (!viewModel.repeating) item {
+            if (!form.repeating) item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "Reminder times",
@@ -175,7 +205,7 @@ fun ScheduleEditScreen(
                     }
                 }
             }
-            if (!viewModel.repeating && viewModel.reminders.isEmpty()) {
+            if (!form.repeating && form.reminders.isEmpty()) {
                 item {
                     Text(
                         "No reminder times yet.",
@@ -184,7 +214,7 @@ fun ScheduleEditScreen(
                     )
                 }
             }
-            if (!viewModel.repeating) items(viewModel.reminders, key = { it.key }) { r ->
+            if (!form.repeating) items(form.reminders, key = { it.key }) { r ->
                 val names = stretches.filter { it.id in r.stretchIds }.map { it.name }
                 Card(Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -201,7 +231,7 @@ fun ScheduleEditScreen(
                                 modifier = Modifier.clickable { stretchDialogFor = r.key }.padding(vertical = 4.dp),
                             )
                         }
-                        IconButton(onClick = { viewModel.removeReminder(r.key) }) {
+                        IconButton(onClick = { form.removeReminder(r.key) }) {
                             Icon(Icons.Filled.Delete, contentDescription = "Remove time")
                         }
                     }
@@ -215,23 +245,23 @@ fun ScheduleEditScreen(
             val isStart = key == KEY_WINDOW_START
             TimePickerDialog(
                 title = if (isStart) "From" else "Until",
-                initial = if (isStart) viewModel.windowStart else viewModel.windowEnd,
+                initial = if (isStart) form.windowStart else form.windowEnd,
                 is24Hour = DateFormat.is24HourFormat(context),
                 onDismiss = { timeDialogFor = null },
                 onConfirm = { time ->
-                    if (isStart) viewModel.windowStart = time else viewModel.windowEnd = time
+                    if (isStart) form.windowStart = time else form.windowEnd = time
                     timeDialogFor = null
                 },
             )
         } else {
-            val existing = viewModel.reminders.firstOrNull { it.key == key }
+            val existing = form.reminders.firstOrNull { it.key == key }
             TimePickerDialog(
                 title = "Reminder time",
                 initial = existing?.time ?: LocalTime.of(10, 0),
                 is24Hour = DateFormat.is24HourFormat(context),
                 onDismiss = { timeDialogFor = null },
                 onConfirm = { time ->
-                    if (existing == null) viewModel.addReminder(time) else viewModel.updateTime(key, time)
+                    if (existing == null) form.addReminder(time) else form.updateTime(key, time)
                     timeDialogFor = null
                 },
             )
@@ -239,17 +269,17 @@ fun ScheduleEditScreen(
     }
 
     stretchDialogFor?.let { key ->
-        val existing = viewModel.reminders.firstOrNull { it.key == key }
+        val existing = form.reminders.firstOrNull { it.key == key }
         if (existing != null) {
             StretchPickerDialog(
                 stretches = stretches,
                 initial = existing.stretchIds,
                 onDismiss = { stretchDialogFor = null },
                 onConfirm = { ids ->
-                    viewModel.updateStretches(key, ids)
+                    form.updateStretches(key, ids)
                     stretchDialogFor = null
                 },
-                onCreateStretch = viewModel::createStretch,
+                onCreateStretch = onCreateStretch,
             )
         }
     }
@@ -258,11 +288,11 @@ fun ScheduleEditScreen(
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
             title = { Text("Delete schedule?") },
-            text = { Text("\"${viewModel.name}\" and all of its reminder times will be removed.") },
+            text = { Text("\"${form.name}\" and all of its reminder times will be removed.") },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false
-                    viewModel.delete(onDone)
+                    onDelete()
                 }) { Text("Delete") }
             },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
@@ -369,20 +399,20 @@ private val INTERVAL_CHOICES = listOf(15, 20, 30, 45, 60, 90, 120)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RepeatingSection(
-    viewModel: ScheduleEditViewModel,
+    form: ScheduleEditForm,
     onPickStart: () -> Unit,
     onPickEnd: () -> Unit,
 ) {
     val context = LocalContext.current
-    var minuteText by remember { mutableStateOf(viewModel.minutePastHour.toString()) }
+    var minuteText by remember { mutableStateOf(form.minutePastHour.toString()) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Every", style = MaterialTheme.typography.titleSmall)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val choices = (INTERVAL_CHOICES + viewModel.intervalMinutes).distinct().sorted()
+            val choices = (INTERVAL_CHOICES + form.intervalMinutes).distinct().sorted()
             choices.forEach { minutes ->
                 FilterChip(
-                    selected = viewModel.intervalMinutes == minutes,
-                    onClick = { viewModel.intervalMinutes = minutes },
+                    selected = form.intervalMinutes == minutes,
+                    onClick = { form.intervalMinutes = minutes },
                     label = { Text(if (minutes % 60 == 0) "${minutes / 60} h" else "$minutes min") },
                 )
             }
@@ -392,7 +422,7 @@ private fun RepeatingSection(
             onValueChange = { v ->
                 val digits = v.filter { it.isDigit() }.take(2)
                 minuteText = digits
-                digits.toIntOrNull()?.takeIf { it in 0..59 }?.let { viewModel.minutePastHour = it }
+                digits.toIntOrNull()?.takeIf { it in 0..59 }?.let { form.minutePastHour = it }
             },
             label = { Text("At minute past the hour (0-59)") },
             singleLine = true,
@@ -402,14 +432,14 @@ private fun RepeatingSection(
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("From", style = MaterialTheme.typography.titleSmall)
-            OutlinedButton(onClick = onPickStart) { Text(Formatting.time(context, viewModel.windowStart)) }
+            OutlinedButton(onClick = onPickStart) { Text(Formatting.time(context, form.windowStart)) }
             Text("until", style = MaterialTheme.typography.titleSmall)
-            OutlinedButton(onClick = onPickEnd) { Text(Formatting.time(context, viewModel.windowEnd)) }
+            OutlinedButton(onClick = onPickEnd) { Text(Formatting.time(context, form.windowEnd)) }
         }
-        val slots = viewModel.previewSlots
+        val slots = form.previewSlots
         Text(
             when {
-                viewModel.windowEnd.isBefore(viewModel.windowStart) -> "The end time must be after the start time."
+                form.windowEnd.isBefore(form.windowStart) -> "The end time must be after the start time."
                 slots.isEmpty() -> "No reminder fits between these times."
                 else -> "${slots.size} a day: " + slots.joinToString(", ") { Formatting.time(context, it) }
             },
@@ -422,7 +452,7 @@ private fun RepeatingSection(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        if (viewModel.intervalMinutes !in RepeatRule.MIN_INTERVAL..RepeatRule.MAX_INTERVAL) {
+        if (form.intervalMinutes !in RepeatRule.MIN_INTERVAL..RepeatRule.MAX_INTERVAL) {
             Text("Pick an interval.", color = MaterialTheme.colorScheme.error)
         }
     }

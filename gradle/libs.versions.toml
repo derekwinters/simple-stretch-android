@@ -10,6 +10,12 @@ navigationCompose = "2.8.5"
 room = "2.6.1"
 coroutines = "1.9.0"
 junit = "4.13.2"
+# Store screenshots (docs/spec/store-listing.md). Roborazzi 1.60.0 is the newest release built
+# with Kotlin 2.0 metadata, which this project's Kotlin 2.0.21 compiler can read (1.61.0 and
+# later are built with Kotlin 2.3). Robolectric 4.16.1 knows SDK 36; the tests pin SDK 34, since
+# Robolectric runs SDK 35 and later only on Java 21.
+robolectric = "4.16.1"
+roborazzi = "1.60.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -30,6 +36,10 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
 
 [plugins]
 androidx-room = { id = "androidx.room", version.ref = "room" }
@@ -37,3 +47,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }

@@ -68,6 +68,7 @@ import com.derekwinters.stretch.goals.GoalProgress
 import com.derekwinters.stretch.notifications.Notifications
 import com.derekwinters.stretch.scheduling.ReminderScheduler
 import com.derekwinters.stretch.ui.common.Formatting
+import java.time.Clock
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,6 +104,49 @@ fun HomeScreen(
         }
     }
 
+    HomeContent(
+        state = state,
+        canNotify = canNotify,
+        canExact = canExact,
+        clock = viewModel.clock,
+        onEditSchedule = onEditSchedule,
+        onNewSchedule = onNewSchedule,
+        onOpenStretches = onOpenStretches,
+        onOpenSkips = onOpenSkips,
+        onOpenGoals = onOpenGoals,
+        onOpenTrends = onOpenTrends,
+        onStretchNow = onStretchNow,
+        onOpenSession = onOpenSession,
+        onSetTodaySkipped = viewModel::setTodaySkipped,
+        onSetScheduleEnabled = viewModel::setScheduleEnabled,
+    )
+}
+
+/**
+ * HOME-001..HOME-009: the home screen drawn from its state alone. [HomeScreen] feeds it from
+ * [HomeViewModel] and the live permission checks; the store screenshots feed it directly
+ * (STORE-SHOT-001). [clock] is the app clock: a Today row's time is taken in its zone, read at
+ * the tap (HOME-009, SCHED-010 invariant).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeContent(
+    state: HomeState,
+    canNotify: Boolean,
+    canExact: Boolean,
+    clock: Clock,
+    onEditSchedule: (Long) -> Unit,
+    onNewSchedule: () -> Unit,
+    onOpenStretches: () -> Unit,
+    onOpenSkips: () -> Unit,
+    onOpenGoals: () -> Unit,
+    onOpenTrends: () -> Unit,
+    onStretchNow: () -> Unit,
+    onOpenSession: (route: String) -> Unit,
+    onSetTodaySkipped: (skip: Boolean) -> Unit,
+    onSetScheduleEnabled: (id: Long, enabled: Boolean) -> Unit,
+) {
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -123,7 +167,7 @@ fun HomeScreen(
                                 text = { Text(if (state.todaySkipped) "Resume today" else "Skip today") },
                                 onClick = {
                                     menuOpen = false
-                                    viewModel.setTodaySkipped(!state.todaySkipped)
+                                    onSetTodaySkipped(!state.todaySkipped)
                                 },
                             )
                             DropdownMenuItem(
@@ -220,7 +264,7 @@ fun HomeScreen(
             item {
                 TodayHeaderRow(
                     button = TodaySkipButton.of(state.todaySkipped, state.todayReminders),
-                    onClick = { skip -> viewModel.setTodaySkipped(skip) },
+                    onClick = { skip -> onSetTodaySkipped(skip) },
                 )
             }
             if (state.loaded && state.todayReminders.isEmpty()) {
@@ -237,7 +281,7 @@ fun HomeScreen(
                 TodayReminderRow(
                     r,
                     dimmed = r.isPast || state.todaySkipped,
-                    onClick = { onOpenSession(r.sessionRoute(state.today, viewModel.clock.zone)) },
+                    onClick = { onOpenSession(r.sessionRoute(state.today, clock.zone)) },
                 )
             }
 
@@ -255,7 +299,7 @@ fun HomeScreen(
                 ScheduleCard(
                     item = s,
                     onClick = { onEditSchedule(s.schedule.id) },
-                    onToggle = { viewModel.setScheduleEnabled(s.schedule.id, it) },
+                    onToggle = { onSetScheduleEnabled(s.schedule.id, it) },
                 )
             }
         }

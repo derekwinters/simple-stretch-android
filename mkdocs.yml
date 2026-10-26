@@ -34,7 +34,9 @@ nav:
       - Screens: spec/screens.md
       - Widgets: spec/widgets.md
       - Privacy: spec/privacy.md
+      - Store listing: spec/store-listing.md
   - Privacy policy: privacy.md
+  - Store screenshot captions: store/captions.md
   - Decisions:
       - 0001 Debug signing until a release keystore: adr/0001-debug-signing-until-release-keystore.md
       - 0002 Release signing with a stable keystore: adr/0002-release-signing-with-a-stable-keystore.md

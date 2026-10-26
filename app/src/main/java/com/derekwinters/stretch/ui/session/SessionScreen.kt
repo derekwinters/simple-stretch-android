@@ -111,33 +111,54 @@ class SessionViewModel(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionScreen(
     onDone: () -> Unit,
     viewModel: SessionViewModel = viewModel(),
+) {
+    SessionContent(
+        layout = if (viewModel.loading) null else viewModel.layout,
+        topHeading = if (viewModel.loading) null else viewModel.topHeading(),
+        checked = viewModel.checked,
+        canSave = viewModel.checked.isNotEmpty() && !viewModel.saving,
+        onBack = onDone,
+        onSave = { viewModel.save(onDone) },
+        onToggle = viewModel::toggle,
+    )
+}
+
+/**
+ * SESS-002/003: the session screen drawn from its state alone; [layout] is null while it loads.
+ * [SessionScreen] feeds it from [SessionViewModel]; the store screenshots feed it directly
+ * (STORE-SHOT-002).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SessionContent(
+    layout: SessionLayout?,
+    topHeading: String?,
+    checked: Set<Long>,
+    canSave: Boolean,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+    onToggle: (stretchId: Long) -> Unit,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Stretch session") },
                 navigationIcon = {
-                    IconButton(onClick = onDone) {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    TextButton(
-                        onClick = { viewModel.save(onDone) },
-                        enabled = viewModel.checked.isNotEmpty() && !viewModel.saving,
-                    ) { Text("Save") }
+                    TextButton(onClick = onSave, enabled = canSave) { Text("Save") }
                 },
             )
         },
     ) { padding ->
-        if (!viewModel.loading) {
-            val layout = viewModel.layout
-            val topHeading = viewModel.topHeading()
+        if (layout != null) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(bottom = 24.dp),
@@ -160,9 +181,9 @@ fun SessionScreen(
                     items(layout.topEntries, key = { it.stretchId }) { entry ->
                         SessionRow(
                             entry = entry,
-                            checked = entry.stretchId in viewModel.checked,
+                            checked = entry.stretchId in checked,
                             highlighted = true,
-                            onToggle = { viewModel.toggle(entry.stretchId) },
+                            onToggle = { onToggle(entry.stretchId) },
                         )
                     }
                 }
@@ -176,9 +197,9 @@ fun SessionScreen(
                     items(layout.others, key = { it.stretchId }) { entry ->
                         SessionRow(
                             entry = entry,
-                            checked = entry.stretchId in viewModel.checked,
+                            checked = entry.stretchId in checked,
                             highlighted = false,
-                            onToggle = { viewModel.toggle(entry.stretchId) },
+                            onToggle = { onToggle(entry.stretchId) },
                         )
                     }
                 }

@@ -1,8 +1,9 @@
 name: pr
 
-# The build gate for a pull request: the unit tests must pass and the app must assemble. This is
-# also where the Android build is verified at all: the Android SDK and the Android Gradle Plugin
-# come from Google's servers, which not every development environment can reach.
+# The build gate for a pull request: the unit tests must pass, the store screenshots must match
+# the committed images, and the app must assemble. This is also where the Android build is
+# verified at all: the Android SDK and the Android Gradle Plugin come from Google's servers, which
+# not every development environment can reach.
 #
 # For a pull request from a branch of this repository (never a fork) it also builds the APK signed
 # with the stable release keystore (docs/adr/0002), so the PR can be installed in place over a
@@ -68,8 +69,30 @@ jobs:
       - name: Run the release gate tests
         run: python3 -m unittest discover -s .github/scripts/tests -v
 
-      - name: Run the unit tests
-        run: ./gradlew test --stacktrace
+      # Every unit test, debug and release, as `./gradlew test` would, without running the debug
+      # ones twice: verifyRoborazziDebug runs testDebugUnitTest itself, with the verify setting.
+      #
+      # STORE-SHOT (docs/spec/store-listing.md): that verify run renders the Google Play
+      # screenshots and compares them with the images committed in
+      # fastlane/metadata/android/en-US/images/phoneScreenshots/. A changed or missing image fails
+      # the job. This workflow only verifies (STORE-SHOT-008); recording happens only when a
+      # person asks for it: the `record-store-screenshots` label (record-store-screenshots.yml,
+      # which pushes to a side branch, never to the PR branch) or `./gradlew recordRoborazziDebug`
+      # locally. The new images then arrive in the PR by a person's push, which runs this workflow
+      # to verify them.
+      - name: Run the unit tests and verify the store screenshots
+        run: ./gradlew testReleaseUnitTest verifyRoborazziDebug --stacktrace
+
+      # On a failure (a test or the verify), the rendered (_actual) and diff (_compare) images, so a reviewer can
+      # see what changed without a local build.
+      - name: Upload the store screenshot diffs
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: store-screenshot-diffs
+          path: app/build/outputs/roborazzi/
+          if-no-files-found: ignore
+          retention-days: 14
 
       # buildSrc is a build of its own, and ./gradlew test does not run its tests: the
       # version-code formula that derives versionCode from VERSION_NAME (docs/adr/0003).

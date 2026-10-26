@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.derekwinters.stretch.StretchApp
 import com.derekwinters.stretch.data.ReminderDraft
 import com.derekwinters.stretch.data.Schedule
+import com.derekwinters.stretch.data.ScheduleWithReminders
 import com.derekwinters.stretch.data.ScheduleMode
 import com.derekwinters.stretch.data.Stretch
 import com.derekwinters.stretch.data.days
@@ -31,15 +32,12 @@ data class EditableReminder(
     val stretchIds: Set<Long>,
 )
 
-class ScheduleEditViewModel(
-    application: Application,
-    savedStateHandle: SavedStateHandle,
-) : AndroidViewModel(application) {
-    private val repo = (application as StretchApp).repository
-
-    val scheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
-    val isNew: Boolean get() = scheduleId <= 0L
-
+/**
+ * The schedule editor's editable fields and the pure edits on them (SCHED-001, SCHED-011,
+ * SCHED-012). [ScheduleEditViewModel] owns one and loads and saves it; the store screenshots
+ * build one directly (STORE-SHOT-004). Compose state, so the editor recomposes on every edit.
+ */
+class ScheduleEditForm {
     var name by mutableStateOf("")
     var enabled by mutableStateOf(true)
     var days by mutableStateOf(DaysOfWeek.WEEKDAYS)
@@ -51,39 +49,8 @@ class ScheduleEditViewModel(
     var windowEnd by mutableStateOf(LocalTime.of(RepeatRule.DEFAULT_END / 60, RepeatRule.DEFAULT_END % 60))
     var intervalMinutes by mutableStateOf(RepeatRule.DEFAULT_INTERVAL)
     var minutePastHour by mutableStateOf(RepeatRule.DEFAULT_MINUTE)
-    var loading by mutableStateOf(!isNew)
-        private set
-    var saving by mutableStateOf(false)
-        private set
 
     private var nextKey = 1L
-
-    val allStretches: StateFlow<List<Stretch>> =
-        repo.stretches.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    init {
-        if (!isNew) {
-            viewModelScope.launch {
-                repo.getSchedule(scheduleId)?.let { s ->
-                    name = s.schedule.name
-                    enabled = s.schedule.enabled
-                    days = s.schedule.days
-                    repeating = s.schedule.mode == ScheduleMode.REPEATING
-                    windowStart = minuteToTime(s.schedule.windowStartMinute)
-                    windowEnd = minuteToTime(s.schedule.windowEndMinute)
-                    intervalMinutes = s.schedule.intervalMinutes
-                    minutePastHour = s.schedule.minutePastHour
-                    reminders.clear()
-                    s.reminders
-                        .sortedBy { it.reminder.minuteOfDay }
-                        .forEach { r ->
-                            reminders += EditableReminder(nextKey++, r.reminder.time, r.stretches.map { it.id }.toSet())
-                        }
-                }
-                loading = false
-            }
-        }
-    }
 
     val repeatRule: RepeatRule
         get() = RepeatRule(
@@ -96,7 +63,26 @@ class ScheduleEditViewModel(
     /** SCHED-012: the slots the current repeating settings give, for the editor's preview. */
     val previewSlots: List<LocalTime> get() = RepeatingSlots.forDay(repeatRule)
 
-    val canSave: Boolean get() = name.isNotBlank() && !saving && (!repeating || previewSlots.isNotEmpty())
+    /** Whether the fields describe a schedule that can be saved (a save may still be running). */
+    val isComplete: Boolean get() = name.isNotBlank() && (!repeating || previewSlots.isNotEmpty())
+
+    /** Fills the form from a stored schedule, its set times sorted by time. */
+    fun load(s: ScheduleWithReminders) {
+        name = s.schedule.name
+        enabled = s.schedule.enabled
+        days = s.schedule.days
+        repeating = s.schedule.mode == ScheduleMode.REPEATING
+        windowStart = minuteToTime(s.schedule.windowStartMinute)
+        windowEnd = minuteToTime(s.schedule.windowEndMinute)
+        intervalMinutes = s.schedule.intervalMinutes
+        minutePastHour = s.schedule.minutePastHour
+        reminders.clear()
+        s.reminders
+            .sortedBy { it.reminder.minuteOfDay }
+            .forEach { r ->
+                reminders += EditableReminder(nextKey++, r.reminder.time, r.stretches.map { it.id }.toSet())
+            }
+    }
 
     fun toggleDay(day: DayOfWeek) {
         days = if (day in days) days - day else days + day
@@ -118,11 +104,6 @@ class ScheduleEditViewModel(
         if (i >= 0) reminders[i] = reminders[i].copy(stretchIds = ids)
     }
 
-    /** LIB-007: adds [stretch] to the library, then reports its new id (on the main thread). */
-    fun createStretch(stretch: Stretch, onCreated: (Long) -> Unit) {
-        viewModelScope.launch { onCreated(repo.saveStretch(stretch)) }
-    }
-
     fun removeReminder(key: Long) {
         reminders.removeAll { it.key == key }
     }
@@ -132,28 +113,66 @@ class ScheduleEditViewModel(
         reminders.clear()
         reminders.addAll(sorted)
     }
+}
+
+class ScheduleEditViewModel(
+    application: Application,
+    savedStateHandle: SavedStateHandle,
+) : AndroidViewModel(application) {
+    private val repo = (application as StretchApp).repository
+
+    val scheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
+    val isNew: Boolean get() = scheduleId <= 0L
+
+    /** The fields being edited. */
+    val form = ScheduleEditForm()
+
+    var loading by mutableStateOf(!isNew)
+        private set
+    var saving by mutableStateOf(false)
+        private set
+
+    val allStretches: StateFlow<List<Stretch>> =
+        repo.stretches.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    init {
+        if (!isNew) {
+            viewModelScope.launch {
+                repo.getSchedule(scheduleId)?.let { form.load(it) }
+                loading = false
+            }
+        }
+    }
+
+    val canSave: Boolean get() = form.isComplete && !saving
+
+    /** LIB-007: adds [stretch] to the library, then reports its new id (on the main thread). */
+    fun createStretch(stretch: Stretch, onCreated: (Long) -> Unit) {
+        viewModelScope.launch { onCreated(repo.saveStretch(stretch)) }
+    }
 
     fun save(onDone: () -> Unit) {
         if (!canSave) return
         saving = true
         viewModelScope.launch {
+            val f = form
             repo.saveSchedule(
                 Schedule(
                     id = if (isNew) 0L else scheduleId,
-                    name = name.trim(),
-                    enabled = enabled,
-                    daysMask = DaysOfWeek.toMask(days),
-                    mode = if (repeating) ScheduleMode.REPEATING else ScheduleMode.FIXED,
-                    windowStartMinute = repeatRule.windowStartMinute,
-                    windowEndMinute = repeatRule.windowEndMinute,
-                    intervalMinutes = intervalMinutes,
-                    minutePastHour = minutePastHour,
+                    name = f.name.trim(),
+                    enabled = f.enabled,
+                    daysMask = DaysOfWeek.toMask(f.days),
+                    mode = if (f.repeating) ScheduleMode.REPEATING else ScheduleMode.FIXED,
+                    windowStartMinute = f.repeatRule.windowStartMinute,
+                    windowEndMinute = f.repeatRule.windowEndMinute,
+                    intervalMinutes = f.intervalMinutes,
+                    minutePastHour = f.minutePastHour,
                 ),
                 // SCHED-014: a repeating schedule keeps no set reminder times.
-                if (repeating) {
+                if (f.repeating) {
                     emptyList()
                 } else {
-                    reminders.map { r ->
+                    f.reminders.map { r ->
                         ReminderDraft(minuteOfDay = r.time.hour * 60 + r.time.minute, stretchIds = r.stretchIds.toList())
                     }
                 },
