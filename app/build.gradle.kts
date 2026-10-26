@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
+    alias(libs.plugins.roborazzi)
 }
 
 // gradle.properties is the single source of truth for the app's version. VERSION_NAME carries a
@@ -98,6 +99,19 @@ android {
         // BuildConfig.APPLICATION_ID is what ApplicationIdTest checks (issue #42).
         buildConfig = true
     }
+
+    testOptions {
+        unitTests {
+            // Robolectric needs the merged resources and manifest (store screenshots).
+            isIncludeAndroidResources = true
+            all {
+                // The store screenshots are drawn through Robolectric's hardware renderer rather
+                // than View#draw, so graphics layers, clips and shadows render as they do on a
+                // phone (docs/spec/store-listing.md). Other unit tests draw nothing.
+                it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+            }
+        }
+    }
 }
 
 kotlin {
@@ -109,6 +123,14 @@ kotlin {
 // Room exports its schema here so schema changes are reviewable in PRs. Commit app/schemas/.
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+// Store screenshots (docs/spec/store-listing.md): Roborazzi reads and writes the reference images
+// in fastlane supply's folder, so `verifyRoborazziDebug` (what CI runs) compares against the
+// committed images and fails on a changed or missing one. Its actual and _compare images go to
+// app/build/outputs/roborazzi/. Only a person runs `recordRoborazziDebug`; no workflow does.
+roborazzi {
+    outputDir.set(rootProject.layout.projectDirectory.dir("fastlane/metadata/android/en-US/images/phoneScreenshots"))
 }
 
 // Every variant's APK is named `simple-stretch-<versionName>-<buildType>.apk`, so workflows can
@@ -153,4 +175,11 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    // The compose test rule's host activity (debug builds; the store screenshot test registers it
+    // itself for release unit tests).
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

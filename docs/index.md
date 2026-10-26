@@ -56,6 +56,21 @@ Behaviour is set out in the [specification](spec/README.md).
 adb install -r app/build/outputs/apk/debug/simple-stretch-*-debug.apk
 ```
 
+The Google Play screenshots are rendered from the app's screens on the JVM, not captured on a
+phone ([store listing specification](spec/store-listing.md)), and committed under
+`fastlane/metadata/android/en-US/images/phoneScreenshots/`; their captions are in
+[store/captions.md](store/captions.md).
+
+```sh
+./gradlew verifyRoborazziDebug   # compare with the committed screenshots (what CI runs)
+./gradlew recordRoborazziDebug   # re-record them, deliberately, after changing a screen or caption
+```
+
+Every pull request's CI run verifies them; a changed or missing image fails the run and uploads
+the new and diff images as the `store-screenshot-diffs` workflow artifact. CI never records them:
+record on Linux with JDK 17 (as CI runs) and commit the images in the pull request, where the
+diff is reviewed.
+
 Or copy the APK to the phone and open it (allow installs from that source when asked).
 
 **Application ID:** from 0.3.0 the application ID is `io.github.derekwinters.simple_stretch_android`.
@@ -118,9 +133,10 @@ app/src/main/java/com/derekwinters/stretch/
   ui/             Compose screens: home, schedule editor, stretch session, goals, trends
                   (Canvas charts) and day detail, stretch library, skipped days
 app/src/test/     JVM unit tests (next occurrence, repeating slots, goal maths, goal history,
-                  trends, widget ring and palette)
+                  trends, widget ring and palette) and the store screenshot tests (store/)
 app/schemas/      exported Room schemas
-docs/spec/        requirements with IDs; docs/adr/ decisions
+docs/spec/        requirements with IDs; docs/adr/ decisions; docs/store/ screenshot captions
+fastlane/         Google Play listing images (the store screenshots)
 ```
 
 ## Notes

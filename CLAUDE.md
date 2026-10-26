@@ -41,5 +41,11 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
   guard) every release's version code; their tests run with
   `python3 -m unittest discover -s .github/scripts/tests`.
 - Room schemas are exported to `app/schemas/`; commit changes to them with the entity change.
+- Store screenshots (docs/spec/store-listing.md) are rendered by Roborazzi on Robolectric from
+  `ShowcaseFixture` and committed in `fastlane/metadata/android/en-US/images/phoneScreenshots/`;
+  captions are in `docs/store/captions.md`. CI runs `./gradlew verifyRoborazziDebug`, which fails
+  on a changed or missing image and uploads the diffs. `./gradlew recordRoborazziDebug` is the
+  deliberate re-record step, run by a person (on Linux with JDK 17, as CI) and committed in the PR
+  that changes a screen or caption; no workflow ever records.
 
 @.ai-sdlc/house-rules.md

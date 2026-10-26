@@ -75,7 +75,9 @@ All sizes are pixels of the final image.
 **Invariant — A store screenshot is never re-recorded by CI.** CI only verifies the committed
 images (`./gradlew verifyRoborazziDebug`, which fails on any changed or missing image); a
 changed image arrives only in a pull request, recorded deliberately with
-`./gradlew recordRoborazziDebug`, where a person sees the diff.
+`./gradlew recordRoborazziDebug`, where a person sees the diff. Record on Linux with JDK 17, as
+CI runs: Robolectric draws with its own fonts and renderer, but the host's JDK formats dates and
+times, and anti-aliasing can differ between operating systems.
 
 ## Build checklist
 
