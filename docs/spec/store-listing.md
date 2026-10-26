@@ -2,18 +2,20 @@
 
 # Store listing
 
-The Google Play listing: its text (title, short description and full description) and its phone
-screenshots. Both are made only in pull requests and reviewed there; a release ships what was
-reviewed and makes nothing of its own. The listing's category, tags, website and contact email
-are entered in Play Console by the owner, not compiled from this repository; they are recorded
-in [Play Console listing details](../store/play-console.md).
+The Google Play listing: its text (title, short description and full description), its phone
+screenshots, its store icon and its feature graphic. All of them are made only in pull requests
+and reviewed there; a release ships what was reviewed and makes nothing of its own. The listing's
+category, tags, website and contact email are entered in Play Console by the owner, not compiled
+from this repository; they are recorded in [Play Console listing details](../store/play-console.md).
 
 The phone screenshots are rendered from the app's own screens on the JVM (Robolectric, through
 Roborazzi), never captured by hand from a device, so they change only when the screens or the
 captions do, and every change is reviewed as an image diff in a pull request (STORE-SHOT-001 to
-STORE-SHOT-014). The text is hand-written, one claim per line, and each claim names the
-requirements it rests on, so the listing can never promise what the specification does not say
-(STORE-LIST-001 to STORE-LIST-007).
+STORE-SHOT-014). The store icon and the feature graphic are rendered the same way, the icon from
+the app's own launcher icon resources, and reviewed the same way (STORE-ICON-001 to
+STORE-ICON-005, STORE-GRAPHIC-001 to STORE-GRAPHIC-006). The text is hand-written, one claim
+per line, and each claim names the requirements it rests on, so the listing can never promise
+what the specification does not say (STORE-LIST-001 to STORE-LIST-007).
 
 ## The shots
 
@@ -80,21 +82,96 @@ All sizes are pixels of the final image.
   pushing the frame down.** Lines are counted as rendered (measured text layout at the caption's
   width, font and size), not as characters.
 
+## Store icon and feature graphic
+
+Two more images, beside the screenshots in fastlane supply's `images` folder. Both are rendered
+on the JVM by `StoreArtTest`, on the STORE-SHOT-006 device (Robolectric, native graphics, SDK
+and qualifiers pinned), with no clock, locale or data involved.
+
+### Store icon
+
+- **STORE-ICON-001** The store icon is `fastlane/metadata/android/en-US/images/icon.png`:
+  exactly 512 x 512 px, a 32-bit PNG with an alpha channel (8-bit RGBA, PNG colour type 6). It
+  is a full square: no rounded corners, mask, shadow or margin of its own (Google Play applies
+  its own mask).
+- **STORE-ICON-002** It is drawn from the app's real adaptive launcher icon: the test inflates
+  `@mipmap/ic_launcher` and draws its background layer (`@color/ic_launcher_background`,
+  #FFFFFF) and then its foreground layer (`@drawable/ic_launcher_foreground`). The monochrome
+  layer is not drawn.
+
+  **Invariant — The store icon is always rendered from the launcher icon and never hand-edited.**
+  The test inflates the launcher icon's own resources rather than a copy of their geometry or
+  colours, so any change to the launcher icon changes the rendered store icon and fails the
+  verify (STORE-ICON-004) until the store icon is re-recorded.
+- **STORE-ICON-003** The launcher icon's central 72 x 72 dp safe zone fills the image. The
+  layers' 108 x 108 dp canvas is scaled by 512 / 72 px per dp, to 768 x 768 px, and drawn
+  offset by -128 px on both axes, so the outer 18 dp on each side falls outside the image.
+
+### Feature graphic
+
+- **STORE-GRAPHIC-001** The feature graphic is
+  `fastlane/metadata/android/en-US/images/featureGraphic.png`: exactly 1024 x 500 px, a 24-bit
+  PNG with no alpha channel (8-bit RGB, PNG colour type 2).
+- **STORE-GRAPHIC-002** It shows the app icon and the app name, "Simple Stretch" (the full
+  name, not the launcher label), on a solid #1361A7 background that runs to every edge. Nothing
+  else is drawn: no tagline, screenshot, device frame, gradient or shadow.
+- **STORE-GRAPHIC-003** The icon is a 240 x 240 px tile: the store icon's drawing
+  (STORE-ICON-002, STORE-ICON-003) at 240 px instead of 512 px, clipped to a rounded square with
+  a 54 px corner radius and anti-aliased edges. The icon's figure is #1361A7, the background's
+  colour, so it always sits on the icon's own white background. The tile is centred vertically
+  (its top at y = 130 px).
+- **STORE-GRAPHIC-004** The name is one line in Roboto Bold (weight 700), 80 px, white
+  (#FFFFFF), starting 48 px right of the tile. Its baseline is at y = 278 px, which centres its
+  cap height (0.711 em, 57 px) on the image's middle row (y = 250 px).
+- **STORE-GRAPHIC-005** The tile, the 48 px gap and the name (its measured advance width) are
+  centred horizontally as one group: the tile's left edge is at
+  round((1024 - group width) / 2) px, about 102 px for this name and font.
+- **STORE-GRAPHIC-006** The font is Roboto Bold from Roboto 2 (`Roboto-Bold.ttf`, version
+  2.001047, from the googlefonts/roboto repository), under the Apache License 2.0. The file and
+  its licence text are committed in `app/src/test/resources/store/fonts/`. The test loads that
+  file, never a system font, and fails if it cannot.
+
+### Writing and checking the two images
+
+- **STORE-ICON-004** Roborazzi writes every image as RGBA, which the feature graphic must not
+  be, so the test writes and compares both images itself (the store icon and the feature
+  graphic), following the mode the Roborazzi Gradle task sets:
+  - `./gradlew recordRoborazziDebug` writes both files in the formats of STORE-ICON-001 and
+    STORE-GRAPHIC-001, then reads each back and checks its size and colour type;
+  - `./gradlew verifyRoborazziDebug` (what CI runs) compares each rendered image pixel for pixel
+    with the committed file, with no tolerance, and fails on any difference in size or pixels
+    or on a missing file. On a failure it writes the rendered image to
+    `app/build/outputs/roborazzi/` as `icon_actual.png` or `featureGraphic_actual.png`, where
+    CI uploads it with the screenshot diffs (STORE-SHOT-008), and leaves the committed file
+    untouched;
+  - plain `./gradlew test` renders both images and writes and compares nothing.
+- **STORE-ICON-005** On every run except a recording, a test reads the committed `icon.png` and
+  `featureGraphic.png` and fails unless each exists with exactly the size and PNG colour type of
+  STORE-ICON-001 and STORE-GRAPHIC-001.
+
 ## Recording and verifying
 
 **Invariant — A store screenshot is recorded only when a person asks for it, and reaches the
-default branch only through a pull request whose diff shows the new image.**
+default branch only through a pull request whose diff shows the new image.** This section applies
+to the store icon and the feature graphic exactly as to the screenshots; together they are the
+store images.
 
-- **STORE-SHOT-008** Every pull request's build (`pr.yml`) only verifies the committed images
-  (`./gradlew verifyRoborazziDebug`, which fails on any changed or missing image) and, when it
-  fails, uploads the rendered and diff images as the `store-screenshot-diffs` artifact. It never
-  records.
+**Invariant — CI only verifies the store images; it never re-records them.** No check that runs
+on a pull request or a release writes a store image. A recording runs only when a person applies
+the label (STORE-SHOT-009), and its commit reaches the pull request only through that person's
+own push.
+
+- **STORE-SHOT-008** Every pull request's build (`pr.yml`) only verifies the committed store
+  images (`./gradlew verifyRoborazziDebug`, which fails on any changed or missing screenshot,
+  store icon or feature graphic) and, when it fails, uploads the rendered and diff images as the
+  `store-screenshot-diffs` artifact. It never records.
 - **STORE-SHOT-009** Recording happens in one of two ways, both started by a person:
   - **In CI:** a person applies the `record-store-screenshots` label to a pull request from a
     branch of this repository (never a fork). `record-store-screenshots.yml` runs
-    `./gradlew recordRoborazziDebug` on the pull request's head, commits only the files in the
-    `phoneScreenshots` folder as `github-actions[bot]`, and force-pushes that commit to the side
-    branch `store-screenshots/pr-<number>`, based on the pull request's head. If no image changed
+    `./gradlew recordRoborazziDebug` on the pull request's head, commits only the store images
+    (the files in the `phoneScreenshots` folder, `icon.png` and `featureGraphic.png`) as
+    `github-actions[bot]`, and force-pushes that commit to the side branch
+    `store-screenshots/pr-<number>`, based on the pull request's head. If no image changed
     it pushes nothing. Its job summary says which commit to bring in, and it always removes the
     label afterwards, so the label can be applied again for another recording.
   - **Locally:** `./gradlew recordRoborazziDebug`, on Linux with JDK 17 as CI runs. Robolectric
@@ -150,8 +227,8 @@ rewrites or records listing text or screenshots.
   `release-please.yml` runs the same check on the release tag's checkout (the tag's own script),
   before anything is built or attached, and attaches `store-listing-<version>.zip` to the GitHub
   Release beside the APK and AAB. The zip holds the committed `fastlane/metadata/android` folder
-  as it is at the tag (text and screenshots, under that path), and the job then reads back that
-  the release carries it. The zip's screenshots are the ones committed under
+  as it is at the tag (text, screenshots, store icon and feature graphic, under that path), and
+  the job then reads back that the release carries it. The zip's images are the ones committed under
   `fastlane/metadata/android`; they are verified only in pull requests (`verifyRoborazziDebug`,
   STORE-SHOT-008), and the release run does not re-verify them (it re-checks
   only the listing text). It needs no secret beyond those the job already uses. A manual
@@ -178,12 +255,28 @@ rewrites or records listing text or screenshots.
 - [x] `pr.yml` runs `verifyRoborazziDebug` and uploads `app/build/outputs/roborazzi/` (the actual
       and `_compare` images) when it fails; it never records (STORE-SHOT-008).
 - [x] `record-store-screenshots.yml` runs only on the `record-store-screenshots` label on a
-      same-repository pull request, commits only the `phoneScreenshots` folder, pushes to
+      same-repository pull request, commits only the store images (the `phoneScreenshots`
+      folder, `icon.png` and `featureGraphic.png`), pushes to
       `store-screenshots/pr-<number>` and never to the pull request's branch, and always removes
       the label; the label is defined in `.github/labels.repo.yml` (STORE-SHOT-009 and its
       invariant).
 - [x] The five images are recorded and committed in the `phoneScreenshots` folder, and
       `verifyRoborazziDebug` passes against them (STORE-SHOT-007).
+- [x] `StoreArtTest` inflates `@mipmap/ic_launcher` and draws its background and foreground
+      layers, with the 72 dp safe zone scaled to 512 px (STORE-ICON-002, STORE-ICON-003 and the
+      invariant).
+- [x] The feature graphic is drawn on the same pinned device with the committed Roboto Bold
+      file, its layout values in one place (`StoreArtSpec`) (STORE-GRAPHIC-002 to
+      STORE-GRAPHIC-006).
+- [x] The test writes the icon as RGBA and the feature graphic as RGB, records only in a
+      recording run, compares exactly in a verify run and writes `<name>_actual.png` to
+      `app/build/outputs/roborazzi/` on a failure (STORE-ICON-004).
+- [x] A test checks the committed images' size and PNG colour type, skipped only in a recording
+      run (STORE-ICON-005).
+- [ ] `icon.png` and `featureGraphic.png` are recorded and committed, and
+      `verifyRoborazziDebug` passes against them (STORE-ICON-001, STORE-GRAPHIC-001).
+- [ ] The owner has reviewed the rendered images in the pull request (the mockup review of
+      STORE-GRAPHIC-003 to STORE-GRAPHIC-005).
 - [x] Every spec page except `README.md` starts with `<!-- store: headline -->` or
       `<!-- store: omit -->` and a blank line (STORE-LIST-002).
 - [x] `store_listing.py` is standard-library Python with unit tests citing the STORE-LIST IDs
