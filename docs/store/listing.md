@@ -46,4 +46,4 @@ Simple Stretch reminds you to stretch during the day, on a schedule you choose. 
 - Skip today, or any day ahead, without changing your schedules. <!-- SKIP-001, SKIP-002, SKIP-006 -->
 - See how well you kept your goals by week or month, with your current streak. <!-- TREND-004, TREND-005, TREND-006 -->
 - Add a home screen widget with a ring that fills as you meet today's goals. <!-- WIDGET-001, WIDGET-002, WIDGET-003 -->
-- No account, no ads and no internet access: the app never goes online, so it never sends what you record anywhere. <!-- PRIV-001, PRIV-002 -->
+- No account, no ads and no internet access: the app never goes online, so it never sends what you record anywhere itself. <!-- PRIV-001, PRIV-002 -->
