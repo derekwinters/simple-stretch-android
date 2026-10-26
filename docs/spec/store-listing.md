@@ -149,7 +149,10 @@ rewrites or records listing text or screenshots.
   before anything is built or attached, and attaches `store-listing-<version>.zip` to the GitHub
   Release beside the APK and AAB. The zip holds the committed `fastlane/metadata/android` folder
   as it is at the tag (text and screenshots, under that path), and the job then reads back that
-  the release carries it. It needs no secret beyond those the job already uses. A manual
+  the release carries it. The zip's screenshots are the ones committed under
+  `fastlane/metadata/android`; they are verified only in pull requests (`verifyRoborazziDebug`,
+  STORE-SHOT-008), and the release run does not re-verify them (it re-checks
+  only the listing text). It needs no secret beyond those the job already uses. A manual
   backfill of a tag older than this requirement (one without `docs/store/listing.md`) skips the
   check and the zip with a notice; any other failure of the check fails the job.
 
