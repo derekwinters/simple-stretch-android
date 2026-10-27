@@ -1,8 +1,11 @@
 package com.derekwinters.stretch.store
 
 import android.app.Application
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.test.captureToImage
+import android.graphics.Bitmap
+import android.graphics.Rect
+import android.os.Handler
+import android.os.Looper
+import android.view.PixelCopy
 import androidx.compose.ui.test.onNodeWithTag
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import kotlin.math.abs
@@ -224,7 +228,23 @@ class FeatureGraphicTest : ShowcaseComposeTest() {
             FeatureGraphic(text, lines) { shot -> ShowcaseShotScreen(shot, context) }
         }
         composeRule.waitForIdle()
-        return composeRule.onNodeWithTag(FeatureGraphicSpec.TAG).captureToImage().asAndroidBitmap().toArgbImage()
+        return capture()
+    }
+
+    /**
+     * Copies the graphic's bounds out of the window through Robolectric's hardware renderer
+     * (PixelCopy), as Roborazzi captures the shots. Compose's own captureToImage waits for a
+     * redraw that Robolectric's paused main looper never delivers.
+     */
+    private fun capture(): ArgbImage {
+        val bounds = composeRule.onNodeWithTag(FeatureGraphicSpec.TAG).fetchSemanticsNode().boundsInWindow
+        val rect = Rect(bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.right.roundToInt(), bounds.bottom.roundToInt())
+        val bitmap = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888)
+        var result: Int? = null
+        PixelCopy.request(composeRule.activity.window, rect, bitmap, { result = it }, Handler(Looper.getMainLooper()))
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals("PixelCopy result", PixelCopy.SUCCESS, result)
+        return bitmap.toArgbImage()
     }
 
     private fun near(a: Int, b: Int, tolerance: Int): Boolean =

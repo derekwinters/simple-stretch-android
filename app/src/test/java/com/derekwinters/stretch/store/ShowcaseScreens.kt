@@ -6,8 +6,7 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.test.junit4.ComposeContentTestRule
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
 import com.derekwinters.stretch.ui.goals.GoalsContent
 import com.derekwinters.stretch.ui.home.HomeContent
@@ -116,7 +115,8 @@ abstract class ShowcaseComposeTest {
 
     protected val context: Context get() = ApplicationProvider.getApplicationContext()
 
-    protected val composeRule: ComposeContentTestRule = createComposeRule()
+    /** What `createComposeRule()` makes on Android, typed so [FeatureGraphicTest] can reach the window. */
+    protected val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     /**
      * The compose rule's host activity is declared by ui-test-manifest only in debug builds;
