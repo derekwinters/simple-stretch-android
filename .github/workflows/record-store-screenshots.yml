@@ -1,8 +1,9 @@
 name: record-store-screenshots
 
-# STORE-SHOT-009 (docs/spec/store-listing.md): re-records the Google Play store screenshots when a
-# person applies the `record-store-screenshots` label to a pull request from a branch of this
-# repository. Never for a fork: this job runs with a token that can push.
+# STORE-SHOT-009 (docs/spec/store-listing.md): re-records the Google Play store images (the phone
+# screenshots, the store icon and the feature graphic, STORE-ICON-004) when a person applies the
+# `record-store-screenshots` label to a pull request from a branch of this repository. Never for a
+# fork: this job runs with a token that can push.
 #
 # Invariant: this workflow never pushes to the pull request's branch. A push made with
 # GITHUB_TOKEN starts no pr.yml run, so a commit pushed there would leave the pull request's head
@@ -33,13 +34,17 @@ concurrency:
 
 jobs:
   record:
-    name: record the store screenshots
+    name: record the store images
     if: >-
       github.event.label.name == 'record-store-screenshots' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     env:
+      # The store images, the only paths this workflow commits: the screenshots' folder, the
+      # store icon and the feature graphic.
       SHOTS_DIR: fastlane/metadata/android/en-US/images/phoneScreenshots
+      ICON: fastlane/metadata/android/en-US/images/icon.png
+      FEATURE_GRAPHIC: fastlane/metadata/android/en-US/images/featureGraphic.png
       SIDE_BRANCH: store-screenshots/pr-${{ github.event.pull_request.number }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       HEAD_REF: ${{ github.event.pull_request.head.ref }}
@@ -64,32 +69,34 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
-      - name: Record the store screenshots
+      - name: Record the store images
         run: ./gradlew recordRoborazziDebug --stacktrace
 
-      # Only the phoneScreenshots folder is committed; anything else the build touched is left
-      # out. Nothing is pushed when no image changed.
+      # Only the store images are committed (the phoneScreenshots folder, icon.png and
+      # featureGraphic.png); anything else the build touched is left out. Nothing is pushed when
+      # no image changed.
       - name: Commit the images to the side branch
         id: commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- "$SHOTS_DIR"
-          if git diff --cached --quiet -- "$SHOTS_DIR"; then
+          images=("$SHOTS_DIR" "$ICON" "$FEATURE_GRAPHIC")
+          git add -- "${images[@]}"
+          if git diff --cached --quiet -- "${images[@]}"; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             {
-              echo "## Store screenshots"
+              echo "## Store images"
               echo
               echo "Recorded on \`$HEAD_REF\` at \`$(git rev-parse --short HEAD)\`: no image changed, so nothing was pushed."
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          git commit -q -m "test(store): record the store screenshots" -- "$SHOTS_DIR"
+          git commit -q -m "test(store): record the store images" -- "${images[@]}"
           git push --force origin "HEAD:refs/heads/$SIDE_BRANCH"
           sha="$(git rev-parse HEAD)"
           echo "changed=true" >> "$GITHUB_OUTPUT"
           {
-            echo "## Store screenshots"
+            echo "## Store images"
             echo
             echo "Recorded commit \`$sha\` is on branch \`$SIDE_BRANCH\`, on top of \`$HEAD_REF\`."
             echo "It is not on the pull request yet. Bring it in with your own push, so pr.yml verifies it and the diff shows the images:"

@@ -56,10 +56,11 @@ class CaptionMeasureTest {
         }
     }
 
-    // STORE-SHOT-012: every committed caption fits.
+    // STORE-SHOT-012: every committed shot caption fits (the feature graphic's text has its own
+    // limits, STORE-GRAPHIC-004).
     @Test
     fun committedCaptionsFit() {
-        Captions.load().forEach { caption ->
+        StoreShot.entries.map(Captions::of).forEach { caption ->
             CaptionFit.require(caption, CaptionMeasure.lines(ApplicationProvider.getApplicationContext(), caption))
         }
     }

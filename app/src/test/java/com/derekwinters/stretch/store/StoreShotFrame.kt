@@ -64,9 +64,6 @@ object StoreShotSpec {
     const val FRAME_CORNER_PX = 79
     val BEZEL_COLOR = Color(0xFF0A0A0B)
 
-    /** The screen's own top corners follow the frame's, inset by the bezel. */
-    const val SCREEN_CORNER_PX = FRAME_CORNER_PX - BEZEL_PX
-
     /** STORE-SHOT-013: the app screen is laid out at the device's natural size, then scaled. */
     val SCREEN_WIDTH: Dp = 411.dp
     val SCREEN_HEIGHT: Dp = 891.dp
@@ -152,37 +149,60 @@ fun StoreShotFrame(caption: Caption, screen: @Composable () -> Unit) {
             Text(caption.supporting, style = StoreShotSpec.supportingStyle(density))
         }
 
-        val frameShape = RoundedCornerShape(
-            topStart = px(StoreShotSpec.FRAME_CORNER_PX),
-            topEnd = px(StoreShotSpec.FRAME_CORNER_PX),
-            bottomEnd = 0.dp,
-            bottomStart = 0.dp,
-        )
-        val screenShape = RoundedCornerShape(
-            topStart = px(StoreShotSpec.SCREEN_CORNER_PX),
-            topEnd = px(StoreShotSpec.SCREEN_CORNER_PX),
-            bottomEnd = 0.dp,
-            bottomStart = 0.dp,
-        )
-        Box(
+        PhoneFrame(
             Modifier
                 .offset(
                     x = px((StoreShotSpec.WIDTH_PX - StoreShotSpec.FRAME_WIDTH_PX) / 2),
                     y = px(StoreShotSpec.FRAME_TOP_PX),
                 )
                 .width(px(StoreShotSpec.FRAME_WIDTH_PX))
-                .height(px(StoreShotSpec.HEIGHT_PX - StoreShotSpec.FRAME_TOP_PX))
-                .clip(frameShape)
-                .background(StoreShotSpec.BEZEL_COLOR)
-                // No bottom bezel: the frame runs off the bottom edge.
-                .padding(
-                    start = px(StoreShotSpec.BEZEL_PX),
-                    top = px(StoreShotSpec.BEZEL_PX),
-                    end = px(StoreShotSpec.BEZEL_PX),
-                ),
-        ) {
-            ScaledScreen(Modifier.fillMaxSize().clip(screenShape), screen)
-        }
+                .height(px(StoreShotSpec.HEIGHT_PX - StoreShotSpec.FRAME_TOP_PX)),
+            bezelPx = StoreShotSpec.BEZEL_PX,
+            frameCornerPx = StoreShotSpec.FRAME_CORNER_PX,
+            bezelColor = StoreShotSpec.BEZEL_COLOR,
+            screen = screen,
+        )
+    }
+}
+
+/**
+ * STORE-SHOT-013 / STORE-GRAPHIC-005: a phone frame filling [modifier]'s bounds: a [bezelColor]
+ * bezel [bezelPx] thick on the top and sides, none at the bottom, and [frameCornerPx] radius top
+ * corners; inside it, [screen] laid out at the device's natural size and scaled down to fit
+ * ([ScaledScreen]), its own top corners the frame's radius less the bezel. Shared by the store
+ * shots and the feature graphic, so the graphic's phones are drawn exactly as the shots' are.
+ */
+@Composable
+fun PhoneFrame(
+    modifier: Modifier,
+    bezelPx: Int,
+    frameCornerPx: Int,
+    bezelColor: Color,
+    screen: @Composable () -> Unit,
+) {
+    val density = LocalDensity.current
+    fun px(value: Int): Dp = with(density) { value.toDp() }
+
+    val frameShape = RoundedCornerShape(
+        topStart = px(frameCornerPx),
+        topEnd = px(frameCornerPx),
+        bottomEnd = 0.dp,
+        bottomStart = 0.dp,
+    )
+    val screenShape = RoundedCornerShape(
+        topStart = px(frameCornerPx - bezelPx),
+        topEnd = px(frameCornerPx - bezelPx),
+        bottomEnd = 0.dp,
+        bottomStart = 0.dp,
+    )
+    Box(
+        modifier
+            .clip(frameShape)
+            .background(bezelColor)
+            // No bottom bezel: the frame runs off the bottom edge.
+            .padding(start = px(bezelPx), top = px(bezelPx), end = px(bezelPx)),
+    ) {
+        ScaledScreen(Modifier.fillMaxSize().clip(screenShape), screen)
     }
 }
 
@@ -192,7 +212,7 @@ fun StoreShotFrame(caption: Caption, screen: @Composable () -> Unit) {
  * than a narrower layout. Whatever falls below this box is cut off by the clip around it.
  */
 @Composable
-private fun ScaledScreen(modifier: Modifier, content: @Composable () -> Unit) {
+fun ScaledScreen(modifier: Modifier, content: @Composable () -> Unit) {
     Layout(content = { Box(propagateMinConstraints = true) { content() } }, modifier = modifier) { measurables, constraints ->
         val naturalWidth = StoreShotSpec.SCREEN_WIDTH.roundToPx()
         val naturalHeight = StoreShotSpec.SCREEN_HEIGHT.roundToPx()

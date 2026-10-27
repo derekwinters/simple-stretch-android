@@ -83,9 +83,10 @@ jobs:
       # Every unit test, debug and release, as `./gradlew test` would, without running the debug
       # ones twice: verifyRoborazziDebug runs testDebugUnitTest itself, with the verify setting.
       #
-      # STORE-SHOT (docs/spec/store-listing.md): that verify run renders the Google Play
-      # screenshots and compares them with the images committed in
-      # fastlane/metadata/android/en-US/images/phoneScreenshots/. A changed or missing image fails
+      # STORE-SHOT / STORE-ICON (docs/spec/store-listing.md): that verify run renders the Google
+      # Play screenshots, store icon and feature graphic and compares them with the images
+      # committed in fastlane/metadata/android/en-US/images/ (phoneScreenshots/, icon.png,
+      # featureGraphic.png). A changed or missing image fails
       # the job. This workflow only verifies (STORE-SHOT-008); recording happens only when a
       # person asks for it: the `record-store-screenshots` label (record-store-screenshots.yml,
       # which pushes to a side branch, never to the PR branch) or `./gradlew recordRoborazziDebug`

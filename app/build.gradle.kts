@@ -130,6 +130,9 @@ room {
 // committed images and fails on a changed or missing one. Its actual and _compare images go to
 // app/build/outputs/roborazzi/. `recordRoborazziDebug` runs only when a person asks: locally, or
 // through the `record-store-screenshots` label (record-store-screenshots.yml, STORE-SHOT-009).
+// The store icon (StoreArtTest) and feature graphic (FeatureGraphicTest) live one folder up, in
+// images/; those tests write and compare them themselves in the mode these tasks set
+// (STORE-ICON-004).
 roborazzi {
     outputDir.set(rootProject.layout.projectDirectory.dir("fastlane/metadata/android/en-US/images/phoneScreenshots"))
 }
@@ -148,6 +151,13 @@ androidComponents {
 }
 
 tasks.withType<Test>().configureEach {
+    // StoreArtTest and FeatureGraphicTest compare the committed store icon and feature graphic
+    // (STORE-ICON-004), which lie outside Roborazzi's folder, so they are declared as inputs: a
+    // change to either re-runs the tests instead of leaving them up to date.
+    inputs.files(
+        rootProject.file("fastlane/metadata/android/en-US/images/icon.png"),
+        rootProject.file("fastlane/metadata/android/en-US/images/featureGraphic.png"),
+    ).withPropertyName("storeImages").withPathSensitivity(PathSensitivity.RELATIVE)
     testLogging {
         events("passed", "failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL

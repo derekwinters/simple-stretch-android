@@ -79,11 +79,14 @@ app shows the banner, so reminders arrive on the minute.
 The Google Play screenshots are rendered from the app's screens on the JVM, not captured on a
 phone ([store listing specification](spec/store-listing.md)), and committed under
 `fastlane/metadata/android/en-US/images/phoneScreenshots/`; their captions are in
-[store/captions.md](store/captions.md).
+[store/captions.md](store/captions.md). The store icon (`images/icon.png`, drawn from the app's
+launcher icon) and the feature graphic (`images/featureGraphic.png`: a headline, whose text is
+also in `captions.md`, beside the Home and stretch session screens on two tilted phones) are
+rendered and checked the same way, by the same commands.
 
 ```sh
-./gradlew verifyRoborazziDebug   # compare with the committed screenshots (what CI runs)
-./gradlew recordRoborazziDebug   # re-record them, deliberately, after changing a screen or caption
+./gradlew verifyRoborazziDebug   # compare with the committed store images (what CI runs)
+./gradlew recordRoborazziDebug   # re-record them, deliberately, after changing a screen, caption or the launcher icon
 ```
 
 Every pull request's CI run verifies them; a changed or missing image fails the run and uploads
@@ -120,7 +123,8 @@ Commit titles. Merging that PR tags a release and attaches three files:
 
 - `simple-stretch-<version>-release.apk`, for installing directly onto a phone (sideloading);
 - `simple-stretch-<version>-release.aab`, the Android App Bundle for uploading to Google Play;
-- `store-listing-<version>.zip`, the reviewed Google Play listing (text and screenshots) as
+- `store-listing-<version>.zip`, the reviewed Google Play listing (text, screenshots, store icon
+  and feature graphic) as
   committed at the release, under `fastlane/metadata/android/`. The release only checks and
   packages it; it never writes listing text.
 
@@ -160,7 +164,7 @@ app/src/main/java/com/derekwinters/stretch/
   ui/             Compose screens: home, schedule editor, stretch session, goals, trends
                   (Canvas charts) and day detail, stretch library, skipped days
 app/src/test/     JVM unit tests (next occurrence, repeating slots, goal maths, goal history,
-                  trends, widget ring and palette) and the store screenshot tests (store/)
+                  trends, widget ring and palette) and the store image tests (store/)
 app/schemas/      exported Room schemas
 docs/spec/        requirements with IDs; docs/adr/ decisions; docs/store/ listing text and
                   screenshot captions
