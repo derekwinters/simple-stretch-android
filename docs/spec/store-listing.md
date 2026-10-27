@@ -326,15 +326,15 @@ rewrites or records listing text or screenshots.
 - [x] `StoreArtTest` inflates `@mipmap/ic_launcher` and draws its background and foreground
       layers, with the 72 dp viewport scaled to 512 px (STORE-ICON-002, STORE-ICON-003 and the
       invariant).
-- [ ] The feature graphic is composed on the shots' pinned device and frozen inputs, its
+- [x] The feature graphic is composed on the shots' pinned device and frozen inputs, its
       layout values in one place (`FeatureGraphicSpec`), its text in the committed Roboto Bold
       and Roboto Regular files (STORE-GRAPHIC-002 to STORE-GRAPHIC-006).
-- [ ] The graphic's headline and supporting line are read from the `STORE-GRAPHIC-003` entry of
+- [x] The graphic's headline and supporting line are read from the `STORE-GRAPHIC-003` entry of
       `docs/store/captions.md`, each with a tag; a test fails on a missing tag or on a cited ID
       that is undefined or retired (STORE-GRAPHIC-003).
-- [ ] A test measures the graphic's text as rendered lines and fails text that does not fit
+- [x] A test measures the graphic's text as rendered lines and fails text that does not fit
       (STORE-GRAPHIC-004 and its invariant).
-- [ ] The two phones' screens are the shots' own composables and fixture state, through code
+- [x] The two phones' screens are the shots' own composables and fixture state, through code
       shared with `StoreScreenshotTest` (the screen, the theme, the frame and the scaled
       screen), and no image file is read; nothing draws the launcher or store icon
       (STORE-GRAPHIC-002 and STORE-GRAPHIC-007 invariants).
