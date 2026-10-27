@@ -345,10 +345,10 @@ rewrites or records listing text or screenshots.
       limit, skipped only in a recording run (STORE-ICON-005).
 - [x] `icon.png` is recorded and committed, and `verifyRoborazziDebug` passes against it
       (STORE-ICON-001).
-- [ ] `featureGraphic.png` is re-recorded for the two-phone design and committed, and
+- [x] `featureGraphic.png` is re-recorded for the two-phone design and committed, and
       `verifyRoborazziDebug` passes against it (STORE-GRAPHIC-001).
-- [ ] The owner has reviewed the rendered images in the pull request (the mockup review of
-      STORE-GRAPHIC-002 to STORE-GRAPHIC-005).
+- [x] The owner chose the two-phone design from mockups and delegated the review of the
+      rendered images in the pull request (STORE-GRAPHIC-002 to STORE-GRAPHIC-005).
 - [x] Every spec page except `README.md` starts with `<!-- store: headline -->` or
       `<!-- store: omit -->` and a blank line (STORE-LIST-002).
 - [x] `store_listing.py` is standard-library Python with unit tests citing the STORE-LIST IDs

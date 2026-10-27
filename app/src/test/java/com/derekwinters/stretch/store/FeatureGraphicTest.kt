@@ -145,13 +145,14 @@ class FeatureGraphicTest : ShowcaseComposeTest() {
     }
 
     // STORE-GRAPHIC-005: after rotating, each frame's bottom edge lies below the image and its top
-    // corners inside it, so the phones run off the bottom edge only.
+    // and sides inside it (every corner's x within the image), so the phones run off the bottom
+    // edge only.
     @Test
     fun phonesRunOffTheBottomEdgeOnly() {
         for (phone in FeatureGraphicSpec.PHONES) {
             for (x in listOf(0f, phone.width.toFloat())) {
                 val (bottomX, bottomY) = phone.toImage(x, phone.height.toFloat())
-                assertTrue("${phone.shot} bottom corner at ($bottomX, $bottomY)", bottomY > 500f)
+                assertTrue("${phone.shot} bottom corner at ($bottomX, $bottomY)", bottomX in 0f..1024f && bottomY > 500f)
                 val (topX, topY) = phone.toImage(x, 0f)
                 assertTrue("${phone.shot} top corner at ($topX, $topY)", topX in 0f..1024f && topY in 0f..500f)
             }
@@ -198,13 +199,16 @@ class FeatureGraphicTest : ShowcaseComposeTest() {
         assertTrue("($x, $y) is ${hex(pixel)}, not darker than the background", (pixel and 0xFF) < (blue and 0xFF) - 6)
     }
 
-    // STORE-GRAPHIC-002 and STORE-GRAPHIC-007 invariants: the graphic's code never draws the
-    // launcher or store icon, and never reads an image file for its screens.
+    // STORE-GRAPHIC-002 and STORE-GRAPHIC-007 invariants: the graphic's code, and the shared
+    // screen and frame code it draws through, never draws the launcher or store icon, and never
+    // reads an image file for its screens.
     @Test
     fun graphicDrawsNoIconAndPastesNoImage() {
-        val source = repoFile("app/src/test/java/com/derekwinters/stretch/store/FeatureGraphic.kt").readText()
-        for (forbidden in listOf("ic_launcher", "drawLauncherIcon", "StoreArt.", "BitmapFactory", "Png.decode", "phoneScreenshots", "painterResource")) {
-            assertFalse("FeatureGraphic.kt uses $forbidden", source.contains(forbidden))
+        for (file in listOf("FeatureGraphic.kt", "ShowcaseScreens.kt", "StoreShotFrame.kt")) {
+            val source = repoFile("app/src/test/java/com/derekwinters/stretch/store/$file").readText()
+            for (forbidden in listOf("ic_launcher", "drawLauncherIcon", "StoreArt.", "BitmapFactory", "Png.decode", "phoneScreenshots", "painterResource")) {
+                assertFalse("$file uses $forbidden", source.contains(forbidden))
+            }
         }
     }
 
