@@ -11,7 +11,7 @@ from this repository; they are recorded in [Play Console listing details](../sto
 The phone screenshots are rendered from the app's own screens on the JVM (Robolectric, through
 Roborazzi), never captured by hand from a device, so they change only when the screens or the
 captions do, and every change is reviewed as an image diff in a pull request (STORE-SHOT-001 to
-STORE-SHOT-014). The store icon and the feature graphic are rendered the same way, the icon from
+STORE-SHOT-015). The store icon and the feature graphic are rendered the same way, the icon from
 the app's own launcher icon resources and the graphic from the same showcase screens as the
 shots, and reviewed the same way (STORE-ICON-001 to STORE-ICON-005, STORE-GRAPHIC-001 to
 STORE-GRAPHIC-007). The text is hand-written, one claim
@@ -244,6 +244,15 @@ own push.
   into the pull request with their own push (`git fetch origin store-screenshots/pr-<number> &&
   git merge --ff-only FETCH_HEAD`, or a cherry-pick). That push runs `pr.yml`, which verifies the
   new images, and the pull request's diff shows them for review.
+- **STORE-SHOT-015** When a pull request from a branch of this repository closes, merged or
+  not, `delete-store-screenshots-branch.yml` deletes its side branch
+  `store-screenshots/pr-<number>` (STORE-SHOT-009). The repository's automatic deletion of head
+  branches does not cover it, because the side branch is never a pull request's head. A pull
+  request that never recorded has no side branch, and its absence is not a failure: the run
+  succeeds when the branch does not exist. Any other failure to delete fails the run. The job's
+  token can write contents and nothing else, and it runs for no fork's pull request (a fork's
+  pull request never records, so it has no side branch). Reopening a pull request does not bring
+  its side branch back; applying the label again records again.
 
 ## Listing text
 
@@ -321,6 +330,10 @@ rewrites or records listing text or screenshots.
       `store-screenshots/pr-<number>` and never to the pull request's branch, and always removes
       the label; the label is defined in `.github/labels.repo.yml` (STORE-SHOT-009 and its
       invariant).
+- [x] `delete-store-screenshots-branch.yml` runs on `pull_request` `closed` for a
+      same-repository pull request, with `contents: write` only, deletes
+      `store-screenshots/pr-<number>`, and succeeds when that branch does not exist
+      (STORE-SHOT-015).
 - [x] The five images are recorded and committed in the `phoneScreenshots` folder, and
       `verifyRoborazziDebug` passes against them (STORE-SHOT-007).
 - [x] `StoreArtTest` inflates `@mipmap/ic_launcher` and draws its background and foreground

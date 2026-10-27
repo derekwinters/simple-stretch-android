@@ -10,7 +10,8 @@ name: record-store-screenshots
 # unverified. Instead the recording is committed (images only) onto the pull request's head and
 # force-pushed to the bot-owned side branch `store-screenshots/pr-<number>`. A person brings that
 # commit into the pull request with their own push, which runs pr.yml (verify only) and shows the
-# new images in the pull request's diff.
+# new images in the pull request's diff. The side branch is deleted when the pull request closes
+# (STORE-SHOT-015, delete-store-screenshots-branch.yml).
 #
 # It is triggered by pull_request (labeled), not workflow_dispatch or issue_comment, so it runs the
 # workflow file of the pull request itself. The label is always removed at the end, so applying it
