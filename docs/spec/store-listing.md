@@ -184,9 +184,10 @@ frame's bottom centre (the middle of its bottom edge, before rotating).
   no animations). They change whenever those screens or the fixture change.
 
   **Invariant — The feature graphic's screens are rendered from the showcase fixture, never
-  pasted in from an image.** The test does not read, crop or scale a committed screenshot (or
-  any other image file), and it shares the shots' rendering code rather than a copy of it, so a
-  screen cannot drift from its shot.
+  pasted in from an image.** Nothing drawn on the graphic comes from an image file: the test
+  does not read, crop or scale a committed screenshot or any other image to make it (a verify
+  run reads only the committed feature graphic, to compare). It shares the shots' rendering code
+  rather than a copy of it, so a screen cannot drift from its shot.
 
 ### Writing and checking the two images
 
