@@ -1,10 +1,10 @@
 # Privacy policy
 
-**Effective date: 25 October 2026**
+**Effective date: 27 October 2026**
 
-Simple Stretch keeps everything you enter on your phone. It has no accounts, no analytics and
-no ads, and it does not ask for internet permission. Nothing is collected by, or shared with, the
-developer.
+Simple Stretch stores what you enter on your phone and never goes online, so it sends nothing
+anywhere itself. It has no accounts, no analytics and no ads, and it does not ask for internet
+permission. Nothing is collected by, or shared with, the developer.
 
 ## What the app stores
 

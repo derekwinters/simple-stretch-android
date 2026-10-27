@@ -2,9 +2,9 @@
 
 # Privacy
 
-The app keeps everything on the phone. The user-facing [privacy policy](../privacy.md) says so
-in plain words and records the answers given in Google Play's data safety form; this page is
-the contract that keeps the policy true.
+The app stores its data on the phone and never goes online, so it sends nothing anywhere itself.
+The user-facing [privacy policy](../privacy.md) says so in plain words and records the answers
+given in Google Play's data safety form; this page is the contract that keeps the policy true.
 
 **Invariant — The policy states only what the app does.** A pull request that changes what can
 leave the device (network access, analytics, crash reporting, any SDK that sends data) or the
