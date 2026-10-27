@@ -1,0 +1,49 @@
+name: delete-store-screenshots-branch
+
+# STORE-SHOT-015 (docs/spec/store-listing.md): when a pull request closes, merged or not, deletes
+# the bot-owned side branch `store-screenshots/pr-<number>` that record-store-screenshots.yml
+# (STORE-SHOT-009) pushes the recorded store images to. The repository's automatic deletion of
+# head branches does not cover it, because the side branch is never a pull request's head.
+#
+# A separate workflow rather than a job in record-store-screenshots.yml, so that workflow keeps
+# its single `labeled` trigger and its own concurrency group. Never for a fork: a fork's pull
+# request never records, so it has no side branch.
+#
+# A pull request that never recorded has no side branch; the API then answers 422 ("Reference
+# does not exist") or 404, which is success here. Any other failure fails the run.
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions: {}
+
+jobs:
+  delete:
+    name: delete the store images side branch
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SIDE_BRANCH: store-screenshots/pr-${{ github.event.pull_request.number }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # Nothing is checked out: the branch is deleted through the API. The API's error text is
+      # not echoed; only its HTTP status is.
+      - name: Delete the side branch if it exists
+        run: |
+          if out="$(gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$SIDE_BRANCH" 2>&1)"; then
+            echo "Deleted $SIDE_BRANCH."
+            exit 0
+          fi
+          status="$(grep -oE 'HTTP [0-9]{3}' <<<"$out" | tail -n 1)"
+          case "$status" in
+            'HTTP 404' | 'HTTP 422')
+              echo "$SIDE_BRANCH does not exist ($status); nothing to delete."
+              ;;
+            *)
+              echo "::error::Could not delete $SIDE_BRANCH (${status:-no HTTP status})."
+              exit 1
+              ;;
+          esac

@@ -52,7 +52,8 @@ recurring stretch reminders. See README.md for features and docs/spec/ for behav
   on a changed or missing image and uploads the diffs; it never records. Recording is always
   deliberate: apply the `record-store-screenshots` label to the PR (`record-store-screenshots.yml`
   records and pushes the images to the side branch `store-screenshots/pr-<number>`, never to the
-  PR branch; bring that commit into the PR with your own push so `pr.yml` verifies it), or run
+  PR branch, and `delete-store-screenshots-branch.yml` deletes it when the PR closes; bring that
+  commit into the PR with your own push so `pr.yml` verifies it), or run
   `./gradlew recordRoborazziDebug` locally on Linux with JDK 17. Either way the images reach
   `main` only through the PR diff.
 - Store listing text is hand-written in `docs/store/listing.md`, each claim citing spec IDs; after
