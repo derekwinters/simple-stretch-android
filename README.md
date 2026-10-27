@@ -8,4 +8,5 @@ specification and design decisions, is published at
 under [docs/](docs/index.md).
 
 The [privacy policy](https://derekwinters.github.io/simple-stretch-android/privacy/) (source:
-[docs/privacy.md](docs/privacy.md)) explains that the app keeps all its data on the device.
+[docs/privacy.md](docs/privacy.md)) explains that the app stores its data on the device and
+never goes online.
