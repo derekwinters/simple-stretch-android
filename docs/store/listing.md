@@ -13,6 +13,9 @@ How to write it:
 - Keep exactly the three sections below, in this order. Everything above `## Title` (this
   explanation) is not part of the listing.
 - The title (at most 30 characters) and the short description (at most 80) are one line each.
+- The title is also the app's name on the phone: the `app_name` string in
+  `app/src/main/res/values/strings.xml` must say exactly the same, and a test fails when they
+  differ ([STORE-LIST-008](../spec/store-listing.md#listing-text)). Change both together.
 - Every line of the full description (at most 4,000 characters) is one claim, written as plain
   text and ending with the requirement IDs it rests on as an HTML comment, e.g.
   `<!-- GOAL-001, HOME-006 -->`. The comment does not show on this page or in the listing; view

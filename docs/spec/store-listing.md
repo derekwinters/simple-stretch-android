@@ -16,7 +16,8 @@ the app's own launcher icon resources and the graphic from the same showcase scr
 shots, and reviewed the same way (STORE-ICON-001 to STORE-ICON-005, STORE-GRAPHIC-001 to
 STORE-GRAPHIC-007). The text is hand-written, one claim
 per line, and each claim names the requirements it rests on, so the listing can never promise
-what the specification does not say (STORE-LIST-001 to STORE-LIST-007).
+what the specification does not say (STORE-LIST-001 to STORE-LIST-007). The listing's title is
+also the app's name on the phone (STORE-LIST-008).
 
 ## The shots
 
@@ -304,6 +305,16 @@ rewrites or records listing text or screenshots.
   only the listing text). It needs no secret beyond those the job already uses. A manual
   backfill of a tag older than this requirement (one without `docs/store/listing.md`) skips the
   check and the zip with a notice; any other failure of the check fails the job.
+- **STORE-LIST-008** The app's name on the phone is the listing title, exactly: "Simple
+  Stretch". It is the `app_name` string resource (`app/src/main/res/values/strings.xml`), which
+  the manifest's `<application android:label>` names; the launcher activity declares no label of
+  its own, so it inherits it. Android shows this label under the launcher icon, in the app's
+  system settings and in its notifications' header.
+
+  **Invariant — The app's name is written once, in `app_name`, and equals the compiled
+  `title.txt`.** The manifest names the resource, never a literal, and a test fails when
+  `app_name` and `fastlane/metadata/android/en-US/title.txt` differ, so the store title and the
+  launcher label can only change together.
 
 ## Build checklist
 
@@ -371,5 +382,8 @@ rewrites or records listing text or screenshots.
 - [x] `build-and-attach` runs the check at the tag and attaches and reads back
       `store-listing-<version>.zip`; no step in it writes listing text (STORE-LIST-007 and the
       invariant).
+- [x] A Robolectric test checks that the manifest's application label is `app_name`, the
+      launcher activity has no label of its own, and `app_name` equals the compiled `title.txt`
+      (STORE-LIST-008 and its invariant).
 - [x] Store listing reviewed: the draft text in `docs/store/listing.md` claims only what the
       cited requirements say (STORE-LIST-003, STORE-LIST-004).
