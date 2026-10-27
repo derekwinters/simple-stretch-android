@@ -192,22 +192,36 @@ object FeatureGraphicFonts {
 }
 
 /**
- * STORE-GRAPHIC-004: the text's line counts as the graphic renders it (the same styles, at the
- * block's width, laid out by the platform's text engine at the device density), the limits on
- * them, and where the block's top lands.
+ * STORE-GRAPHIC-004: the text as laid out: its rendered line counts and the two texts' laid-out
+ * heights in pixels, from which the block's height and its vertically centred top follow.
+ */
+data class FeatureGraphicTextLayout(val lines: CaptionLines, val headlineHeight: Int, val supportingHeight: Int) {
+    val blockHeight: Int get() = headlineHeight + FeatureGraphicSpec.HEADLINE_TO_SUPPORTING_PX + supportingHeight
+
+    /** The block's top, centring it vertically (rounded down). */
+    val top: Int get() = (FeatureGraphicSpec.HEIGHT_PX - blockHeight) / 2
+}
+
+/**
+ * STORE-GRAPHIC-004: the text measured as the graphic renders it (the same styles, at the
+ * block's width, laid out by the platform's text engine at the device density), and the limits
+ * on its lines.
  */
 object FeatureGraphicText {
-    fun lines(context: Context, text: Caption): CaptionLines {
+    fun measure(context: Context, text: Caption): FeatureGraphicTextLayout {
         val density = Density(context)
         val measurer = TextMeasurer(createFontFamilyResolver(context), density, LayoutDirection.Ltr)
         val width = Constraints(maxWidth = FeatureGraphicSpec.TEXT_WIDTH_PX)
-        fun count(value: String, style: TextStyle) =
-            measurer.measure(text = value, style = style, constraints = width).lineCount
-        return CaptionLines(
-            headline = count(text.headline, FeatureGraphicSpec.headlineStyle(density)),
-            supporting = count(text.supporting, FeatureGraphicSpec.supportingStyle(density)),
+        val headline = measurer.measure(text = text.headline, style = FeatureGraphicSpec.headlineStyle(density), constraints = width)
+        val supporting = measurer.measure(text = text.supporting, style = FeatureGraphicSpec.supportingStyle(density), constraints = width)
+        return FeatureGraphicTextLayout(
+            lines = CaptionLines(headline = headline.lineCount, supporting = supporting.lineCount),
+            headlineHeight = headline.size.height,
+            supportingHeight = supporting.size.height,
         )
     }
+
+    fun lines(context: Context, text: Caption): CaptionLines = measure(context, text).lines
 
     /**
      * STORE-GRAPHIC-004 invariant: text over either limit fails the test. Nothing shrinks it,
@@ -229,26 +243,17 @@ object FeatureGraphicText {
             )
         }
     }
-
-    /** STORE-GRAPHIC-004: the block's height for [lines]. */
-    fun blockHeight(lines: CaptionLines): Int =
-        lines.headline * FeatureGraphicSpec.HEADLINE_LINE_HEIGHT_PX +
-            FeatureGraphicSpec.HEADLINE_TO_SUPPORTING_PX +
-            lines.supporting * FeatureGraphicSpec.SUPPORTING_LINE_HEIGHT_PX
-
-    /** STORE-GRAPHIC-004: the block's top, centring it vertically (rounded down). */
-    fun top(lines: CaptionLines): Int = (FeatureGraphicSpec.HEIGHT_PX - blockHeight(lines)) / 2
 }
 
 /**
  * STORE-GRAPHIC-001 to STORE-GRAPHIC-005: the 1024 x 500 feature graphic: the solid background,
- * the text block ([text], already checked to fit in [lines]) and the two phones, back then
+ * the text block ([text], already measured as [layout] and checked to fit) and the two phones, back then
  * front, each showing [screen] for its shot. [screen] is the app screen in its theme
  * ([ShowcaseShotScreen], STORE-GRAPHIC-007); nothing else here is themed. Nothing draws the app
  * icon (STORE-GRAPHIC-002 invariant) or reads an image file (STORE-GRAPHIC-007 invariant).
  */
 @Composable
-fun FeatureGraphic(text: Caption, lines: CaptionLines, screen: @Composable (StoreShot) -> Unit) {
+fun FeatureGraphic(text: Caption, layout: FeatureGraphicTextLayout, screen: @Composable (StoreShot) -> Unit) {
     val density = LocalDensity.current
     fun px(value: Int): Dp = with(density) { value.toDp() }
 
@@ -261,7 +266,7 @@ fun FeatureGraphic(text: Caption, lines: CaptionLines, screen: @Composable (Stor
     ) {
         Column(
             Modifier
-                .offset(x = px(FeatureGraphicSpec.TEXT_LEFT_PX), y = px(FeatureGraphicText.top(lines)))
+                .offset(x = px(FeatureGraphicSpec.TEXT_LEFT_PX), y = px(layout.top))
                 .width(px(FeatureGraphicSpec.TEXT_WIDTH_PX)),
         ) {
             // No maxLines: text that does not fit is caught by FeatureGraphicText, never cut or shrunk.

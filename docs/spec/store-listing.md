@@ -143,11 +143,12 @@ frame's bottom centre (the middle of its bottom edge, before rotating).
 - **STORE-GRAPHIC-004** The text block is left-aligned, its left edge at x = 64 px, and 380 px
   wide. Headline: white (#FFFFFF), Roboto Bold (weight 700), 46 px, 52 px line height, at most
   3 lines. Supporting line: #CFE1F5, Roboto Regular (weight 400), 21 px, 29 px line height,
-  18 px below the headline, at most 2 lines. Each line is exactly its line height, the text
-  centred in it. The block is centred vertically: its top is at
-  (500 − block height) / 2 px, rounded down, where the block height is the headline's lines ×
-  52 + 18 + the supporting line's lines × 29, with lines counted as rendered; for 3 and 2 lines
-  that is 232 px and the top is at y = 134 px.
+  18 px below the headline, at most 2 lines. Each line is its line height, the text centred in
+  it, nothing trimmed (where the font is taller than the line height, as the headline's is, the
+  text engine may keep its full ascent on the first line and descent on the last). The block is
+  centred vertically: its top is at (500 − block height) / 2 px, rounded down, where the block
+  height is the headline's and the supporting line's heights as laid out (measured at the
+  block's width, font and size) plus the 18 px gap.
 
   **Invariant — Text that does not fit its lines fails the test instead of shrinking or
   moving.** As for the shots' captions (STORE-SHOT-014), lines are counted as rendered

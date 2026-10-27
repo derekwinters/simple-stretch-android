@@ -45,7 +45,6 @@ class FeatureGraphicTest : ShowcaseComposeTest() {
     private val bezel = 0xFF0A0A0B.toInt()
     private val supportingColour = 0xFFCFE1F5.toInt()
 
-    private val committedLines = CaptionLines(headline = 3, supporting = 2)
 
     // STORE-GRAPHIC-001 to STORE-GRAPHIC-007, STORE-ICON-004: render the feature graphic, then
     // record or verify it.
@@ -74,26 +73,30 @@ class FeatureGraphicTest : ShowcaseComposeTest() {
         }
     }
 
-    // STORE-GRAPHIC-004: the block is centred vertically: 3 + 2 lines make a 232 px block whose
-    // top is at y = 134.
+    // STORE-GRAPHIC-004: the block is the two texts' laid-out heights and the 18 px gap, centred
+    // vertically; each text is at least its lines times its line height tall.
     @Test
     fun textBlockIsCentredVertically() {
-        assertEquals(232, FeatureGraphicText.blockHeight(committedLines))
-        assertEquals(134, FeatureGraphicText.top(committedLines))
-        assertEquals(174, FeatureGraphicText.top(CaptionLines(headline = 2, supporting = 1)))
+        val layout = FeatureGraphicText.measure(context, Captions.featureGraphic())
+        assertTrue("$layout", layout.headlineHeight >= layout.lines.headline * FeatureGraphicSpec.HEADLINE_LINE_HEIGHT_PX)
+        assertTrue("$layout", layout.supportingHeight >= layout.lines.supporting * FeatureGraphicSpec.SUPPORTING_LINE_HEIGHT_PX)
+        assertEquals(layout.headlineHeight + 18 + layout.supportingHeight, layout.blockHeight)
+        assertEquals((500 - layout.blockHeight) / 2, layout.top)
+        assertEquals(140, FeatureGraphicTextLayout(CaptionLines(3, 2), 150, 52).top)
     }
 
     // STORE-GRAPHIC-003 / STORE-GRAPHIC-004: the headline is drawn in white and the supporting
-    // line in #CFE1F5 inside the block, and nothing above or below the block.
+    // line in #CFE1F5 inside the block, and nothing well above or below it. Glyphs may reach a
+    // few pixels past their laid-out lines (the font is taller than the headline's line height),
+    // so the empty bands start [GLYPH_OVERFLOW_PX] outside the block.
     @Test
     fun textIsDrawnInTheBlock() {
-        val text = Captions.featureGraphic()
-        val lines = FeatureGraphicText.lines(context, text)
+        val layout = FeatureGraphicText.measure(context, Captions.featureGraphic())
         val graphic = render()
-        val top = FeatureGraphicText.top(lines)
-        val headlineBottom = top + lines.headline * FeatureGraphicSpec.HEADLINE_LINE_HEIGHT_PX
+        val top = layout.top
+        val headlineBottom = top + layout.headlineHeight
         val supportingTop = headlineBottom + FeatureGraphicSpec.HEADLINE_TO_SUPPORTING_PX
-        val bottom = top + FeatureGraphicText.blockHeight(lines)
+        val bottom = top + layout.blockHeight
         val left = FeatureGraphicSpec.TEXT_LEFT_PX
         val right = left + FeatureGraphicSpec.TEXT_WIDTH_PX
 
@@ -106,8 +109,8 @@ class FeatureGraphicTest : ShowcaseComposeTest() {
         assertTrue("the supporting line is drawn in #CFE1F5 ($supporting px)", supporting > 30)
 
         for (x in left until 400) {
-            for (y in 0 until top) assertEquals("above the text ($x, $y)", blue, graphic[x, y])
-            for (y in bottom until 500) assertEquals("below the text ($x, $y)", blue, graphic[x, y])
+            for (y in 0 until top - GLYPH_OVERFLOW_PX) assertEquals("above the text ($x, $y)", blue, graphic[x, y])
+            for (y in bottom + GLYPH_OVERFLOW_PX until 500) assertEquals("below the text ($x, $y)", blue, graphic[x, y])
         }
     }
 
@@ -222,10 +225,10 @@ class FeatureGraphicTest : ShowcaseComposeTest() {
      */
     private fun render(): ArgbImage {
         val text = Captions.featureGraphic()
-        val lines = FeatureGraphicText.lines(context, text)
-        FeatureGraphicText.require(text, lines)
+        val layout = FeatureGraphicText.measure(context, text)
+        FeatureGraphicText.require(text, layout.lines)
         composeRule.setContent {
-            FeatureGraphic(text, lines) { shot -> ShowcaseShotScreen(shot, context) }
+            FeatureGraphic(text, layout) { shot -> ShowcaseShotScreen(shot, context) }
         }
         composeRule.waitForIdle()
         return capture()
@@ -264,4 +267,8 @@ class FeatureGraphicTest : ShowcaseComposeTest() {
     }
 
     private fun hex(pixel: Int) = "#%08X".format(pixel)
+
+    private companion object {
+        const val GLYPH_OVERFLOW_PX = 10
+    }
 }
