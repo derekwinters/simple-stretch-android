@@ -15,7 +15,7 @@ tests reference these IDs. Change the spec before the code.
 | [screens.md](screens.md) | HOME-001 … HOME-009 | Home screen layout |
 | [widgets.md](widgets.md) | WIDGET-001 … WIDGET-010 | Segmented ring home screen widget for today's goals |
 | [privacy.md](privacy.md) | PRIV-001 … PRIV-004 | No internet access, on-device data, the permission set, the privacy policy |
-| [store-listing.md](store-listing.md) | STORE-SHOT-001 … STORE-SHOT-014, STORE-ICON-001 … STORE-ICON-005, STORE-GRAPHIC-001 … STORE-GRAPHIC-007, STORE-LIST-001 … STORE-LIST-007 | Google Play phone screenshots: the shots, their frozen inputs, layout, recording (on a deliberate label) and verifying; the store icon rendered from the launcher icon and the feature graphic's text and two showcase phones; the listing text, its claims' requirement IDs, the drift check and the release's listing zip |
+| [store-listing.md](store-listing.md) | STORE-SHOT-001 … STORE-SHOT-014, STORE-ICON-001 … STORE-ICON-005, STORE-GRAPHIC-001 … STORE-GRAPHIC-007, STORE-LIST-001 … STORE-LIST-008 | Google Play phone screenshots: the shots, their frozen inputs, layout, recording (on a deliberate label) and verifying; the store icon rendered from the launcher icon and the feature graphic's text and two showcase phones; the listing text, its claims' requirement IDs, the drift check and the release's listing zip; the app's launcher label matching the store title |
 
 Every page except this one starts with a store marker line, `<!-- store: headline -->` or
 `<!-- store: omit -->`, saying whether the Google Play listing must mention it
