@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Trends - Simple Stretch</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../../css/brands.min.css" rel="stylesheet">
+        <link href="../../css/solid.min.css" rel="stylesheet">
+        <link href="../../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">Simple Stretch</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../.." class="nav-link">Home</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle active" aria-current="page" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Specification</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../" class="dropdown-item">Overview</a>
+</li>
+                                    
+<li>
+    <a href="../scheduling/" class="dropdown-item">Scheduling</a>
+</li>
+                                    
+<li>
+    <a href="../skipping/" class="dropdown-item">Skipping</a>
+</li>
+                                    
+<li>
+    <a href="../notifications/" class="dropdown-item">Notifications</a>
+</li>
+                                    
+<li>
+    <a href="../library/" class="dropdown-item">Stretch library</a>
+</li>
+                                    
+<li>
+    <a href="../goals/" class="dropdown-item">Goals</a>
+</li>
+                                    
+<li>
+    <a href="../sessions/" class="dropdown-item">Sessions</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active" aria-current="page">Trends</a>
+</li>
+                                    
+<li>
+    <a href="../screens/" class="dropdown-item">Screens</a>
+</li>
+                                    
+<li>
+    <a href="../widgets/" class="dropdown-item">Widgets</a>
+</li>
+                                    
+<li>
+    <a href="../privacy/" class="dropdown-item">Privacy</a>
+</li>
+                                    
+<li>
+    <a href="../store-listing/" class="dropdown-item">Store listing</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../privacy/" class="nav-link">Privacy policy</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/listing/" class="nav-link">Store listing text</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/play-console/" class="nav-link">Play Console listing details</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/captions/" class="nav-link">Store screenshot captions</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Decisions</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../../adr/0001-debug-signing-until-release-keystore/" class="dropdown-item">0001 Debug signing until a release keystore</a>
+</li>
+                                    
+<li>
+    <a href="../../adr/0002-release-signing-with-a-stable-keystore/" class="dropdown-item">0002 Release signing with a stable keystore</a>
+</li>
+                                    
+<li>
+    <a href="../../adr/0003-version-code-derived-from-version-name/" class="dropdown-item">0003 Version code derived from the version name</a>
+</li>
+                                    
+<li>
+    <a href="../../adr/0004-play-app-signing-and-publishing/" class="dropdown-item">0004 Play App Signing and publishing</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../sessions/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../screens/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/derekwinters/simple-stretch-android/edit/main/docs/spec/trends.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#trends" class="nav-link">Trends</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#build-checklist" class="nav-link">Build checklist</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<!-- store: headline -->
+
+<h1 id="trends">Trends</h1>
+<p>How well the daily goals (goals.md) were kept, by week or month, with a drill-down into one day.
+Everything here is derived from the goal history (GOAL-008), the completion log (SESS-004) and
+the skipped dates (SKIP-007); nothing is stored.</p>
+<ul>
+<li><strong>TREND-001</strong> A day is judged by the goals <strong>in force that day</strong> (GOAL-008), not by today's
+  goals. A goal changed on the 5th from 3 to 1 a day asks for 3 on the 4th and 1 on the 5th; a
+  goal removed on the 7th no longer counts from the 7th but still counts before it.</li>
+</ul>
+<p><strong>Invariant — Changing or removing a goal never changes a past day's score.</strong> Past days are
+  scored from the goal rows whose range covers them, which an edit closes rather than
+  overwrites (GOAL-009).
+- <strong>TREND-002</strong> A day's <strong>score</strong> is the sum, over the goals in force that day, of
+  min(completions of that goal's stretch that day, its target), divided by the sum of the
+  targets. Completions count by local calendar day as in GOAL-003. Example: hamstring 3 a day and
+  calf 2 a day; 4 hamstring and 1 calf gives (3 + 1) / 5 = 80%. A day is <strong>all goals met</strong> when
+  every goal in force reached its target (score 100%).</p>
+<p><strong>Invariant — Extra completions never lift a score.</strong> Completions beyond a goal's target, and
+  completions of stretches without a goal that day, add nothing: a day never exceeds 100%, and
+  over-doing one goal never makes up for another.
+- <strong>TREND-003</strong> A day with no goals in force, a skipped day (SKIP-001, SKIP-002) and a day after
+  today have <strong>no score</strong>. They are shown as gaps and left out of every average, count and
+  streak.</p>
+<p><strong>Invariant — A gap is never 0%.</strong> A day without a score is never drawn as a 0% bar or
+  averaged in as 0; a scored day with nothing done is 0% and is drawn differently from a gap.
+- <strong>TREND-004</strong> The <strong>Trends</strong> screen has a Week / Month toggle (Week first) and previous / next
+  buttons that move one period at a time. A week runs <strong>Monday to Sunday</strong>; a month runs from
+  the 1st to its last day. The period's title reads like "Oct 5 – 11, 2026" or "October 2026".
+  Next is disabled once the period contains today (no browsing into the future); previous is
+  disabled once the period starts on or before the first day any goal was in force. Switching
+  between week and month shows the period containing today when today is in view, otherwise the
+  period containing the first day shown. A bar chart shows one bar per day of the period, its
+  height the day's score on a 0–100% axis; all-met days are drawn in the full accent colour,
+  partial days lighter, gaps as a dashed outline at the baseline, and today is underlined.
+- <strong>TREND-005</strong> Above the chart, a summary for the shown period: the <strong>average score</strong> over the
+  scored days in it (and how many days that is; "–" when none), and the <strong>number of days with
+  all goals met</strong>.
+- <strong>TREND-006</strong> The summary also shows the <strong>current streak</strong>: the number of consecutive
+  all-goals-met days ending today or yesterday, counted back through all history (not only the
+  shown period). Today adds to the streak once it is met but never breaks it, because the day
+  is not over. Gaps (TREND-003) are passed over: a skipped day or a day without goals neither
+  adds to nor breaks a streak. The first earlier scored day that was not fully met ends it.
+- <strong>TREND-007</strong> Tapping a day's bar (today or earlier) opens the <strong>day detail</strong> screen: the
+  day's score (or why it has none), each goal in force that day with done / target and a
+  progress bar, and every completion logged that day with its time, in time order (including
+  stretches without a goal).
+- <strong>TREND-008</strong> The day detail screen also shows the <strong>score through the day</strong> as a step chart:
+  x is the time of day from 0:00 to 24:00, y is 0–100%. It starts at 0% at midnight and steps up
+  at the time of each completion that counts towards a goal (TREND-002), staying level in
+  between; completions saved together (one session save, SESS-003) make one step. The line
+  runs to the current time for today and to midnight for past days. A day without goals in
+  force has no chart. If the clocks go back during the night, time of day never runs
+  backwards on the chart.
+- <strong>TREND-009</strong> The Trends screen is reached from a labelled "Trends" item in the home screen's
+  overflow menu (HOME-004) and from a "Trends" button on the home goals card while goals exist
+  (HOME-006).
+- <strong>TREND-010</strong> <strong>Accessibility:</strong> each day's bar is its own accessible element whose content
+  description gives the date and the score, done / target and "all goals met" (or "skipped",
+  "no goals", "not yet"), and announces tapping as "Show day". The step chart has one content
+  description listing each step's time and score. Charts are drawn with Compose <code>Canvas</code>; no
+  chart library is used.</p>
+<h2 id="build-checklist">Build checklist</h2>
+<ul>
+<li>[x] <code>TrendMath</code> (goals in force, daily score, per-day counts, week/month periods, summary,
+      streak, intraday series) is pure and unit tested (TREND-001..006, TREND-008).</li>
+<li>[x] Scores are <code>null</code> for gaps, and the average uses only non-null scores (TREND-003
+      invariant).</li>
+<li>[x] Credited completions are <code>min(done, target)</code> per goal (TREND-002 invariant).</li>
+<li>[x] Weeks start Monday via <code>TemporalAdjusters.previousOrSame(MONDAY)</code>, independent of locale
+      (TREND-004).</li>
+<li>[x] The streak is computed over all days since the first goal, not the shown period
+      (TREND-006).</li>
+<li>[x] Each bar is a separate composable with <code>clearAndSetSemantics { contentDescription }</code> and
+      a labelled click (TREND-010).</li>
+<li>[x] Only completions since the first goal day are read for the trends screen (earlier ones
+      can never score).</li>
+<li>[ ] Compose UI test of the chart semantics (needs an emulator in CI).</li>
+<li>[x] Store listing reviewed: every claim in <code>docs/store/listing.md</code> that cites this page is
+      still true, and at least one does (<code>store: headline</code>; STORE-LIST-003, STORE-LIST-004).</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>0004 Play App Signing and publishing - Simple Stretch</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../../css/brands.min.css" rel="stylesheet">
+        <link href="../../css/solid.min.css" rel="stylesheet">
+        <link href="../../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">Simple Stretch</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../.." class="nav-link">Home</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Specification</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../../spec/" class="dropdown-item">Overview</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/scheduling/" class="dropdown-item">Scheduling</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/skipping/" class="dropdown-item">Skipping</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/notifications/" class="dropdown-item">Notifications</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/library/" class="dropdown-item">Stretch library</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/goals/" class="dropdown-item">Goals</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/sessions/" class="dropdown-item">Sessions</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/trends/" class="dropdown-item">Trends</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/screens/" class="dropdown-item">Screens</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/widgets/" class="dropdown-item">Widgets</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/privacy/" class="dropdown-item">Privacy</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/store-listing/" class="dropdown-item">Store listing</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../privacy/" class="nav-link">Privacy policy</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/listing/" class="nav-link">Store listing text</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/play-console/" class="nav-link">Play Console listing details</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/captions/" class="nav-link">Store screenshot captions</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle active" aria-current="page" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Decisions</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../0001-debug-signing-until-release-keystore/" class="dropdown-item">0001 Debug signing until a release keystore</a>
+</li>
+                                    
+<li>
+    <a href="../0002-release-signing-with-a-stable-keystore/" class="dropdown-item">0002 Release signing with a stable keystore</a>
+</li>
+                                    
+<li>
+    <a href="../0003-version-code-derived-from-version-name/" class="dropdown-item">0003 Version code derived from the version name</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active" aria-current="page">0004 Play App Signing and publishing</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../0003-version-code-derived-from-version-name/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" class="nav-link disabled">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/derekwinters/simple-stretch-android/edit/main/docs/adr/0004-play-app-signing-and-publishing.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#0004-enrol-the-release-key-as-the-play-app-signing-key" class="nav-link">0004: Enrol the release key as the Play app signing key</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#context" class="nav-link">Context</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#decision" class="nav-link">Decision</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#consequences" class="nav-link">Consequences</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="0004-enrol-the-release-key-as-the-play-app-signing-key">0004: Enrol the release key as the Play app signing key</h1>
+<p>Status: accepted (partially supersedes <a href="../0002-release-signing-with-a-stable-keystore/">0002</a>)</p>
+<h2 id="context">Context</h2>
+<p>Simple Stretch is going on Google Play as well as being released on GitHub. New apps on Play use
+Play App Signing: the developer uploads an Android App Bundle signed with an <strong>upload key</strong>, and
+Google re-signs the APKs it delivers with the <strong>app signing key</strong> it holds. What a phone sees is
+the app signing key, so that is the key every later update, from any source, must match.</p>
+<p>ADR 0002 was written for a sideloaded app with no Play App Signing. Its stable release keystore
+already signs both the release APK attached to each GitHub Release and the release AAB beside it
+(#40, #73). The open question was how that key relates to the two keys Play needs, and it has to
+be settled before the first Play release, because the app signing key cannot be swapped afterwards
+without breaking updates for everyone who installed from Play.</p>
+<p>Two questions were decided: (1) which key Play signs installs with, and (2) whether GitHub
+Releases keep the APK. Options considered:</p>
+<ul>
+<li><strong>1A. Upload the existing release key as the app signing key, and keep it as the upload key.</strong>
+  Play installs and GitHub-released APKs then carry one signature.</li>
+<li><strong>1B. Keep the existing key as the app signing key, with a separate upload key.</strong> A leaked
+  upload key can be reset through Play, but CI would sign the AAB with a second keystore and a
+  second set of secrets, while the APK keeps the first: two keys to hold and never lose instead of
+  one, for protection that only covers uploads.</li>
+<li><strong>1C. Let Google generate the app signing key.</strong> Google holds the only copy, so the sideloaded
+  APK could never be signed with it: a Play install and a GitHub-released APK could not update
+  each other, and moving between them would mean uninstalling and losing the app's data.</li>
+<li><strong>2. Keep or drop the GitHub-released APK.</strong> Dropping it would make Play the only install path;
+  keeping it serves people without Play and costs nothing under 1A, since it is signed with the
+  same key.</li>
+</ul>
+<h2 id="decision">Decision</h2>
+<p>Option 1A. The stable release keystore of ADR 0002 is uploaded to Play Console as the app signing
+key, and the same key stays the upload key.</p>
+<ul>
+<li>Users who install from Play and users who install the APK from a GitHub Release run builds
+  signed by the same certificate, so either can update the other in place to the same or a newer
+  version, keeping its data.</li>
+<li>CI keeps signing the release AAB with the current secrets. The AAB build, the signature gate and
+  the secrets of ADR 0002 need no change.</li>
+<li>GitHub Releases keep attaching the release-signed APK next to the AAB, for people who do not use
+  Play.</li>
+<li>Enrolling the key in Play App Signing is done in Play Console by the owner (#48), following this
+  record.</li>
+</ul>
+<h3 id="what-this-supersedes-in-adr-0002">What this supersedes in ADR 0002</h3>
+<p>Only ADR 0002's statements that Simple Stretch is sideloaded with no Play App Signing and no key
+recovery, and its consequence that leaves the choice between app signing key and upload key open.
+The rest of ADR 0002 stands: the one stable keystore, its secrets, the unsigned-never-debug-signed
+invariant, and the signature gate on every APK and AAB.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>One key both uploads and signs what users install.</strong> If it leaks, the key every install trusts
+  is exposed, not only the upload path. It stays only in repository secrets and with the owner.
+  If it leaks, register a new upload key through Play at once; installs keep trusting the leaked
+  key.</li>
+<li><strong>The key must never change</strong>, as in ADR 0002, now for Play installs as well as sideloaded ones.</li>
+<li><strong>The choice cannot be undone after the first Play release.</strong> Once Play has delivered builds
+  signed with this key, the app signing key is fixed for everyone who installed them.</li>
+<li><strong>If the key is lost,</strong> Play can register a new upload key, and Play releases continue under the
+  app signing key Google holds. GitHub-released APKs could then no longer be signed with the
+  matching key, so sideloaded installs would have to uninstall once to move to a new key, and
+  could no longer update to or from Play installs.</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

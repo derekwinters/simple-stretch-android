@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Sessions - Simple Stretch</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../../css/brands.min.css" rel="stylesheet">
+        <link href="../../css/solid.min.css" rel="stylesheet">
+        <link href="../../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">Simple Stretch</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../.." class="nav-link">Home</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle active" aria-current="page" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Specification</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../" class="dropdown-item">Overview</a>
+</li>
+                                    
+<li>
+    <a href="../scheduling/" class="dropdown-item">Scheduling</a>
+</li>
+                                    
+<li>
+    <a href="../skipping/" class="dropdown-item">Skipping</a>
+</li>
+                                    
+<li>
+    <a href="../notifications/" class="dropdown-item">Notifications</a>
+</li>
+                                    
+<li>
+    <a href="../library/" class="dropdown-item">Stretch library</a>
+</li>
+                                    
+<li>
+    <a href="../goals/" class="dropdown-item">Goals</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active" aria-current="page">Sessions</a>
+</li>
+                                    
+<li>
+    <a href="../trends/" class="dropdown-item">Trends</a>
+</li>
+                                    
+<li>
+    <a href="../screens/" class="dropdown-item">Screens</a>
+</li>
+                                    
+<li>
+    <a href="../widgets/" class="dropdown-item">Widgets</a>
+</li>
+                                    
+<li>
+    <a href="../privacy/" class="dropdown-item">Privacy</a>
+</li>
+                                    
+<li>
+    <a href="../store-listing/" class="dropdown-item">Store listing</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../privacy/" class="nav-link">Privacy policy</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/listing/" class="nav-link">Store listing text</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/play-console/" class="nav-link">Play Console listing details</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/captions/" class="nav-link">Store screenshot captions</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Decisions</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../../adr/0001-debug-signing-until-release-keystore/" class="dropdown-item">0001 Debug signing until a release keystore</a>
+</li>
+                                    
+<li>
+    <a href="../../adr/0002-release-signing-with-a-stable-keystore/" class="dropdown-item">0002 Release signing with a stable keystore</a>
+</li>
+                                    
+<li>
+    <a href="../../adr/0003-version-code-derived-from-version-name/" class="dropdown-item">0003 Version code derived from the version name</a>
+</li>
+                                    
+<li>
+    <a href="../../adr/0004-play-app-signing-and-publishing/" class="dropdown-item">0004 Play App Signing and publishing</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../goals/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../trends/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/derekwinters/simple-stretch-android/edit/main/docs/spec/sessions.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#stretch-sessions" class="nav-link">Stretch sessions</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#build-checklist" class="nav-link">Build checklist</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<!-- store: headline -->
+
+<h1 id="stretch-sessions">Stretch sessions</h1>
+<ul>
+<li><strong>SESS-001</strong> The stretch session screen is where the user records what they stretched. It
+  opens from a reminder notification (tap or "Start", NOTIF-002, NOTIF-003), from the
+  "Stretch now" button on the home screen (HOME-007) and from a row of the home screen's
+  Today list, which opens it as that reminder's notification would (HOME-009). A reminder
+  opens it carrying the reminder's named stretches, its schedule name and its original
+  scheduled time (NOTIF-002, NOTIF-008); "Stretch now" and a reminder with no stretches
+  (every repeating schedule, SCHED-011) carry no named list.</li>
+<li><strong>SESS-002</strong> It lists every stretch in the library once, each with a checkbox and a progress
+  label: "n of target today" for an unmet goal, "Goal met: n of target today" for a met one,
+  "No goal" otherwise. The list has two sections:</li>
+<li><strong>Top section, opened from a reminder that names stretches:</strong> headed "From your {time}
+    {schedule} reminder" (e.g. "From your 9:00 Morning reminder"; the time in the user's 12/24
+    hour format), it lists that reminder's stretches in the order the reminder names them, on a
+    highlighted background. A reminder stretch whose goal is already met stays here with its
+    progress. A named stretch that no longer exists (deleted, LIB-003) is left out without any
+    note; if none of the named stretches still exists, the screen opens as if with no named
+    list.</li>
+<li><strong>Top section, opened with no named list:</strong> headed "Goals still short today", it lists the
+    stretches whose goal is not yet met today, by name ignoring case, on a highlighted
+    background. It is left out when no goal is short (every goal met, or no goals at all).</li>
+<li><strong>"Other stretches":</strong> every stretch not in the top section, by name ignoring case (ties by
+    id), always expanded. With no top section the screen is just this alphabetical list.</li>
+</ul>
+<p><strong>Invariant — Nothing is pre-checked.</strong> Every checkbox, in both sections, starts unchecked,
+  whichever way the screen was opened, so only what the user taps is logged.
+- <strong>SESS-003</strong> "Save" records one completion per checked stretch, in either section, all
+  stamped with the moment of saving, then closes the screen. Save is disabled while nothing is
+  checked in either section. Leaving the
+  screen any other way records nothing.
+- <strong>SESS-004</strong> The completion log stores, per completion, the stretch and the time it was
+  completed (epoch milliseconds). Deleting a stretch deletes its completions (LIB-005).
+- <strong>SESS-005</strong> <strong>Invariant — The list order is fixed when the screen opens.</strong> Both sections,
+  and which stretch is in which, are decided once. Checking a box never moves a row, and progress changing in the background (e.g. a save from another screen)
+  does not reorder the list while it is shown.</p>
+<p>Saving a session only appends to the completion log; it never changes schedules or alarms.</p>
+<h2 id="build-checklist">Build checklist</h2>
+<ul>
+<li>[x] Both sections are computed once by <code>GoalMath.sessionLayout</code> from a one-shot read
+      (SESS-002, SESS-005); it is pure and unit tested, including deleted named stretches.</li>
+<li>[x] The reminder's stretch ids, schedule name and scheduled time travel as session route
+      arguments, so they survive process death (SESS-001).</li>
+<li>[x] A Today row and a notification build the session route with one shared function
+      (SESS-001, HOME-009).</li>
+<li>[x] The checked set starts empty for every way of opening (SESS-002 invariant).</li>
+<li>[x] All completions of one save are inserted in one transaction with one timestamp (SESS-003).</li>
+<li>[x] <code>completions</code> has indices on <code>stretchId</code> and <code>completedAt</code> (SESS-004, GOAL-003).</li>
+<li>[x] Store listing reviewed: every claim in <code>docs/store/listing.md</code> that cites this page is
+      still true, and at least one does (<code>store: headline</code>; STORE-LIST-003, STORE-LIST-004).</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

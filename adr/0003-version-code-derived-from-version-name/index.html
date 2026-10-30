@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>0003 Version code derived from the version name - Simple Stretch</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../../css/brands.min.css" rel="stylesheet">
+        <link href="../../css/solid.min.css" rel="stylesheet">
+        <link href="../../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">Simple Stretch</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../.." class="nav-link">Home</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Specification</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../../spec/" class="dropdown-item">Overview</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/scheduling/" class="dropdown-item">Scheduling</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/skipping/" class="dropdown-item">Skipping</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/notifications/" class="dropdown-item">Notifications</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/library/" class="dropdown-item">Stretch library</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/goals/" class="dropdown-item">Goals</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/sessions/" class="dropdown-item">Sessions</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/trends/" class="dropdown-item">Trends</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/screens/" class="dropdown-item">Screens</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/widgets/" class="dropdown-item">Widgets</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/privacy/" class="dropdown-item">Privacy</a>
+</li>
+                                    
+<li>
+    <a href="../../spec/store-listing/" class="dropdown-item">Store listing</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../privacy/" class="nav-link">Privacy policy</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/listing/" class="nav-link">Store listing text</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/play-console/" class="nav-link">Play Console listing details</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/captions/" class="nav-link">Store screenshot captions</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle active" aria-current="page" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Decisions</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../0001-debug-signing-until-release-keystore/" class="dropdown-item">0001 Debug signing until a release keystore</a>
+</li>
+                                    
+<li>
+    <a href="../0002-release-signing-with-a-stable-keystore/" class="dropdown-item">0002 Release signing with a stable keystore</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active" aria-current="page">0003 Version code derived from the version name</a>
+</li>
+                                    
+<li>
+    <a href="../0004-play-app-signing-and-publishing/" class="dropdown-item">0004 Play App Signing and publishing</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../0002-release-signing-with-a-stable-keystore/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../0004-play-app-signing-and-publishing/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/derekwinters/simple-stretch-android/edit/main/docs/adr/0003-version-code-derived-from-version-name.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#0003-derive-the-version-code-from-the-version-name" class="nav-link">0003: Derive the version code from the version name</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#context" class="nav-link">Context</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#decision" class="nav-link">Decision</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#consequences" class="nav-link">Consequences</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="0003-derive-the-version-code-from-the-version-name">0003: Derive the version code from the version name</h1>
+<p>Status: accepted</p>
+<h2 id="context">Context</h2>
+<p>Android and Google Play order builds by <code>versionCode</code>, an integer, not by the version name. Play
+rejects an upload whose <code>versionCode</code> it has already seen for the app, and will not offer a build
+with a lower code than the installed one as an update; a device refuses to install such an
+update too. Until now the code was a hand-set <code>VERSION_CODE=1</code> in <code>gradle.properties</code> that nothing
+bumped: releases 0.1.0 and 0.2.0 both shipped as code 1, and the second Play upload would have
+been refused. The guard below requires each release's code to be strictly higher than the
+previous release's, which satisfies all of these.</p>
+<p>release-please already owns the version name (<code>VERSION_NAME</code> in <code>gradle.properties</code>, rewritten from
+Conventional Commit titles). A second number kept in step by hand is a number that drifts.</p>
+<h2 id="decision">Decision</h2>
+<p>The version code is computed from <code>VERSION_NAME</code> at build time; there is no <code>VERSION_CODE</code>
+property.</p>
+<pre><code>versionCode = major * 10000 + minor * 100 + patch
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.2.0</td>
+<td>200</td>
+</tr>
+<tr>
+<td>0.3.0</td>
+<td>300 (the first release under this scheme; 0.1.0 and 0.2.0 were code 1)</td>
+</tr>
+<tr>
+<td>0.99.99</td>
+<td>9999</td>
+</tr>
+<tr>
+<td>1.0.0</td>
+<td>10000</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>The conversion lives in <code>buildSrc/</code> (<code>VersionCode.fromVersionName</code>) and is unit-tested there;
+  <code>app/build.gradle.kts</code> sets <code>defaultConfig.versionCode</code> from it, so debug and release builds of
+  one version share one code.</li>
+<li>It accepts only <code>MAJOR.MINOR.PATCH</code>, three dot-separated numbers without leading zeros
+  (<code>0.03.0</code> is refused): no <code>v</code> prefix, no pre-release or build suffix. <strong>Minor and patch are
+  capped at 99</strong>, and the code may not exceed
+  2100000000, Google Play's largest allowed <code>versionCode</code>. Anything else fails the build with a
+  message naming the value.</li>
+<li><strong>Invariant — the conversion never wraps, clamps or truncates.</strong> A version it cannot represent
+  fails the build; it never produces some other, smaller code. Under the caps the scheme is
+  strictly increasing: a higher version always has a higher code, including across a carry
+  (0.2.99 → 299 &lt; 0.3.0 → 300; 0.99.99 → 9999 &lt; 1.0.0 → 10000).</li>
+<li><strong>Escape hatch.</strong> If a minor or patch ever needs to pass 99, switch to
+  <code>major * 1000000 + minor * 1000 + patch</code> (caps 999). That switch is always safe: for every
+  version the new code is at least the old one (with minor and patch at most 99, the difference is
+  <code>major * 990000 + minor * 900</code>), so the first build under it is higher than every earlier
+  release. Switching the other way is never safe.</li>
+</ul>
+<h3 id="release-guard">Release guard</h3>
+<p><code>.github/scripts/check_version_code.py</code> refuses a release whose code is not strictly higher than
+the previous release's.</p>
+<ul>
+<li><strong>The previous release</strong> is the newest GitHub release by publish time that is neither a draft
+  nor a pre-release, leaving out the tag being released. It is the newest by publish time, not
+  the one with the highest code.</li>
+<li>It downloads that release's <code>simple-stretch-*-release.apk</code> with
+  <code>gh release download &lt;tag&gt; --pattern 'simple-stretch-*-release.apk'</code> and reads both codes with
+  <code>aapt2 dump badging</code>. <strong>Invariant — the new code is read from the APK that was actually built,
+  never recomputed from the formula</strong>, so a build that ignores the formula is still caught.</li>
+<li>It passes only when the new code is strictly greater; otherwise it fails, naming both codes
+  and both versions.</li>
+<li>Edge cases:</li>
+<li>no published release at all: passes with a notice (nothing to compare against);</li>
+<li>the previous release has no matching APK, or more than one: fails, naming the tag, and
+    points to the <code>backfill_tag</code> input of the <code>release-please</code> workflow, which re-attaches it;</li>
+<li>the listing, download or <code>aapt2</code> fails, or <code>aapt2</code> prints output the parser does not
+    recognise: fails (it never passes on a reading it is unsure of);</li>
+<li>a manual backfill (<code>workflow_dispatch</code> with <code>backfill_tag</code>) of the <strong>newest</strong> published
+    release is guarded exactly like a release (<code>--backfill-tag</code> decides this with the same
+    release selection, then compares against the release before it), so re-attaching cannot
+    bypass a guard that failed on release. Only a backfill of an <strong>older</strong> release skips the
+    guard, with a notice: it is lower than newer releases by design.</li>
+<li><strong>On release:</strong> the <code>build-and-attach</code> job of <code>release-please.yml</code> runs the guard on the
+  signed release APK after the signature gate and before the attach step, from the <code>main</code>
+  checkout like the signature gate. <strong>Invariant — a release, or a backfill of the newest
+  release, whose APK's code is not higher than the previous release's gets no APK or AAB
+  attached.</strong></li>
+<li><strong>The guard reads only the APK.</strong> The AAB is covered only because the APK and the AAB come out
+  of one Gradle invocation (<code>assembleRelease bundleRelease</code>) with one <code>versionCode</code>. <strong>Invariant
+  — the release APK and AAB are built in the same Gradle invocation;</strong> splitting the AAB build
+  into a separate step or job leaves it unchecked by this guard, and would need the guard run on
+  the AAB as well.</li>
+<li><strong>On the release PR:</strong> the <code>release-pr-guard</code> job runs on every push to <code>main</code> after
+  release-please has updated its PR. When a release PR is open it checks out the PR's head,
+  builds the debug APK (same derived code), runs the guard and posts a commit status named
+  <code>release-version-code</code> on the PR's head commit: <code>success</code>, or <code>failure</code> with the reason. A
+  release PR that would publish a lower or equal code is visible before it is merged.</li>
+</ul>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>Google Play's own record is the authority, and the guard cannot see it.</strong> It compares against
+  the previous GitHub release's APK only. A build uploaded to Play by hand, outside a GitHub
+  release, is invisible to it, and a later release could pass the guard yet still be refused by
+  Play. Checking Play itself needs a Play Developer API credential, which is part of automated
+  upload (#26). Until then, <strong>every Play upload should be a GitHub release asset.</strong></li>
+<li>0.3.0 (code 300) is the first code above the 1 that v0.1.0 and v0.2.0 shipped with. The jump
+  from 1 to 300 is intentional and permanent: codes never go back down.</li>
+<li>Minor and patch stop at 99 until the escape hatch is taken; the build says so rather than
+  publishing a wrong code.</li>
+<li>Pre-release versions (<code>0.3.0-beta</code>) cannot be built; release-please is configured for plain
+  releases only.</li>
+<li>The formula tests are not part of <code>./gradlew test</code>: buildSrc is a separate build whose tests
+  Gradle does not run for the main build. They run with <code>./gradlew -p buildSrc test</code>, which
+  <code>pr.yml</code> runs on every pull request.</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

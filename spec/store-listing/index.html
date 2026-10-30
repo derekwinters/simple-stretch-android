@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Store listing - Simple Stretch</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../../css/brands.min.css" rel="stylesheet">
+        <link href="../../css/solid.min.css" rel="stylesheet">
+        <link href="../../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">Simple Stretch</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../.." class="nav-link">Home</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle active" aria-current="page" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Specification</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../" class="dropdown-item">Overview</a>
+</li>
+                                    
+<li>
+    <a href="../scheduling/" class="dropdown-item">Scheduling</a>
+</li>
+                                    
+<li>
+    <a href="../skipping/" class="dropdown-item">Skipping</a>
+</li>
+                                    
+<li>
+    <a href="../notifications/" class="dropdown-item">Notifications</a>
+</li>
+                                    
+<li>
+    <a href="../library/" class="dropdown-item">Stretch library</a>
+</li>
+                                    
+<li>
+    <a href="../goals/" class="dropdown-item">Goals</a>
+</li>
+                                    
+<li>
+    <a href="../sessions/" class="dropdown-item">Sessions</a>
+</li>
+                                    
+<li>
+    <a href="../trends/" class="dropdown-item">Trends</a>
+</li>
+                                    
+<li>
+    <a href="../screens/" class="dropdown-item">Screens</a>
+</li>
+                                    
+<li>
+    <a href="../widgets/" class="dropdown-item">Widgets</a>
+</li>
+                                    
+<li>
+    <a href="../privacy/" class="dropdown-item">Privacy</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active" aria-current="page">Store listing</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../privacy/" class="nav-link">Privacy policy</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/listing/" class="nav-link">Store listing text</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/play-console/" class="nav-link">Play Console listing details</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../../store/captions/" class="nav-link">Store screenshot captions</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Decisions</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../../adr/0001-debug-signing-until-release-keystore/" class="dropdown-item">0001 Debug signing until a release keystore</a>
+</li>
+                                    
+<li>
+    <a href="../../adr/0002-release-signing-with-a-stable-keystore/" class="dropdown-item">0002 Release signing with a stable keystore</a>
+</li>
+                                    
+<li>
+    <a href="../../adr/0003-version-code-derived-from-version-name/" class="dropdown-item">0003 Version code derived from the version name</a>
+</li>
+                                    
+<li>
+    <a href="../../adr/0004-play-app-signing-and-publishing/" class="dropdown-item">0004 Play App Signing and publishing</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../privacy/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../../privacy/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/derekwinters/simple-stretch-android/edit/main/docs/spec/store-listing.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#store-listing" class="nav-link">Store listing</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#the-shots" class="nav-link">The shots</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#inputs" class="nav-link">Inputs</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#layout" class="nav-link">Layout</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#store-icon-and-feature-graphic" class="nav-link">Store icon and feature graphic</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#recording-and-verifying" class="nav-link">Recording and verifying</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#listing-text" class="nav-link">Listing text</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#build-checklist" class="nav-link">Build checklist</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<!-- store: omit -->
+
+<h1 id="store-listing">Store listing</h1>
+<p>The Google Play listing: its text (title, short description and full description), its phone
+screenshots, its store icon and its feature graphic. All of them are made only in pull requests
+and reviewed there; a release ships what was reviewed and makes nothing of its own. The listing's
+category, tags, website and contact email are entered in Play Console by the owner, not compiled
+from this repository; they are recorded in <a href="../../store/play-console/">Play Console listing details</a>.</p>
+<p>The phone screenshots are rendered from the app's own screens on the JVM (Robolectric, through
+Roborazzi), never captured by hand from a device, so they change only when the screens or the
+captions do, and every change is reviewed as an image diff in a pull request (STORE-SHOT-001 to
+STORE-SHOT-015). The store icon and the feature graphic are rendered the same way, the icon from
+the app's own launcher icon resources and the graphic from the same showcase screens as the
+shots, and reviewed the same way (STORE-ICON-001 to STORE-ICON-005, STORE-GRAPHIC-001 to
+STORE-GRAPHIC-007). The text is hand-written, one claim
+per line, and each claim names the requirements it rests on, so the listing can never promise
+what the specification does not say (STORE-LIST-001 to STORE-LIST-007). The listing's title is
+also the app's name on the phone (STORE-LIST-008).</p>
+<h2 id="the-shots">The shots</h2>
+<p>Each shot shows a screen as it exists in the app, with the showcase data of STORE-SHOT-006.</p>
+<ul>
+<li><strong>STORE-SHOT-001</strong> Home: today's reminders and the goals card with goal progress (HOME-002,
+  HOME-006). Light theme.</li>
+<li><strong>STORE-SHOT-002</strong> The stretch session opened from a reminder, with some of its stretches
+  checked (SESS-001 to SESS-003). Dark theme.</li>
+<li><strong>STORE-SHOT-003</strong> Daily goals, with goals partway done (GOAL-001, GOAL-003). Light theme.</li>
+<li><strong>STORE-SHOT-004</strong> The schedule editor on a repeating schedule, showing its interval, minute,
+  window and slot preview (SCHED-011, SCHED-012). Dark theme.</li>
+<li><strong>STORE-SHOT-005</strong> Weekly trends with the period summary and the current streak (TREND-004 to
+  TREND-006). Light theme.</li>
+</ul>
+<p>There is no shot of the skipped-days screen.</p>
+<h2 id="inputs">Inputs</h2>
+<ul>
+<li><strong>STORE-SHOT-006</strong> Every shot is rendered from frozen inputs, so the same commit always gives
+  the same pixels:</li>
+<li>the time is Friday 16 October 2026, 9:40 AM, in America/New_York, read from a fixed clock
+    (<code>Clock.fixed</code>, SCHED-016) whose zone is also set as the JVM's default time zone;</li>
+<li>the locale is en-US (Robolectric qualifier and the JVM default), with the 12-hour clock;</li>
+<li>the device is Robolectric's <code>w411dp-h891dp-xxhdpi</code> (density 3) on a pinned SDK, with native
+    graphics;</li>
+<li>the colour schemes are the app's fixed light and dark schemes, dynamic colour off;</li>
+<li>animations are off: each screen is composed straight into its final state, the animator
+    duration scale is 0, and the capture waits until composition is idle;</li>
+<li>the data comes from one <code>ShowcaseFixture</code> that builds each screen's state directly: the
+    seeded stretch library (LIB-002), three goals partway done today, one set-times schedule
+    and one repeating schedule, and 30 days of completion history.</li>
+</ul>
+<p><strong>Invariant — The showcase never touches a database or randomness.</strong> No Room, no
+  <code>StretchApp</code>, no <code>Random</code>, no system clock: a screen that only takes a ViewModel is rendered
+  through its stateless content composable with state the fixture built.
+- <strong>STORE-SHOT-007</strong> The images are PNGs in <code>fastlane/metadata/android/en-US/images/phoneScreenshots/</code>
+  (fastlane supply's layout), named in listing order: <code>1_home.png</code>, <code>2_session.png</code>,
+  <code>3_goals.png</code>, <code>4_schedule.png</code>, <code>5_trends.png</code>. Their caption text lives only in
+  <a href="../../store/captions/">docs/store/captions.md</a>, one entry per shot ID (STORE-SHOT-001 to
+  STORE-SHOT-005), which the screenshot test reads. The file's only other entry is the feature
+  graphic's text (STORE-GRAPHIC-003).</p>
+<h2 id="layout">Layout</h2>
+<p>All sizes are pixels of the final image.</p>
+<ul>
+<li><strong>STORE-SHOT-010</strong> Each shot is one 1080 x 2340 image: a caption at the top and a framed phone
+  screen below it, cut off by the bottom edge.</li>
+<li><strong>STORE-SHOT-011</strong> The background is solid #1361A7 on every shot, light and dark: no gradient
+  and nothing else drawn on it.</li>
+</ul>
+<p><strong>Invariant — A shot's light or dark theme changes only the screen inside the frame, never the
+  background behind it.</strong>
+- <strong>STORE-SHOT-012</strong> The caption is left-aligned, 108 px from the top, with 79 px side margins
+  (922 px wide). Headline: white, bold, 90 px, 1.18 line height, at most 3 lines. Supporting
+  line: #CFE1F5, regular, 50 px, 1.35 line height, 22 px below the headline, at most 2 lines.
+- <strong>STORE-SHOT-013</strong> The phone frame's top edge is at y = 650 px on every shot. The frame is
+  centred horizontally and 922 px wide. Its bezel is #0A0A0B, 18 px thick on the top and sides,
+  with no bottom bezel and 79 px radius top corners. The real screen, laid out at the device's
+  natural size (411 x 891 dp), is scaled down to fit inside the bezel.
+- <strong>STORE-SHOT-014</strong> There is no status bar, navigation bar or other device chrome.</p>
+<p><strong>Invariant — A caption that is too long fails the test instead of shrinking the text or
+  pushing the frame down.</strong> Lines are counted as rendered (measured text layout at the caption's
+  width, font and size), not as characters.</p>
+<h2 id="store-icon-and-feature-graphic">Store icon and feature graphic</h2>
+<p>Two more images, beside the screenshots in fastlane supply's <code>images</code> folder. Both are rendered
+on the JVM on the STORE-SHOT-006 device (Robolectric, native graphics, SDK and qualifiers
+pinned). The store icon is drawn by <code>StoreArtTest</code> with no clock, locale or data involved. The
+feature graphic is composed by <code>FeatureGraphicTest</code> with all of STORE-SHOT-006's frozen inputs,
+because it shows two of the app's screens.</p>
+<h3 id="store-icon">Store icon</h3>
+<ul>
+<li><strong>STORE-ICON-001</strong> The store icon is <code>fastlane/metadata/android/en-US/images/icon.png</code>:
+  exactly 512 x 512 px, a 32-bit PNG with an alpha channel (8-bit RGBA, PNG colour type 6). It
+  is a full square: no rounded corners, mask, shadow or margin of its own (Google Play applies
+  its own mask). The file is at most 1024 KB (1,048,576 bytes), Google Play's limit for the
+  store icon.</li>
+<li><strong>STORE-ICON-002</strong> It is drawn from the app's real adaptive launcher icon: the test inflates
+  <code>@mipmap/ic_launcher</code> and draws its background layer (<code>@color/ic_launcher_background</code>,
+  #FFFFFF) and then its foreground layer (<code>@drawable/ic_launcher_foreground</code>). The monochrome
+  layer is not drawn.</li>
+</ul>
+<p><strong>Invariant — The store icon is always rendered from the launcher icon and never hand-edited.</strong>
+  The test inflates the launcher icon's own resources rather than a copy of their geometry or
+  colours, so any change to the launcher icon changes the rendered store icon and fails the
+  verify (STORE-ICON-004) until the store icon is re-recorded.
+- <strong>STORE-ICON-003</strong> The launcher icon's viewport, its central 72 x 72 dp (the most a
+  launcher's mask can show; the smaller 66 dp safe zone is what no mask clips), fills the image.
+  The layers' 108 x 108 dp canvas is scaled by 512 / 72 px per dp, to 768 x 768 px, and drawn
+  offset by -128 px on both axes, so the outer 18 dp on each side falls outside the image.</p>
+<h3 id="feature-graphic">Feature graphic</h3>
+<p>A headline on the left and two of the app's phone screens on the right, tilted towards each
+other and running off the bottom edge, drawn like the screenshots' framed phones.</p>
+<p>All sizes are pixels of the final image. A rotation is in degrees, positive clockwise, about the
+frame's bottom centre (the middle of its bottom edge, before rotating).</p>
+<ul>
+<li><strong>STORE-GRAPHIC-001</strong> The feature graphic is
+  <code>fastlane/metadata/android/en-US/images/featureGraphic.png</code>: exactly 1024 x 500 px, a 24-bit
+  PNG with no alpha channel (8-bit RGB, PNG colour type 2).</li>
+<li><strong>STORE-GRAPHIC-002</strong> The background is solid #1361A7, the screenshots' colour
+  (STORE-SHOT-011), and runs to every edge: no gradient. On it, in drawing order: the text
+  (STORE-GRAPHIC-003, STORE-GRAPHIC-004), the back phone and then the front phone
+  (STORE-GRAPHIC-005), so the front phone partly covers the back one. Nothing else is drawn: no
+  app icon, app name, logo, badge or device chrome.</li>
+</ul>
+<p><strong>Invariant — The feature graphic never shows the app icon.</strong> Google Play shows the app icon
+  beside the feature graphic and advises against repeating it, so the test draws neither the
+  launcher icon nor the store icon, in any form, anywhere on the graphic.
+- <strong>STORE-GRAPHIC-003</strong> The text is a headline and a supporting line. Their wording lives only
+  in <a href="../../store/captions/">docs/store/captions.md</a>, in its <code>## STORE-GRAPHIC-003</code> entry (a
+  <code>Headline:</code> line and a <code>Supporting:</code> line, like the shots' captions, STORE-SHOT-007), which
+  the test reads. Both are claims: each of the two lines ends with one tag,
+  <code>&lt;!-- ID, ID --&gt;</code>, naming the requirements it rests on, and the test fails unless every cited
+  ID is defined by a spec page and not retired (the rule of STORE-LIST-003). The tag is not
+  part of the drawn text.
+- <strong>STORE-GRAPHIC-004</strong> The text block is left-aligned, its left edge at x = 64 px, and 380 px
+  wide. Headline: white (#FFFFFF), Roboto Bold (weight 700), 46 px, 52 px line height, at most
+  3 lines. Supporting line: #CFE1F5, Roboto Regular (weight 400), 21 px, 29 px line height,
+  18 px below the headline, at most 2 lines. Each line is its line height, the text centred in
+  it, nothing trimmed (where the font is taller than the line height, as the headline's is, the
+  text engine may keep its full ascent on the first line and descent on the last). The block is
+  centred vertically: its top is at (500 − block height) / 2 px, rounded down, where the block
+  height is the headline's and the supporting line's heights as laid out (measured at the
+  block's width, font and size) plus the 18 px gap.</p>
+<p><strong>Invariant — Text that does not fit its lines fails the test instead of shrinking or
+  moving.</strong> As for the shots' captions (STORE-SHOT-014), lines are counted as rendered
+  (measured text layout at the block's width, font and size), not as characters; nothing
+  shrinks the text, widens the block or moves the phones to make it fit.
+- <strong>STORE-GRAPHIC-005</strong> Two phones, each drawn like a shot's frame (STORE-SHOT-013,
+  STORE-SHOT-014) at a smaller size: a #0A0A0B bezel 9 px thick on the top and sides, no bottom
+  bezel, 36 px radius top corners; the screen inside it has 27 px radius top corners (the
+  frame's radius less the bezel), is laid out at the device's natural size (411 x 891 dp) and is
+  scaled down to fit the bezel's inside width, top-anchored, and is cut off by the frame's
+  bottom edge. There is no status bar, navigation bar or other device chrome. Before rotating:</p>
+<table>
+<thead>
+<tr>
+<th>Phone</th>
+<th>Screen</th>
+<th>Theme</th>
+<th>Left</th>
+<th>Top</th>
+<th>Width</th>
+<th>Height</th>
+<th>Rotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Back</td>
+<td>The stretch session (STORE-SHOT-002)</td>
+<td>Dark</td>
+<td>720</td>
+<td>96</td>
+<td>250</td>
+<td>447</td>
+<td>+6°</td>
+</tr>
+<tr>
+<td>Front</td>
+<td>Home (STORE-SHOT-001)</td>
+<td>Light</td>
+<td>520</td>
+<td>50</td>
+<td>270</td>
+<td>485</td>
+<td>−4°</td>
+</tr>
+</tbody>
+</table>
+<p>The heights are the bezel plus the screen's width × 1672 / 886, rounded, so each phone shows
+  the same part of its screen as its shot does (a shot's screen area is 886 x 1672 px). After rotating, each frame's bottom edge lies wholly below the image (y &gt; 500) and its
+  top and sides inside it, so the phones run off the bottom edge only. Each frame casts a drop
+  shadow, drawn under it and rotated with it: black at 35 % opacity (#59000000), offset 18 px
+  down, blur radius 42 px (Android's <code>Paint.setShadowLayer</code>; a Gaussian sigma of about 25 px).
+  The background, text, bezels and shadows are drawn outside the app theme; only the screens
+  are themed.
+- <strong>STORE-GRAPHIC-006</strong> The fonts are Roboto Bold and Roboto Regular from Roboto 2
+  (<code>Roboto-Bold.ttf</code> and <code>Roboto-Regular.ttf</code>, version 2.001047, from the googlefonts/roboto
+  repository), under the Apache License 2.0. The two files and their licence text are committed
+  in <code>app/src/test/resources/store/fonts/</code>. The test loads those files, never a system font,
+  and fails if either cannot be loaded.
+- <strong>STORE-GRAPHIC-007</strong> The two screens are the app's real composables, rendered the way their
+  shots are: the same stateless content composables with the same <code>ShowcaseFixture</code> state as
+  STORE-SHOT-001 and STORE-SHOT-002, in the shot's fixed theme with dynamic colour off, and with
+  every frozen input of STORE-SHOT-006 (clock, zone, locale, 12-hour clock, device, density,
+  no animations). They change whenever those screens or the fixture change.</p>
+<p><strong>Invariant — The feature graphic's screens are rendered from the showcase fixture, never
+  pasted in from an image.</strong> Nothing drawn on the graphic comes from an image file: the test
+  does not read, crop or scale a committed screenshot or any other image to make it (a verify
+  run reads only the committed feature graphic, to compare). It shares the shots' rendering code
+  rather than a copy of it, so a screen cannot drift from its shot.</p>
+<h3 id="writing-and-checking-the-two-images">Writing and checking the two images</h3>
+<ul>
+<li><strong>STORE-ICON-004</strong> Roborazzi writes every image as RGBA, which the feature graphic must not
+  be, so the two tests (<code>StoreArtTest</code> for the store icon, <code>FeatureGraphicTest</code> for the feature
+  graphic) write and compare the images themselves, through one shared recorder, following the
+  mode the Roborazzi Gradle task sets:</li>
+<li><code>./gradlew recordRoborazziDebug</code> writes both files in the formats of STORE-ICON-001 and
+    STORE-GRAPHIC-001, then reads each back and checks its size and colour type;</li>
+<li><code>./gradlew verifyRoborazziDebug</code> (what CI runs) compares each rendered image pixel for pixel
+    with the committed file, with no tolerance, and fails on any difference in size or pixels
+    or on a missing file. On a failure it writes the rendered image to
+    <code>app/build/outputs/roborazzi/</code> as <code>icon_actual.png</code> or <code>featureGraphic_actual.png</code>, where
+    CI uploads it with the screenshot diffs (STORE-SHOT-008), and leaves the committed file
+    untouched;</li>
+<li>plain <code>./gradlew test</code> renders both images and writes and compares nothing.</li>
+<li><strong>STORE-ICON-005</strong> On every run except a recording, a test reads the committed <code>icon.png</code> and
+  <code>featureGraphic.png</code> and fails unless each exists with exactly the size and PNG colour type of
+  STORE-ICON-001 and STORE-GRAPHIC-001, and unless <code>icon.png</code> is within STORE-ICON-001's
+  1024 KB limit. The feature graphic has no file size check.</li>
+</ul>
+<h2 id="recording-and-verifying">Recording and verifying</h2>
+<p><strong>Invariant — A store screenshot is recorded only when a person asks for it, and reaches the
+default branch only through a pull request whose diff shows the new image.</strong> This section applies
+to the store icon and the feature graphic exactly as to the screenshots; together they are the
+store images.</p>
+<p><strong>Invariant — CI only verifies the store images; it never re-records them.</strong> No check that runs
+on a pull request or a release writes a store image. A recording runs only when a person applies
+the label (STORE-SHOT-009), and its commit reaches the pull request only through that person's
+own push.</p>
+<ul>
+<li><strong>STORE-SHOT-008</strong> Every pull request's build (<code>pr.yml</code>) only verifies the committed store
+  images (<code>./gradlew verifyRoborazziDebug</code>, which fails on any changed or missing screenshot,
+  store icon or feature graphic) and, when it fails, uploads the rendered and diff images as the
+  <code>store-screenshot-diffs</code> artifact. It never records.</li>
+<li><strong>STORE-SHOT-009</strong> Recording happens in one of two ways, both started by a person:</li>
+<li><strong>In CI:</strong> a person applies the <code>record-store-screenshots</code> label to a pull request from a
+    branch of this repository (never a fork). <code>record-store-screenshots.yml</code> runs
+    <code>./gradlew recordRoborazziDebug</code> on the pull request's head, commits only the store images
+    (the files in the <code>phoneScreenshots</code> folder, <code>icon.png</code> and <code>featureGraphic.png</code>) as
+    <code>github-actions[bot]</code>, and force-pushes that commit to the side branch
+    <code>store-screenshots/pr-&lt;number&gt;</code>, based on the pull request's head. If no image changed
+    it pushes nothing. Its job summary says which commit to bring in, and it always removes the
+    label afterwards, so the label can be applied again for another recording.</li>
+<li><strong>Locally:</strong> <code>./gradlew recordRoborazziDebug</code>, on Linux with JDK 17 as CI runs. Robolectric
+    draws with its own fonts and renderer, but the host's JDK formats dates and times, and
+    anti-aliasing can differ between operating systems.</li>
+</ul>
+<p><strong>Invariant — The recording workflow never pushes to the pull request's branch.</strong> A push made
+  with the workflow's token starts no <code>pr.yml</code> run, so a person brings the side branch's commit
+  into the pull request with their own push (<code>git fetch origin store-screenshots/pr-&lt;number&gt; &amp;&amp;
+  git merge --ff-only FETCH_HEAD</code>, or a cherry-pick). That push runs <code>pr.yml</code>, which verifies the
+  new images, and the pull request's diff shows them for review.
+- <strong>STORE-SHOT-015</strong> When a pull request from a branch of this repository closes, merged or
+  not, <code>delete-store-screenshots-branch.yml</code> deletes its side branch
+  <code>store-screenshots/pr-&lt;number&gt;</code> (STORE-SHOT-009). The repository's automatic deletion of head
+  branches does not cover it, because the side branch is never a pull request's head. A pull
+  request that never recorded has no side branch, and its absence is not a failure: the run
+  succeeds when the branch does not exist. Any other failure to delete fails the run. The job's
+  token can write contents and nothing else, and it runs for no fork's pull request (a fork's
+  pull request never records, so it has no side branch). Reopening a pull request does not bring
+  its side branch back; applying the label again records again.</p>
+<h2 id="listing-text">Listing text</h2>
+<p><strong>Invariant — The listing is never generated at release time.</strong> The release run only verifies and
+packages text and images that were already reviewed in pull requests: nothing in it writes,
+rewrites or records listing text or screenshots.</p>
+<ul>
+<li><strong>STORE-LIST-001</strong> The listing text is written by hand in
+  <a href="../../store/listing/">docs/store/listing.md</a>, in three sections, exactly these and in this
+  order: <code>## Title</code>, <code>## Short description</code> and <code>## Full description</code>. Text before <code>## Title</code>
+  explains the page and is not part of the listing. The title and the short description are one
+  line each. Every non-blank line of the full description is one <strong>claim</strong>: a paragraph line or
+  a <code>-</code> list item, ending with one tag that lists the requirement IDs it rests on, for example
+  <code>- Set a daily goal for each stretch. &lt;!-- GOAL-001 --&gt;</code>. The title and the short description
+  may carry a tag as well. <code>.github/scripts/store_listing.py</code> compiles the page into
+  <code>fastlane/metadata/android/en-US/title.txt</code>, <code>short_description.txt</code> and
+  <code>full_description.txt</code> (fastlane supply's layout), with the tags removed, the claims' text
+  kept as written, and runs of blank lines collapsed into one paragraph break. The three files
+  are committed with the listing change that produced them; they are never edited by hand.</li>
+<li><strong>STORE-LIST-002</strong> Every page in <code>docs/spec/</code> except this folder's <code>README.md</code> (the index,
+  which defines no requirements) starts with a store marker as its <strong>first line</strong>, followed by a
+  blank line, in exactly one of two forms: <code>&lt;!-- store: headline --&gt;</code> or
+  <code>&lt;!-- store: omit --&gt;</code>. The marker is an HTML comment, so MkDocs renders nothing for it. A
+  <code>headline</code> page describes a feature the listing must mention; an <code>omit</code> page need not be
+  mentioned (its IDs may still be cited). The headline pages are scheduling, goals, sessions,
+  trends and widgets; skipping, notifications, library, screens, privacy and this page are
+  <code>omit</code> (privacy and the store listing are not app features).</li>
+<li><strong>STORE-LIST-003</strong> A tag may cite only an ID that a spec page defines (a top-level list item
+  opening with the bold ID, <code>- **GOAL-001** …</code>) and that is not retired (a definition whose text
+  opens with <code>_Retired._</code>). An ID mentioned only in prose is not defined.</li>
+<li><strong>STORE-LIST-004</strong> Every <code>headline</code> page has at least one claim citing at least one of the IDs
+  it defines.</li>
+<li><strong>STORE-LIST-005</strong> The compiled files keep within Google Play's limits, counted in characters
+  (not bytes), without the one trailing newline each file ends with: title 30, short description
+  80, full description 4,000.</li>
+<li><strong>STORE-LIST-006</strong> <code>python3 .github/scripts/store_listing.py --check</code> writes nothing and fails,
+  with a workflow error naming each problem, when any of STORE-LIST-001 to STORE-LIST-005 is
+  broken or a committed file is missing or differs from what the script compiles. Every pull
+  request's build (<code>pr.yml</code>) runs it. Without <code>--check</code> the script writes the three files, and
+  writes nothing when any of STORE-LIST-001 to STORE-LIST-005 is broken.</li>
+<li><strong>STORE-LIST-007</strong> When release-please publishes a release, <code>build-and-attach</code> in
+  <code>release-please.yml</code> runs the same check on the release tag's checkout (the tag's own script),
+  before anything is built or attached, and attaches <code>store-listing-&lt;version&gt;.zip</code> to the GitHub
+  Release beside the APK and AAB. The zip holds the committed <code>fastlane/metadata/android</code> folder
+  as it is at the tag (text, screenshots, store icon and feature graphic, under that path), and
+  the job then reads back that the release carries it. The zip's images are the ones committed under
+  <code>fastlane/metadata/android</code>; they are verified only in pull requests (<code>verifyRoborazziDebug</code>,
+  STORE-SHOT-008), and the release run does not re-verify them (it re-checks
+  only the listing text). It needs no secret beyond those the job already uses. A manual
+  backfill of a tag older than this requirement (one without <code>docs/store/listing.md</code>) skips the
+  check and the zip with a notice; any other failure of the check fails the job.</li>
+<li><strong>STORE-LIST-008</strong> The app's name on the phone is the listing title, exactly: "Simple
+  Stretch". It is the <code>app_name</code> string resource (<code>app/src/main/res/values/strings.xml</code>), which
+  the manifest's <code>&lt;application android:label&gt;</code> names; the launcher activity declares no label of
+  its own, so it inherits it. Android shows this label under the launcher icon, in the app's
+  system settings and in its notifications' header, and the app shows it as the title of the
+  Home screen's top bar (HOME-004).</li>
+</ul>
+<p><strong>Invariant — The app's name is written once, in <code>app_name</code>, and equals the compiled
+  <code>title.txt</code>.</strong> The manifest names the resource, never a literal, and a test fails when
+  <code>app_name</code> and <code>fastlane/metadata/android/en-US/title.txt</code> differ, so the store title and the
+  launcher label can only change together.</p>
+<p><strong>Invariant — Every place in the app that shows its name reads <code>app_name</code>; no screen writes
+  the name as a literal.</strong></p>
+<h2 id="build-checklist">Build checklist</h2>
+<ul>
+<li>[x] One screenshot test per shot, each naming its STORE-SHOT ID (STORE-SHOT-001 to
+      STORE-SHOT-005), all on one <code>ShowcaseFixture</code> with a fixed clock and zone, en-US,
+      <code>w411dp-h891dp-xxhdpi</code>, native graphics, fixed colour schemes (STORE-SHOT-006).</li>
+<li>[x] Screens that take a ViewModel are rendered through behaviour-neutral stateless content
+      composables (STORE-SHOT-006 invariant); <code>StretchTheme</code> takes the dark flag and dynamic
+      colour as parameters, defaulting to the system's.</li>
+<li>[x] Roborazzi's output directory is the fastlane <code>phoneScreenshots</code> folder, so verify compares
+      against the committed images (STORE-SHOT-007).</li>
+<li>[x] Captions are parsed from <code>docs/store/captions.md</code>; a test checks it holds exactly the five
+      shot IDs and then the feature graphic's entry (STORE-SHOT-007, STORE-GRAPHIC-003).</li>
+<li>[x] The canvas is composed at density 3 (1 dp = 3 px) at exactly 1080 x 2340 px; background,
+      caption and frame are drawn outside the app theme (STORE-SHOT-010 to STORE-SHOT-013,
+      STORE-SHOT-011 invariant).</li>
+<li>[x] A unit test measures captions as rendered lines and fails a too-long one (STORE-SHOT-012,
+      STORE-SHOT-014 invariant).</li>
+<li>[x] <code>pr.yml</code> runs <code>verifyRoborazziDebug</code> and uploads <code>app/build/outputs/roborazzi/</code> (the actual
+      and <code>_compare</code> images) when it fails; it never records (STORE-SHOT-008).</li>
+<li>[x] <code>record-store-screenshots.yml</code> runs only on the <code>record-store-screenshots</code> label on a
+      same-repository pull request, commits only the store images (the <code>phoneScreenshots</code>
+      folder, <code>icon.png</code> and <code>featureGraphic.png</code>), pushes to
+      <code>store-screenshots/pr-&lt;number&gt;</code> and never to the pull request's branch, and always removes
+      the label; the label is defined in <code>.github/labels.repo.yml</code> (STORE-SHOT-009 and its
+      invariant).</li>
+<li>[x] <code>delete-store-screenshots-branch.yml</code> runs on <code>pull_request</code> <code>closed</code> for a
+      same-repository pull request, with <code>contents: write</code> only, deletes
+      <code>store-screenshots/pr-&lt;number&gt;</code>, and succeeds when that branch does not exist
+      (STORE-SHOT-015).</li>
+<li>[x] The five images are recorded and committed in the <code>phoneScreenshots</code> folder, and
+      <code>verifyRoborazziDebug</code> passes against them (STORE-SHOT-007).</li>
+<li>[x] <code>StoreArtTest</code> inflates <code>@mipmap/ic_launcher</code> and draws its background and foreground
+      layers, with the 72 dp viewport scaled to 512 px (STORE-ICON-002, STORE-ICON-003 and the
+      invariant).</li>
+<li>[x] The feature graphic is composed on the shots' pinned device and frozen inputs, its
+      layout values in one place (<code>FeatureGraphicSpec</code>), its text in the committed Roboto Bold
+      and Roboto Regular files (STORE-GRAPHIC-002 to STORE-GRAPHIC-006).</li>
+<li>[x] The graphic's headline and supporting line are read from the <code>STORE-GRAPHIC-003</code> entry of
+      <code>docs/store/captions.md</code>, each with a tag; a test fails on a missing tag or on a cited ID
+      that is undefined or retired (STORE-GRAPHIC-003).</li>
+<li>[x] A test measures the graphic's text as rendered lines and fails text that does not fit
+      (STORE-GRAPHIC-004 and its invariant).</li>
+<li>[x] The two phones' screens are the shots' own composables and fixture state, through code
+      shared with <code>StoreScreenshotTest</code> (the screen, the theme, the frame and the scaled
+      screen), and no image file is read; nothing draws the launcher or store icon
+      (STORE-GRAPHIC-002 and STORE-GRAPHIC-007 invariants).</li>
+<li>[x] The recorder writes the icon as RGBA and the feature graphic as RGB, records only in a
+      recording run, compares exactly in a verify run and writes <code>&lt;name&gt;_actual.png</code> to
+      <code>app/build/outputs/roborazzi/</code> on a failure (STORE-ICON-004).</li>
+<li>[x] A test checks the committed images' size and PNG colour type, and the icon's 1024 KB
+      limit, skipped only in a recording run (STORE-ICON-005).</li>
+<li>[x] <code>icon.png</code> is recorded and committed, and <code>verifyRoborazziDebug</code> passes against it
+      (STORE-ICON-001).</li>
+<li>[x] <code>featureGraphic.png</code> is re-recorded for the two-phone design and committed, and
+      <code>verifyRoborazziDebug</code> passes against it (STORE-GRAPHIC-001).</li>
+<li>[x] The owner chose the two-phone design from mockups and delegated the review of the
+      rendered images in the pull request (STORE-GRAPHIC-002 to STORE-GRAPHIC-005).</li>
+<li>[x] Every spec page except <code>README.md</code> starts with <code>&lt;!-- store: headline --&gt;</code> or
+      <code>&lt;!-- store: omit --&gt;</code> and a blank line (STORE-LIST-002).</li>
+<li>[x] <code>store_listing.py</code> is standard-library Python with unit tests citing the STORE-LIST IDs
+      they cover, run by <code>pr.yml</code> with the other script tests (STORE-LIST-001 to
+      STORE-LIST-006).</li>
+<li>[x] <code>pr.yml</code> runs <code>store_listing.py --check</code> (STORE-LIST-006).</li>
+<li>[x] <code>build-and-attach</code> runs the check at the tag and attaches and reads back
+      <code>store-listing-&lt;version&gt;.zip</code>; no step in it writes listing text (STORE-LIST-007 and the
+      invariant).</li>
+<li>[x] A Robolectric test checks that the manifest's application label is <code>app_name</code>, the
+      launcher activity has no label of its own, and <code>app_name</code> equals the compiled <code>title.txt</code>
+      (STORE-LIST-008 and its first invariant).</li>
+<li>[x] The Home top bar's title reads <code>app_name</code>, and a Robolectric test renders Home and finds
+      the <code>app_name</code> text there (STORE-LIST-008 second invariant, HOME-004).</li>
+<li>[x] Store listing reviewed: the draft text in <code>docs/store/listing.md</code> claims only what the
+      cited requirements say (STORE-LIST-003, STORE-LIST-004).</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
