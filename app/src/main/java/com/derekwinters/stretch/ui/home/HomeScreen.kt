@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,6 +60,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.derekwinters.stretch.R
 import com.derekwinters.stretch.data.ScheduleWithReminders
 import com.derekwinters.stretch.data.days
 import com.derekwinters.stretch.data.isRepeating
@@ -150,7 +152,7 @@ fun HomeContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Stretch") },
+                title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = onOpenGoals) {
                         Icon(Icons.Filled.Star, contentDescription = "Daily goals")

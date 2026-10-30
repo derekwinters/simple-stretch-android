@@ -309,12 +309,16 @@ rewrites or records listing text or screenshots.
   Stretch". It is the `app_name` string resource (`app/src/main/res/values/strings.xml`), which
   the manifest's `<application android:label>` names; the launcher activity declares no label of
   its own, so it inherits it. Android shows this label under the launcher icon, in the app's
-  system settings and in its notifications' header.
+  system settings and in its notifications' header, and the app shows it as the title of the
+  Home screen's top bar (HOME-004).
 
   **Invariant — The app's name is written once, in `app_name`, and equals the compiled
   `title.txt`.** The manifest names the resource, never a literal, and a test fails when
   `app_name` and `fastlane/metadata/android/en-US/title.txt` differ, so the store title and the
   launcher label can only change together.
+
+  **Invariant — Every place in the app that shows its name reads `app_name`; no screen writes
+  the name as a literal.**
 
 ## Build checklist
 
@@ -384,6 +388,8 @@ rewrites or records listing text or screenshots.
       invariant).
 - [x] A Robolectric test checks that the manifest's application label is `app_name`, the
       launcher activity has no label of its own, and `app_name` equals the compiled `title.txt`
-      (STORE-LIST-008 and its invariant).
+      (STORE-LIST-008 and its first invariant).
+- [x] The Home top bar's title reads `app_name`, and a Robolectric test renders Home and finds
+      the `app_name` text there (STORE-LIST-008 second invariant, HOME-004).
 - [x] Store listing reviewed: the draft text in `docs/store/listing.md` claims only what the
       cited requirements say (STORE-LIST-003, STORE-LIST-004).
