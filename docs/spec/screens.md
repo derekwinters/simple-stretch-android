@@ -21,7 +21,8 @@
 - **HOME-004** The top bar has at most two icon actions plus an overflow menu. The goals screen
   is an icon ("Daily goals"); the overflow menu holds labelled text items "Skip today" (or
   "Resume today"), "Skip other days" (the skipped-days screen), "My stretches" (the stretch
-  library, LIB-006) and "Trends" (TREND-004).
+  library, LIB-006) and "Trends" (TREND-004). The top bar's title is the app's name, "Simple
+  Stretch", read from `app_name` (STORE-LIST-008).
 
   **Invariant — The stretch library is reached by a labelled item**, never only by an
   unlabelled icon.
@@ -67,6 +68,8 @@
 - [x] No skip-card closed date is written or read (HOME-008 retired).
 - [x] Top bar: one icon (goals) + overflow with Skip today, Skip other days, My stretches,
       Trends (HOME-004).
+- [x] The top bar's title is `stringResource(R.string.app_name)`, never a literal; a Robolectric
+      test renders Home and finds the `app_name` text (HOME-004, STORE-LIST-008 invariant).
 - [x] Goal progress re-queries when the date changes (the clock tick drives the day bounds)
       (HOME-006).
 - [x] Today rows build their session route with the same pure, unit-tested function as the
