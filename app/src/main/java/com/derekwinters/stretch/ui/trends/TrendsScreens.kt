@@ -70,14 +70,12 @@ private fun days(n: Int): String = if (n == 1) "1 day" else "$n days"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrendsScreen(
-    onBack: () -> Unit,
     onOpenDay: (LocalDate) -> Unit,
     viewModel: TrendsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     TrendsContent(
         state = state,
-        onBack = onBack,
         onOpenDay = onOpenDay,
         onSetKind = viewModel::setKind,
         onPrevious = viewModel::previous,
@@ -93,7 +91,6 @@ fun TrendsScreen(
 @Composable
 fun TrendsContent(
     state: TrendsState,
-    onBack: () -> Unit,
     onOpenDay: (LocalDate) -> Unit,
     onSetKind: (PeriodKind) -> Unit,
     onPrevious: () -> Unit,
@@ -103,14 +100,8 @@ fun TrendsContent(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Trends") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-            )
+            // TREND-009: the Trends tab (HOME-004), so no back arrow.
+            TopAppBar(title = { Text("Trends") })
         },
     ) { padding ->
         LazyColumn(

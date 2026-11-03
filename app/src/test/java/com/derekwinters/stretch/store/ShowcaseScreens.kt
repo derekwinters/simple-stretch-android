@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
+import com.derekwinters.stretch.ui.TabScaffold
+import com.derekwinters.stretch.ui.TopTab
 import com.derekwinters.stretch.ui.goals.GoalsContent
 import com.derekwinters.stretch.ui.home.HomeContent
 import com.derekwinters.stretch.ui.schedule.ScheduleEditContent
@@ -35,23 +37,20 @@ import java.util.TimeZone
 fun ShowcaseShotScreen(shot: StoreShot, context: Context) {
     StretchTheme(darkTheme = shot.dark, dynamicColor = false) {
         when (shot) {
-            // STORE-SHOT-001: home, today's reminders and goal progress (HOME-002, HOME-006). Light.
-            StoreShot.HOME -> HomeContent(
-                state = ShowcaseFixture.home(),
-                canNotify = true,
-                canExact = true,
-                clock = ShowcaseFixture.clock,
-                onEditSchedule = {},
-                onNewSchedule = {},
-                onOpenStretches = {},
-                onOpenSkips = {},
-                onOpenGoals = {},
-                onOpenTrends = {},
-                onStretchNow = {},
-                onOpenSession = {},
-                onSetTodaySkipped = {},
-                onSetScheduleEnabled = { _, _ -> },
-            )
+            // STORE-SHOT-001: home with the ring, Stretch now, upcoming and greyed past reminders,
+            // and the bottom bar (HOME-002, HOME-004, HOME-006, HOME-007). Light.
+            StoreShot.HOME -> TabScaffold(selected = TopTab.HOME, onSelect = {}) {
+                HomeContent(
+                    state = ShowcaseFixture.home(),
+                    canNotify = true,
+                    canExact = true,
+                    clock = ShowcaseFixture.clock,
+                    onOpenGoals = {},
+                    onStretchNow = {},
+                    onOpenSession = {},
+                    onSetTodaySkipped = {},
+                )
+            }
 
             // STORE-SHOT-002: the session from a reminder, some stretches checked (SESS-001 to
             // SESS-003). Dark.
@@ -65,13 +64,15 @@ fun ShowcaseShotScreen(shot: StoreShot, context: Context) {
                 onToggle = {},
             )
 
-            // STORE-SHOT-003: daily goals, partway done (GOAL-001, GOAL-003). Light.
-            StoreShot.GOALS -> GoalsContent(
-                state = ShowcaseFixture.goals(),
-                onBack = {},
-                onTap = { _, _ -> },
-                onNewStretch = {},
-            )
+            // STORE-SHOT-003: daily goals, partway done, as the Goals tab (GOAL-001, GOAL-003,
+            // HOME-004). Light.
+            StoreShot.GOALS -> TabScaffold(selected = TopTab.GOALS, onSelect = {}) {
+                GoalsContent(
+                    state = ShowcaseFixture.goals(),
+                    onTap = { _, _ -> },
+                    onNewStretch = {},
+                )
+            }
 
             // STORE-SHOT-004: the schedule editor on a repeating schedule (SCHED-011, SCHED-012). Dark.
             StoreShot.SCHEDULE -> {
@@ -89,15 +90,17 @@ fun ShowcaseShotScreen(shot: StoreShot, context: Context) {
                 )
             }
 
-            // STORE-SHOT-005: weekly trends with the streak (TREND-004 to TREND-006). Light.
-            StoreShot.TRENDS -> TrendsContent(
-                state = ShowcaseFixture.trends(),
-                onBack = {},
-                onOpenDay = {},
-                onSetKind = {},
-                onPrevious = {},
-                onNext = {},
-            )
+            // STORE-SHOT-005: weekly trends with the streak, as the Trends tab (TREND-004 to
+            // TREND-006, HOME-004). Light.
+            StoreShot.TRENDS -> TabScaffold(selected = TopTab.TRENDS, onSelect = {}) {
+                TrendsContent(
+                    state = ShowcaseFixture.trends(),
+                    onOpenDay = {},
+                    onSetKind = {},
+                    onPrevious = {},
+                    onNext = {},
+                )
+            }
         }
     }
 }

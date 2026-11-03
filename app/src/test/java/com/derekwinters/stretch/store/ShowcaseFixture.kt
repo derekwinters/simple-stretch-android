@@ -24,7 +24,9 @@ import com.derekwinters.stretch.ui.goals.GoalsState
 import com.derekwinters.stretch.ui.home.HomeState
 import com.derekwinters.stretch.ui.home.TodayReminders
 import com.derekwinters.stretch.ui.schedule.ScheduleEditForm
+import com.derekwinters.stretch.ui.schedule.SchedulesState
 import com.derekwinters.stretch.ui.trends.TrendsState
+import com.derekwinters.stretch.widget.GoalRing
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -142,15 +144,21 @@ object ShowcaseFixture {
 
     private val schedules: List<ScheduleWithReminders> = listOf(deskBreaks, workday)
 
-    /** STORE-SHOT-001: home, as HomeViewModel derives it (HOME-002, HOME-006). */
+    /**
+     * STORE-SHOT-001: home, as HomeViewModel derives it (HOME-002, HOME-006): the ring reads 4/8
+     * (Calf stretch 1/3, Hamstring stretch 2/3, Neck rolls 1/2), and at 9:40 the 9:00 reminder
+     * has passed, so it sits greyed below the upcoming ones.
+     */
     fun home(): HomeState = HomeState(
         today = today,
         todaySkipped = false,
         todayReminders = TodayReminders.of(schedules, now),
-        schedules = schedules,
-        goals = GoalMath.progress(stretchRefs, goals, countsToday),
+        ring = GoalRing.fromLog(stretchRefs, goals, countsToday),
         loaded = true,
     )
+
+    /** The Schedules tab (HOME-010): the two showcase schedules. */
+    fun schedules(): SchedulesState = SchedulesState(schedules, loaded = true)
 
     /** STORE-SHOT-002: the session opened from the 9:00 AM "Desk breaks" reminder (SESS-001). */
     private val sessionReminder = deskBreaks.reminders.first()

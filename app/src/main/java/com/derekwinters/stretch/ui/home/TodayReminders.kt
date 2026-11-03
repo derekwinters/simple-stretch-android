@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 /**
- * One row of HOME-002. A set reminder time has [stretchNames] and their [stretchIds], in the
+ * One reminder of HOME-002. A set reminder time has [stretchNames] and their [stretchIds], in the
  * reminder's order (HOME-009); a repeating schedule has a [repeatRule], no stretches, and shows
  * its next slot today (or its last, once all have passed).
  */
@@ -70,5 +70,32 @@ object TodayReminders {
                 }
             }
             .sortedBy { it.time }
+    }
+}
+
+/** One row of the Today list as drawn (HOME-002): [greyed] rows are past, or today is skipped. */
+data class TodayRow(val reminder: TodayReminder, val greyed: Boolean)
+
+/**
+ * HOME-002: the Today list in its two groups: [upcoming] reminders first, then, after a divider,
+ * today's [past] ones, greyed. Each group keeps the time order of [TodayReminders.of].
+ */
+data class TodayList(val upcoming: List<TodayRow>, val past: List<TodayRow>) {
+    val isEmpty: Boolean get() = upcoming.isEmpty() && past.isEmpty()
+
+    companion object {
+        /**
+         * HOME-002 invariant: a pure function of [rows] (whose past state was read from the app
+         * clock) and [todaySkipped]. A repeating schedule's row is past once its last slot today
+         * has passed, so it moves to [past] at that slot. When today is skipped every row is
+         * greyed, and the groups keep their order.
+         */
+        fun of(rows: List<TodayReminder>, todaySkipped: Boolean): TodayList {
+            val (past, upcoming) = rows.sortedBy { it.time }.partition { it.isPast }
+            return TodayList(
+                upcoming = upcoming.map { TodayRow(it, greyed = todaySkipped) },
+                past = past.map { TodayRow(it, greyed = true) },
+            )
+        }
     }
 }

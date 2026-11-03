@@ -22,7 +22,7 @@ object Formatting {
     fun minuteOfDay(context: Context, minute: Int): String =
         time(context, LocalTime.of(minute / 60, minute % 60))
 
-    /** HOME-003: e.g. "Every 60 min at :50, 8:00 AM - 5:00 PM". */
+    /** HOME-010: e.g. "Every 60 min at :50, 8:00 AM - 5:00 PM". */
     fun repeatSummary(context: Context, rule: RepeatRule): String {
         val minute = rule.minutePastHour.toString().padStart(2, '0')
         val anchor = if (rule.intervalMinutes % 60 == 0) "at" else "from"
