@@ -255,11 +255,11 @@ class StretchNavHostTest : ShowcaseComposeTest() {
     @Test
     fun scheduleListIsOnTheSchedulesTab() {
         show()
-        composeRule.onAllNodesWithText("New schedule").assertCountEquals(0)
+        composeRule.onAllNodesWithText("New schedule", useUnmergedTree = true).assertCountEquals(0)
         tap(TopTab.SCHEDULES)
         composeRule.onNodeWithText("Desk breaks").assertIsDisplayed()
         composeRule.onNodeWithText("Workday").assertIsDisplayed()
-        composeRule.onNodeWithText("New schedule").performClick()
+        composeRule.onNodeWithText("New schedule", useUnmergedTree = true).performClick()
         composeRule.waitForIdle()
         assertEquals(Routes.SCHEDULE, route())
     }
