@@ -25,7 +25,8 @@
 
   **Invariant — The goals screen uses only the theme's colour roles.** A stepper with a goal
   uses `primaryContainer` / `onPrimaryContainer` (as the "New schedule" button); a stepper at 0
-  uses `surfaceContainerHighest`, with − in the disabled content colour. The ✓ and "New stretch…" use `primary` (as "Edit goals"). There are no `Color(…)`
+  uses `surfaceContainerHighest`, with − in the disabled content colour. The ✓ and "New
+  stretch…" use `primary` (as Home's "Skip today" text button). There are no `Color(…)`
   literals, so the screen follows dynamic colour and dark mode like the rest of the app.
 - **GOAL-003** A goal's progress on a day is the number of completions of its stretch (SESS-004)
   whose time falls within that local calendar day, from midnight inclusive to the next midnight

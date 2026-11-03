@@ -13,7 +13,7 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
 
 - **HOME-001** The home screen shows, from the top: the banners (HOME-005), today's date, the
   goal ring (HOME-006) with "Stretch now" under it (HOME-007), and the Today list (HOME-002).
-  There is no schedule list (HOME-003 is the Schedules tab) and no skip card. See the
+  There is no schedule list (HOME-010 is the Schedules tab) and no skip card. See the
   [mockups](../design/bottom-navigation/bottom-navigation.png) ("Home", "Home, no goals",
   "Home, today skipped").
 - **HOME-002** The Today list: today's reminders from all enabled schedules, each with the
@@ -45,8 +45,8 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
   the stretch session) cover the whole window and have no bar; Back returns from them.
 
   Back on any top-level screen other than Home returns to Home; Back on Home leaves the app.
-  Switching tabs keeps each tab's own state (its scroll position and any screen opened above
-  it) and never stacks one tab on another.
+  Switching tabs keeps each tab's own state (such as its scroll position) and never stacks one
+  tab on another.
 
   The top bar has no icon actions and no overflow menu. Home's top bar title is the app's
   name, "Simple Stretch", read from `app_name` (STORE-LIST-008); each other top-level screen's

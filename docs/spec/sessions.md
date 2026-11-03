@@ -5,8 +5,7 @@
 - **SESS-001** The stretch session screen is where the user records what they stretched. It
   opens from a reminder notification (tap or "Start", NOTIF-002, NOTIF-003), from the
   "Stretch now" button under the home screen's goal ring (HOME-007) and from a row of the home
-  screen's
-  Today list, which opens it as that reminder's notification would (HOME-009). A reminder
+  screen's Today list, which opens it as that reminder's notification would (HOME-009). A reminder
   opens it carrying the reminder's named stretches, its schedule name and its original
   scheduled time (NOTIF-002, NOTIF-008); "Stretch now" and a reminder with no stretches
   (every repeating schedule, SCHED-011) carry no named list.

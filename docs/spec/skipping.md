@@ -3,9 +3,10 @@
 # Skipping days
 
 - **SKIP-001** The "Today" heading row on the home screen has a "Skip today" text button at its
-  right end (HOME-002); it is the only place on Home to skip or resume today. Pressing it suppresses every remaining reminder for today across all
-  schedules. It is shown but disabled when no reminders are left today, and once today is
-  skipped the same spot shows a "Resume today" text button that undoes the skip.
+  right end (HOME-002); it is the only place on Home to skip or resume today. Pressing it
+  suppresses every remaining reminder for today across all schedules. It is shown but disabled
+  when no reminders are left today, and once today is skipped the same spot shows a "Resume
+  today" text button that undoes the skip.
 - **SKIP-002** The user can skip any future date, picked with a date picker, from the "Skipped
   days" screen, which the labelled "Skip other days" button at the top of the Schedules tab
   opens (HOME-010). That screen lists today and future skipped dates, each removable.
