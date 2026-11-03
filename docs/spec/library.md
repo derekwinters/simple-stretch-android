@@ -15,7 +15,8 @@
   schedule's timing.
 - **LIB-005** Deleting a stretch also deletes its goal (GOAL-001) and its completion history
   (SESS-004).
-- **LIB-006** The library screen is titled "My stretches". It shows a hint at the top, "Add your
+- **LIB-006** The library screen is titled "My stretches" and is opened by the labelled "My
+  stretches" item on the Settings tab (HOME-011). It shows a hint at the top, "Add your
   own stretches with +", above the list, and its + button opens the stretch editor for a new
   stretch.
 - **LIB-007** "New stretch…" is offered in two places: the goals screen's "New stretch…" link

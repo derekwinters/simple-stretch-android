@@ -3,7 +3,8 @@
 # Widgets
 
 A home screen widget shows today's goals at a glance. The segmented ring is the first widget;
-the mat-bar and goal-list widgets are later alternatives.
+the mat-bar and goal-list widgets are later alternatives. The app's own Home screen shows the
+same ring, built and drawn by the same code in the app's theme colours (HOME-006).
 
 ### Segmented ring
 
@@ -34,8 +35,9 @@ the mat-bar and goal-list widgets are later alternatives.
 
   "Dimmed" means the figure (body and head) is drawn in the text colour at 40% opacity; the mat
   keeps its colour.
-- **WIDGET-007** Tapping the widget opens the app on its home screen (HOME-001): any screen
-  open above home is closed.
+- **WIDGET-007** Tapping the widget opens the app on its home screen (HOME-001), with Home
+  selected in the bottom bar (HOME-004): any screen open above home, and any other tab, is
+  closed.
 
 ### Colour
 
@@ -112,6 +114,8 @@ the mat-bar and goal-list widgets are later alternatives.
 - [x] The midnight alarm is re-armed at every redraw and cancelled when the last widget is
       removed (WIDGET-010).
 - [x] Tapping opens home with any screen above it closed (WIDGET-007).
+- [x] `GoalRingRenderer.draw` draws a `RingModel` into any Android canvas; the widget's bitmap
+      and Home's ring (HOME-006) both use it, so they cannot drift apart.
 - [ ] On a device: light and dark, dynamic colour on and off, resize, tap, and the midnight
       reset (human-only issue).
 - [x] Store listing reviewed: every claim in `docs/store/listing.md` that cites this page is
