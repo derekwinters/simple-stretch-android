@@ -1,15 +1,9 @@
 package com.derekwinters.stretch.ui
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ShowChart
-import androidx.compose.material.icons.automirrored.outlined.ShowChart
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.MilitaryTech
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -19,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import com.derekwinters.stretch.ui.icons.TabIcons
 
 /**
  * HOME-004: the bottom navigation bar's five items, in bar order. Every item has its [label],
@@ -27,9 +22,9 @@ import androidx.compose.ui.platform.testTag
  */
 enum class TopTab(val route: String, val label: String, val icon: ImageVector, val selectedIcon: ImageVector) {
     HOME(Routes.HOME, "Home", Icons.Outlined.Home, Icons.Filled.Home),
-    SCHEDULES(Routes.SCHEDULES, "Schedules", Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth),
-    GOALS(Routes.GOALS, "Goals", Icons.Outlined.MilitaryTech, Icons.Filled.MilitaryTech),
-    TRENDS(Routes.TRENDS, "Trends", Icons.AutoMirrored.Outlined.ShowChart, Icons.AutoMirrored.Filled.ShowChart),
+    SCHEDULES(Routes.SCHEDULES, "Schedules", TabIcons.CalendarMonthOutlined, TabIcons.CalendarMonthFilled),
+    GOALS(Routes.GOALS, "Goals", TabIcons.MilitaryTechOutlined, TabIcons.MilitaryTechFilled),
+    TRENDS(Routes.TRENDS, "Trends", TabIcons.ShowChartOutlined, TabIcons.ShowChartFilled),
     SETTINGS(Routes.SETTINGS, "Settings", Icons.Outlined.Settings, Icons.Filled.Settings),
     ;
 
