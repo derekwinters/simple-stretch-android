@@ -1,0 +1,85 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Bottom navigation mockups</title><style>
+:root{--bg:#0b0b0c;--panel:#141518;--sub:#a3a7ad;--txt:#e7e8ea;
+--surf:#FEF7FF;--on:#1D1B20;--onv:#49454F;--pri:#2E7D6B;--pric:#CDE8DF;--card:#E8E2EA;--navbg:#F3EDF7;--line:#CAC4D0;--dim:#8E8A93}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:Roboto,"Helvetica Neue",Arial,sans-serif;padding:40px 44px;width:1720px}
+h1{font-size:38px;margin:0 0 8px}.lead{color:var(--sub);font-size:19px;margin:0 0 28px;line-height:1.45;max-width:1600px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-bottom:30px}
+.o{background:var(--panel);border-radius:20px;padding:18px;display:flex;flex-direction:column;align-items:center}
+.cap{margin-top:12px;font-size:16px;color:var(--sub);line-height:1.4;text-align:center;max-width:340px}.cap b{display:block;color:var(--txt);font-size:19px;margin-bottom:4px}
+.ph{width:360px;height:760px;background:var(--surf);color:var(--on);border-radius:30px;border:6px solid #1d1d1f;overflow:hidden;position:relative;font-size:15px;display:flex;flex-direction:column}
+.sb{height:28px;display:flex;justify-content:space-between;padding:7px 20px 0;font-size:12px;color:var(--onv);flex:none}
+.top{height:54px;display:flex;align-items:center;padding:0 18px;font-size:21px;flex:none}
+.body{flex:1;overflow:hidden;position:relative}
+.date{font-size:13px;font-weight:600;color:var(--onv);padding:0 18px 4px}
+.ringwrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
+.cnt{font-size:15px;font-weight:700;fill:var(--on)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--pri);color:#fff;border-radius:22px;padding:10px 22px;font-weight:600;font-size:15px}
+.btn.t{background:none;color:var(--pri);padding:10px 8px}
+.btn.o2{background:none;border:1.5px solid var(--line);color:var(--pri)}
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 4px;font-size:16px;font-weight:600}
+.hdr a{color:var(--pri);font-size:14px;font-weight:600}.hdr a.off{color:var(--dim)}
+.row{display:flex;gap:14px;padding:9px 18px}.row .tm{width:70px;flex:none;font-size:14px}.row .nm{font-size:14.5px;line-height:1.3}.row .sc{font-size:12.5px;color:var(--onv)}
+.row.g{color:var(--dim)}.row.g .sc{color:var(--dim)}
+.div{height:1px;background:var(--line);margin:6px 18px}
+.banner{margin:4px 14px 8px;background:#F9DEDC;color:#410E0B;border-radius:12px;padding:10px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center}.banner a{color:#8C1D18;font-weight:700}
+.nav{flex:none;height:80px;background:var(--navbg);display:flex;justify-content:space-around;align-items:flex-start;padding-top:12px}
+.ni{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--onv);width:64px}
+.ni .pill{width:56px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center}
+.ni.on{color:var(--on);font-weight:700}.ni.on .pill{background:var(--pric)}
+.ni svg{width:22px;height:22px;fill:none;stroke:var(--onv);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.ni.on svg{stroke:#0F3B31}
+.sch{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line)}.sch .nm{font-size:16px}.sch .sc{font-size:13px;color:var(--onv);line-height:1.35}
+.sw{width:44px;height:26px;border-radius:13px;background:var(--pri);position:relative;flex:none}.sw::after{content:"";position:absolute;right:4px;top:4px;width:18px;height:18px;border-radius:9px;background:#fff}
+.sw.off{background:#E6E0E9;border:2px solid #79747E}.sw.off::after{left:4px;right:auto;top:3px;width:16px;height:16px;background:#79747E}
+.fab{position:absolute;right:16px;bottom:14px;background:#BFE8DA;color:#0F3B31;border-radius:16px;padding:16px 18px;font-weight:600;font-size:15px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.goal{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--line)}.goal .sc{font-size:13px;color:var(--onv)}
+.step{display:flex;align-items:center;gap:22px;background:#E6E0E9;border-radius:22px;padding:8px 18px;font-size:16px}.step.on{background:#E8DEF8}.step i{font-style:normal;color:var(--dim)}
+.hint{font-size:13px;color:var(--onv);padding:2px 18px 10px;line-height:1.4}
+.seg{display:flex;gap:8px;padding:6px 18px}.seg span{border:1.5px solid #79747E;border-radius:8px;padding:6px 16px;font-size:14px}.seg span.on{background:#E8DEF8;border-color:#E8DEF8}
+.tiles{display:flex;gap:8px;padding:10px 18px}.tile{flex:1;background:var(--card);border-radius:12px;padding:8px 9px;font-size:11px;color:var(--onv)}.tile b{display:block;font-size:19px;color:var(--on);margin:2px 0}
+.chart{margin:4px 18px;background:var(--card);border-radius:12px;padding:10px;height:230px;display:flex;align-items:flex-end;gap:9px}
+.chart div{flex:1;background:var(--pri);border-radius:3px 3px 0 0}
+.set{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.set .nm{font-size:16px}.set .sc{font-size:13px;color:var(--onv)}
+.sec{font-size:13px;font-weight:600;color:var(--pri);padding:16px 18px 4px}
+.note{font-size:12.5px;color:var(--dim);padding:10px 18px;line-height:1.4;font-style:italic}
+</style></head><body>
+<h1>Bottom navigation and the simpler Home</h1>
+<p class="lead">Mockups for #92, applying the nine triage answers. Five labelled tabs (Home, Schedules, Goals, Trends, Settings), no top-bar icons or overflow menu. Home has the widget's ring, Stretch now and the Today list with upcoming reminders first and today's past ones greyed underneath. Showcase data: Friday 16 October 2026, 9:40 AM; goals Calf 1/3, Hamstring 2/3, Neck rolls 1/2. Light theme, fixed (non-dynamic) colours.</p>
+<div class="grid" id="r1"></div><div class="grid" id="r2"></div>
+<script>
+const I={
+home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+med:'<circle cx="12" cy="15" r="5.5"/><path d="M8.5 10.5L6 3h4l2 5 2-5h4l-2.5 7.5"/><path d="M12 12.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z"/>',
+graph:'<path d="M4 20V4M4 20h16"/><path d="M7 15l4-5 3 3 5-6"/>',
+gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/><circle cx="12" cy="12" r="6.6"/>'};
+const tabs=[['home','Home'],['cal','Schedules'],['med','Goals'],['graph','Trends'],['gear','Settings']];
+const nav=a=>`<div class="nav">${tabs.map((t,i)=>`<div class="ni ${i==a?'on':''}"><div class="pill"><svg viewBox="0 0 24 24">${I[t[0]]}</svg></div>${t[1]}</div>`).join('')}</div>`;
+const ph=(title,body,a)=>`<div class="ph"><div class="sb"><span>9:40</span><span>▾ ▮</span></div><div class="top">${title}</div><div class="body">${body}</div>${nav(a)}</div>`;
+function arc(cx,cy,r,a0,a1){const p=a=>[cx+r*Math.sin(a*Math.PI/180),cy-r*Math.cos(a*Math.PI/180)];const[x0,y0]=p(a0),[x1,y1]=p(a1);return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${a1-a0>180?1:0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`}
+function ring(goals,size=170){const c=size/2,r=c-12,sw=12,track='rgba(29,27,32,.14)';let s='';
+ const figDim=!goals.length||goals.every(g=>g[0]==0);
+ if(!goals.length){for(let a=0;a<360;a+=12){const x=c+r*Math.sin(a*Math.PI/180),y=c-r*Math.cos(a*Math.PI/180);s+=`<circle cx="${x}" cy="${y}" r="4" fill="${track}"/>`}}
+ else{const n=goals.length,cap=(sw/2)/r*180/Math.PI,seg=360/n,gap=n>1?8+2*cap:0;
+ goals.forEach((g,i)=>{const a0=i*seg+gap/2,a1=(i+1)*seg-gap/2+(n>1?0:-0.01);s+=`<path d="${arc(c,c,r,a0,a1)}" stroke="${track}" stroke-width="${sw}" fill="none" stroke-linecap="round"/>`;const f=Math.min(1,g[0]/g[1]);if(f>0)s+=`<path d="${arc(c,c,r,a0,a0+(a1-a0)*f)}" stroke="#2E7D6B" stroke-width="${sw}" fill="none" stroke-linecap="round"/>`})}
+ const done=goals.reduce((t,g)=>t+Math.min(g[0],g[1]),0),tot=goals.reduce((t,g)=>t+g[1],0);
+ const fc=figDim?'rgba(29,27,32,.4)':'#2E7D6B',fy=goals.length?c-14:c;
+ const fig=`<g transform="translate(${c-22},${fy-24}) scale(1.1)" stroke="${fc}" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 30L14 14L22 30"/><path d="M14 14L30 6"/><path d="M22 18L28 8"/><circle cx="33" cy="10" r="3.6" fill="${fc}" stroke="none"/><path d="M1 36H39" stroke="#818589"/></g>`;
+ const txt=goals.length?(done>=tot?`<path d="M${c-9} ${c+26}l6 6 12-12" stroke="#1D1B20" stroke-width="3" fill="none" stroke-linecap="round"/>`:`<text x="${c}" y="${c+34}" text-anchor="middle" class="cnt">${done}/${tot}</text>`):'';
+ return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${c}" cy="${c}" r="${r-sw/2}" fill="rgba(255,255,255,.55)"/>${s}${fig}${txt}</svg>`}
+const G=[[1,3],[2,3],[1,2]];
+const R=(t,n,s,g)=>`<div class="row ${g?'g':''}"><div class="tm">${t}</div><div><div class="nm">${n}</div><div class="sc">${s}</div></div></div>`;
+const upcoming=R('9:50 AM','Stretch break · 8 left today','Workday · Every 60 min at :50, 8:00 AM - 5:00 PM')+R('12:30 PM','Hamstring stretch, Calf stretch','Desk breaks')+R('3:30 PM','Hip flexor stretch, Wrist stretch','Desk breaks');
+const past=R('9:00 AM','Neck rolls, Shoulder shrugs, Upper back stretch','Desk breaks',1);
+const ringBlock=(g,extra)=>`<div class="ringwrap">${ring(g)}<div style="display:flex;gap:6px;margin-top:10px"><span class="btn">▶ Stretch now</span>${extra||''}</div></div>`;
+const home=ph('Simple Stretch',`<div class="date">Friday, October 16, 2026</div>${ringBlock(G)}<div class="hdr">Today<a>Skip today</a></div>${upcoming}<div class="div"></div>${past}`,0);
+const homeNo=ph('Simple Stretch',`<div class="date">Friday, October 16, 2026</div>${ringBlock([],'<span class="btn o2">Set a goal</span>')}<div class="hdr">Today<a>Skip today</a></div>${upcoming}<div class="div"></div>${past}`,0);
+const homeSkip=ph('Simple Stretch',`<div class="banner"><span>Notifications are off, so reminders can't show.</span><a>Allow</a></div><div class="date">Friday, October 16, 2026</div>${ringBlock(G)}<div class="hdr">Today<a>Resume today</a></div>${R('9:50 AM','Stretch break · 8 left today','Workday · Every 60 min at :50, 8:00 AM - 5:00 PM',1)+R('12:30 PM','Hamstring stretch, Calf stretch','Desk breaks',1)+R('3:30 PM','Hip flexor stretch, Wrist stretch','Desk breaks',1)}<div class="div"></div>${past}`,0);
+const schedules=ph('Schedules',`<div style="padding:4px 18px 10px"><span class="btn o2">Skip other days</span></div><div class="sch"><div style="flex:1"><div class="nm">Desk breaks</div><div class="sc">Mon - Fri · 9:00 AM, 12:30 PM, 3:30 PM</div></div><div class="sw"></div></div><div class="sch"><div style="flex:1"><div class="nm">Workday</div><div class="sc">Mon - Fri · Every 60 min at :50, 8:00 AM - 5:00 PM</div></div><div class="sw"></div></div><div class="sch"><div style="flex:1"><div class="nm">Weekend</div><div class="sc">Sat, Sun · 10:00 AM</div></div><div class="sw off"></div></div><div class="fab">＋ New schedule</div>`,1);
+const goal=(n,s,v)=>`<div class="goal"><div><div>${n}</div>${s?`<div class="sc">${s}</div>`:''}</div><div class="step ${v?'on':''}"><i>−</i>${v}<span>+</span></div></div>`;
+const goals=ph('Daily goals',`<div class="hint">Set how many times a day you want to do each stretch. Once every goal is met for the day, reminders stay quiet until tomorrow.</div>${goal('Calf stretch','1 of 3 today',3)+goal('Chest opener','',0)+goal('Hamstring stretch','2 of 3 today',3)+goal('Hip flexor stretch','',0)+goal('Neck rolls','1 of 2 today',2)+goal('Seated spinal twist','',0)+goal('Shoulder shrugs','',0)}`,2);
+const trends=ph('Trends',`<div class="seg"><span class="on">Week</span><span>Month</span></div><div style="display:flex;justify-content:space-between;padding:10px 24px;font-size:16px"><span>‹</span>Oct 12 – 18, 2026<span style="color:#aaa">›</span></div><div class="tiles"><div class="tile">Average<b>90%</b>over 5 days</div><div class="tile">All goals met<b>4 days</b>this week</div><div class="tile">Streak<b>12 days</b>all goals met</div></div><div class="chart"><div style="height:100%"></div><div style="height:100%"></div><div style="height:100%"></div><div style="height:100%"></div><div style="height:50%;opacity:.55"></div><div style="height:0"></div><div style="height:0"></div></div>`,3);
+const settings=ph('Settings',`<div class="set"><div><div class="nm">My stretches</div><div class="sc">Add, rename or remove stretches</div></div><span>›</span></div><div class="note">More settings arrive with #94 (v0.4).</div>`,4);
+const cell=(p,t,d)=>`<div class="o">${p}<div class="cap"><b>${t}</b>${d}</div></div>`;
+document.getElementById('r1').innerHTML=cell(home,'Home','Ring with 4/8, Stretch now, then upcoming reminders. The 9:00 reminder has passed, so it sits below the line, greyed.')+cell(homeNo,'Home, no goals','Dotted empty ring and dimmed figure, with a "Set a goal" button that opens the Goals tab.')+cell(homeSkip,'Home, today skipped','"Resume today" on the Today heading; every row greyed. Banners show here, on Home only.')+cell(schedules,'Schedules','The schedule list with on/off switches, a labelled "Skip other days" button and the New schedule button.');
+document.getElementById('r2').innerHTML=cell(goals,'Goals','The existing Daily goals screen, now a tab: no back arrow.')+cell(trends,'Trends','The existing Trends screen as a tab. The Home goals-card link is gone.')+cell(settings,'Settings','Starts with only "My stretches"; #94 adds the rest.')+'<div class="o" style="justify-content:center"><div class="cap" style="text-align:left;max-width:330px"><b>Also in the plan</b>Back on any other tab returns to Home; Back on Home leaves the app.<br><br>Every tab has an icon and a label. The selected tab gets the filled pill.<br><br>Tapping a Today row still opens the session exactly as its notification would.</div></div>';
+</script></body></html>

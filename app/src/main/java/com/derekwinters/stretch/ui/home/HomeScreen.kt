@@ -17,29 +17,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -61,26 +55,19 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.derekwinters.stretch.R
-import com.derekwinters.stretch.data.ScheduleWithReminders
-import com.derekwinters.stretch.data.days
-import com.derekwinters.stretch.data.isRepeating
-import com.derekwinters.stretch.data.repeatRule
-import com.derekwinters.stretch.data.time
-import com.derekwinters.stretch.goals.GoalProgress
 import com.derekwinters.stretch.notifications.Notifications
 import com.derekwinters.stretch.scheduling.ReminderScheduler
 import com.derekwinters.stretch.ui.common.Formatting
 import java.time.Clock
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * HOME-001: the Home tab. [onOpenGoals] opens the Goals tab ("Set a goal", HOME-006),
+ * [onStretchNow] the session with no named list (HOME-007), and [onOpenSession] the route a Today
+ * row's notification would open (HOME-009).
+ */
 @Composable
 fun HomeScreen(
-    onEditSchedule: (Long) -> Unit,
-    onNewSchedule: () -> Unit,
-    onOpenStretches: () -> Unit,
-    onOpenSkips: () -> Unit,
     onOpenGoals: () -> Unit,
-    onOpenTrends: () -> Unit,
     onStretchNow: () -> Unit,
     onOpenSession: (route: String) -> Unit,
     viewModel: HomeViewModel = viewModel(),
@@ -111,16 +98,10 @@ fun HomeScreen(
         canNotify = canNotify,
         canExact = canExact,
         clock = viewModel.clock,
-        onEditSchedule = onEditSchedule,
-        onNewSchedule = onNewSchedule,
-        onOpenStretches = onOpenStretches,
-        onOpenSkips = onOpenSkips,
         onOpenGoals = onOpenGoals,
-        onOpenTrends = onOpenTrends,
         onStretchNow = onStretchNow,
         onOpenSession = onOpenSession,
         onSetTodaySkipped = viewModel::setTodaySkipped,
-        onSetScheduleEnabled = viewModel::setScheduleEnabled,
     )
 }
 
@@ -128,7 +109,8 @@ fun HomeScreen(
  * HOME-001..HOME-009: the home screen drawn from its state alone. [HomeScreen] feeds it from
  * [HomeViewModel] and the live permission checks; the store screenshots feed it directly
  * (STORE-SHOT-001). [clock] is the app clock: a Today row's time is taken in its zone, read at
- * the tap (HOME-009, SCHED-010 invariant).
+ * the tap (HOME-009, SCHED-010 invariant). The bottom bar is drawn around it by the navigation
+ * host (HOME-004).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,81 +119,23 @@ fun HomeContent(
     canNotify: Boolean,
     canExact: Boolean,
     clock: Clock,
-    onEditSchedule: (Long) -> Unit,
-    onNewSchedule: () -> Unit,
-    onOpenStretches: () -> Unit,
-    onOpenSkips: () -> Unit,
     onOpenGoals: () -> Unit,
-    onOpenTrends: () -> Unit,
     onStretchNow: () -> Unit,
     onOpenSession: (route: String) -> Unit,
     onSetTodaySkipped: (skip: Boolean) -> Unit,
-    onSetScheduleEnabled: (id: Long, enabled: Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                actions = {
-                    IconButton(onClick = onOpenGoals) {
-                        Icon(Icons.Filled.Star, contentDescription = "Daily goals")
-                    }
-                    // HOME-004: one icon plus a labelled overflow menu; "Skip today" / "Resume
-                    // today" stays here alongside the Today row button (HOME-002).
-                    var menuOpen by remember { mutableStateOf(false) }
-                    Box {
-                        IconButton(onClick = { menuOpen = true }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "More options")
-                        }
-                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                            DropdownMenuItem(
-                                text = { Text(if (state.todaySkipped) "Resume today" else "Skip today") },
-                                onClick = {
-                                    menuOpen = false
-                                    onSetTodaySkipped(!state.todaySkipped)
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Skip other days") },
-                                onClick = {
-                                    menuOpen = false
-                                    onOpenSkips()
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text("My stretches") },
-                                onClick = {
-                                    menuOpen = false
-                                    onOpenStretches()
-                                },
-                            )
-                            // TREND-009: trends are reached by a labelled menu item.
-                            DropdownMenuItem(
-                                text = { Text("Trends") },
-                                onClick = {
-                                    menuOpen = false
-                                    onOpenTrends()
-                                },
-                            )
-                        }
-                    }
-                },
-            )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNewSchedule,
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("New schedule") },
-            )
-        },
+        // HOME-004: the app's name from app_name, no icon actions and no overflow menu.
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
     ) { padding ->
+        val today = state.todayList
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // HOME-005: the banners, on Home only.
             if (!canNotify) {
                 item {
                     WarningCard(
@@ -243,7 +167,7 @@ fun HomeContent(
                 }
             }
 
-            // HOME-001: today's date at the top; there is no skip card.
+            // HOME-001: today's date.
             item {
                 Text(
                     Formatting.date(state.today),
@@ -252,14 +176,10 @@ fun HomeContent(
                 )
             }
 
+            // HOME-006 / HOME-007: the widget's ring, "Stretch now" under it, and "Set a goal"
+            // beside it while no goal is set.
             item {
-                GoalsCard(
-                    goals = state.goals,
-                    loaded = state.loaded,
-                    onStretchNow = onStretchNow,
-                    onOpenGoals = onOpenGoals,
-                    onOpenTrends = onOpenTrends,
-                )
+                RingSection(state = state, onStretchNow = onStretchNow, onOpenGoals = onOpenGoals)
             }
 
             // SKIP-001 / HOME-002: skip or resume today from the right of the Today heading.
@@ -269,7 +189,7 @@ fun HomeContent(
                     onClick = { skip -> onSetTodaySkipped(skip) },
                 )
             }
-            if (state.loaded && state.todayReminders.isEmpty()) {
+            if (state.loaded && today.isEmpty) {
                 item {
                     Text(
                         "No reminders scheduled for today.",
@@ -278,45 +198,58 @@ fun HomeContent(
                     )
                 }
             }
-            items(state.todayReminders, key = { "today-${it.key}" }) { r ->
+            // HOME-002: upcoming reminders first ...
+            items(today.upcoming, key = { "today-${it.reminder.key}" }) { row ->
                 // HOME-009: every row, past or skipped too, opens what its notification would.
                 TodayReminderRow(
-                    r,
-                    dimmed = r.isPast || state.todaySkipped,
-                    onClick = { onOpenSession(r.sessionRoute(state.today, clock.zone)) },
+                    row.reminder,
+                    greyed = row.greyed,
+                    onClick = { onOpenSession(row.reminder.sessionRoute(state.today, clock.zone)) },
                 )
             }
-
-            item { SectionTitle("Schedules") }
-            if (state.loaded && state.schedules.isEmpty()) {
-                item {
-                    Text(
-                        "No schedules yet. Tap \"New schedule\" to set up your first reminders.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+            // ... then, after a divider, today's past reminders, greyed.
+            if (today.past.isNotEmpty()) {
+                if (today.upcoming.isNotEmpty()) {
+                    item(key = "today-divider") { HorizontalDivider() }
+                }
+                items(today.past, key = { "today-${it.reminder.key}" }) { row ->
+                    TodayReminderRow(
+                        row.reminder,
+                        greyed = row.greyed,
+                        onClick = { onOpenSession(row.reminder.sessionRoute(state.today, clock.zone)) },
                     )
                 }
-            }
-            items(state.schedules, key = { "schedule-${it.schedule.id}" }) { s ->
-                ScheduleCard(
-                    item = s,
-                    onClick = { onEditSchedule(s.schedule.id) },
-                    onToggle = { onSetScheduleEnabled(s.schedule.id, it) },
-                )
             }
         }
     }
 }
 
+/** HOME-006 / HOME-007: the ring, centred, with its buttons under it. */
 @Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(top = 8.dp),
-    )
+private fun RingSection(state: HomeState, onStretchNow: () -> Unit, onOpenGoals: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.size(RING_SIZE)) {
+            // Drawn once loaded, so a slow first read never flashes the no-goals ring.
+            if (state.loaded) GoalRingImage(state.ring, Modifier.size(RING_SIZE))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Button(onClick = onStretchNow) {
+                Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                Spacer(Modifier.width(4.dp))
+                Text("Stretch now")
+            }
+            if (state.loaded && HomeRing.showsSetAGoal(state.ring)) {
+                OutlinedButton(onClick = onOpenGoals) { Text("Set a goal") }
+            }
+        }
+    }
 }
+
+private val RING_SIZE = 168.dp
 
 /**
  * HOME-002: the "Today" heading with the skip/resume text button at its right end. The button is
@@ -359,9 +292,9 @@ private fun WarningCard(text: String, action: String, onAction: () -> Unit) {
 }
 
 @Composable
-private fun TodayReminderRow(r: TodayReminder, dimmed: Boolean, onClick: () -> Unit) {
+private fun TodayReminderRow(r: TodayReminder, greyed: Boolean, onClick: () -> Unit) {
     val context = LocalContext.current
-    val color = if (dimmed) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface
+    val color = if (greyed) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface
     ListItem(
         // HOME-009: announced as a button that opens the stretch session.
         modifier = Modifier.clickable(onClickLabel = "Open stretch session", role = Role.Button, onClick = onClick),
@@ -385,88 +318,4 @@ private fun TodayReminderRow(r: TodayReminder, dimmed: Boolean, onClick: () -> U
             )
         },
     )
-}
-
-@Composable
-private fun ScheduleCard(
-    item: ScheduleWithReminders,
-    onClick: () -> Unit,
-    onToggle: (Boolean) -> Unit,
-) {
-    val context = LocalContext.current
-    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(item.schedule.name, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    Formatting.daysSummary(item.schedule.days),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                val times = item.reminders.map { it.reminder.time }.sorted()
-                Text(
-                    when {
-                        item.schedule.isRepeating -> Formatting.repeatSummary(context, item.schedule.repeatRule)
-                        times.isEmpty() -> "No reminder times"
-                        else -> times.joinToString("  ·  ") { Formatting.time(context, it) }
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Switch(checked = item.schedule.enabled, onCheckedChange = onToggle)
-        }
-    }
-}
-
-/** HOME-006 / HOME-007 / TREND-009: today's progress, "Stretch now", links to goals and trends. */
-@Composable
-private fun GoalsCard(
-    goals: List<GoalProgress>,
-    loaded: Boolean,
-    onStretchNow: () -> Unit,
-    onOpenGoals: () -> Unit,
-    onOpenTrends: () -> Unit,
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Today's goals", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                // TREND-009: in the card's header, so the button row below still fits a phone.
-                if (goals.isNotEmpty()) TextButton(onClick = onOpenTrends) { Text("Trends") }
-            }
-            if (loaded && goals.isEmpty()) {
-                Text(
-                    "Set daily goals, e.g. 3 hamstring stretches a day.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            goals.forEach { g ->
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(g.stretchName, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            "${g.done}/${g.target}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = if (g.met) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (g.met) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                    LinearProgressIndicator(
-                        progress = { g.fraction },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onStretchNow) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                    Spacer(Modifier.width(4.dp))
-                    Text("Stretch now")
-                }
-                TextButton(onClick = onOpenGoals) { Text(if (goals.isEmpty()) "Set goals" else "Edit goals") }
-            }
-        }
-    }
 }

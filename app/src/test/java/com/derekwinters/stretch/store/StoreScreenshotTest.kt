@@ -32,7 +32,8 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [StoreShotDevice.SDK], qualifiers = StoreShotDevice.QUALIFIERS, application = Application::class)
 class StoreScreenshotTest : ShowcaseComposeTest() {
 
-    // STORE-SHOT-001: home, today's reminders and goal progress (HOME-002, HOME-006). Light.
+    // STORE-SHOT-001: home, the ring, Stretch now, upcoming and greyed past reminders and the
+    // bottom bar (HOME-002, HOME-004, HOME-006, HOME-007). Light.
     @Test
     fun home() = shoot(StoreShot.HOME)
 
@@ -40,7 +41,7 @@ class StoreScreenshotTest : ShowcaseComposeTest() {
     @Test
     fun session() = shoot(StoreShot.SESSION)
 
-    // STORE-SHOT-003: daily goals, partway done (GOAL-001, GOAL-003). Light.
+    // STORE-SHOT-003: daily goals, partway done, as the Goals tab (GOAL-001, GOAL-003, HOME-004). Light.
     @Test
     fun goals() = shoot(StoreShot.GOALS)
 
@@ -48,7 +49,8 @@ class StoreScreenshotTest : ShowcaseComposeTest() {
     @Test
     fun schedule() = shoot(StoreShot.SCHEDULE)
 
-    // STORE-SHOT-005: weekly trends with the streak (TREND-004 to TREND-006). Light.
+    // STORE-SHOT-005: weekly trends with the streak, as the Trends tab (TREND-004 to TREND-006,
+    // HOME-004). Light.
     @Test
     fun trends() = shoot(StoreShot.TRENDS)
 

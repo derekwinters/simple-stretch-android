@@ -23,15 +23,19 @@ also the app's name on the phone (STORE-LIST-008).
 
 Each shot shows a screen as it exists in the app, with the showcase data of STORE-SHOT-006.
 
-- **STORE-SHOT-001** Home: today's reminders and the goals card with goal progress (HOME-002,
-  HOME-006). Light theme.
+- **STORE-SHOT-001** Home: the ring with goals partway done, Stretch now, upcoming and greyed
+  past reminders, and the bottom bar (HOME-002, HOME-004, HOME-006, HOME-007). Light theme. The
+  screen is composed with its bottom bar, as in the app; at the frame's size the bar falls in
+  the part of the screen the bottom edge cuts off (STORE-SHOT-013), so it does not show.
 - **STORE-SHOT-002** The stretch session opened from a reminder, with some of its stretches
   checked (SESS-001 to SESS-003). Dark theme.
-- **STORE-SHOT-003** Daily goals, with goals partway done (GOAL-001, GOAL-003). Light theme.
+- **STORE-SHOT-003** Daily goals, with goals partway done, as the Goals tab, composed with the
+  bottom bar like STORE-SHOT-001 (GOAL-001, GOAL-003, HOME-004). Light theme.
 - **STORE-SHOT-004** The schedule editor on a repeating schedule, showing its interval, minute,
   window and slot preview (SCHED-011, SCHED-012). Dark theme.
-- **STORE-SHOT-005** Weekly trends with the period summary and the current streak (TREND-004 to
-  TREND-006). Light theme.
+- **STORE-SHOT-005** Weekly trends with the period summary and the current streak, as the Trends
+  tab, composed with the bottom bar like STORE-SHOT-001 (TREND-004 to TREND-006, HOME-004). Light
+  theme.
 
 There is no shot of the skipped-days screen.
 

@@ -26,8 +26,16 @@ object GoalRingRenderer {
 
     fun render(model: RingModel, colors: WidgetColors, side: Int): Bitmap {
         val bitmap = Bitmap.createBitmap(side, side, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        val s = side.toFloat()
+        draw(Canvas(bitmap), model, colors, side.toFloat())
+        return bitmap
+    }
+
+    /**
+     * Draws [model] into the square from (0, 0) to ([side], [side]) of [canvas]. The widget's
+     * bitmap and Home's ring (HOME-006) both draw through this, so they cannot drift apart.
+     */
+    fun draw(canvas: Canvas, model: RingModel, colors: WidgetColors, side: Float) {
+        val s = side
         val c = s / 2f
         val stroke = s * STROKE
         val r = c - stroke / 2f - s * MARGIN
@@ -72,7 +80,6 @@ object GoalRingRenderer {
             }
             RingCentre.None -> Unit
         }
-        return bitmap
     }
 
     /**

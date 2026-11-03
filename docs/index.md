@@ -4,22 +4,26 @@ A small Android app that reminds you to stretch during the day, on your own sche
 
 ## Features
 
-- **Stretch library** ("My stretches" in the home screen's menu): add, edit and delete stretches
+- **Navigation**: a bottom bar with five labelled tabs, Home, Schedules, Goals, Trends and
+  Settings, each one tap from the others. Back on any other tab returns to Home.
+- **Home**: today's date, a ring with one arc per daily goal (the same ring as the widget) with
+  **Stretch now** under it, and today's reminders, upcoming first and the ones already past
+  greyed out beneath.
+- **Stretch library** ("My stretches" on the Settings tab): add, edit and delete stretches
   (name, instructions, optional duration). Ten common stretches are added on first run. You can
   also create a stretch straight from the goals screen and the reminder-time picker with
   "New stretch…".
-- **Schedules**: as many as you like, each with a name, an on/off switch and the days of the
-  week it runs. A schedule either has **set times**, each optionally with its own stretches
+- **Schedules** (the Schedules tab): as many as you like, each with a name, an on/off switch
+  and the days of the week it runs. A schedule either has **set times**, each optionally with its own stretches
   (e.g. neck rolls at 10:00, hip flexors at 14:00), or **repeats**: every N minutes at a minute
   past the hour between two times, e.g. every hour at :50 from 8:00 to 17:00 (8:50 ... 16:50;
   the end time is inclusive).
 - **Daily goals**: e.g. 3 hamstring stretches and 3 calf stretches a day, set with a − / +
-  stepper next to every stretch on the goals screen (0 means no goal). The home screen shows
-  today's progress ("Hamstring stretch 2/3"). Once every goal for the day is met, reminders
-  stay quiet for the rest of the day.
-- **Trends** ("Trends" in the home screen's menu, or on the goals card): a week or month bar
-  chart of each day's score (goal stretches done, up to each target, out of the day's total
-  target), the period's average, how many days met every goal, and your current streak. Tap a
+  stepper next to every stretch on the Goals tab (0 means no goal). The home screen's ring
+  shows today's progress, one arc per goal, with the count ("4/8") in its centre. Once every
+  goal for the day is met, reminders stay quiet for the rest of the day.
+- **Trends** (the Trends tab): a week or month bar chart of each day's score (goal stretches
+  done, up to each target, out of the day's total target), the period's average, how many days met every goal, and your current streak. Tap a
   day to see its goals, the score climbing through the day, and every stretch logged with its
   time. Skipped days and days without goals are gaps, not 0%; changing a goal never rewrites
   past days.
@@ -31,9 +35,10 @@ A small Android app that reminds you to stretch during the day, on your own sche
   you did and save. Opened from a reminder, that reminder's stretches lead in their own section;
   otherwise stretches still short of today's goal do. Everything else follows alphabetically,
   and nothing is pre-checked.
-- **Skip a day**: one tap on "Skip today", at the right of the home screen's "Today" heading (or
-  in the top bar's menu), silences every reminder for the rest of the day; "Resume today" undoes
-  it. Future days can be skipped from the calendar screen, and skipped days can be removed again.
+- **Skip a day**: one tap on "Skip today", at the right of the home screen's "Today" heading,
+  silences every reminder for the rest of the day; "Resume today" undoes it. Future days can be
+  skipped from the calendar screen ("Skip other days" on the Schedules tab), and skipped days can
+  be removed again.
 - **Notifications** show the stretches (or today's unmet goals), with **Start** (opens the
   stretch session) and **Snooze 5 min** buttons; swipe to dismiss just this one.
   Tapping also opens the session.
@@ -161,8 +166,9 @@ app/src/main/java/com/derekwinters/stretch/
   notifications/  notification channel/content and the Snooze / Skip actions
   widget/         segmented ring home screen widget: ring layout and palette (pure Kotlin),
                   bitmap renderer, provider and redraws
-  ui/             Compose screens: home, schedule editor, stretch session, goals, trends
-                  (Canvas charts) and day detail, stretch library, skipped days
+  ui/             Compose screens: the bottom navigation bar, home (with the widget's ring),
+                  schedules, schedule editor, stretch session, goals, trends (Canvas charts)
+                  and day detail, settings, stretch library, skipped days
 app/src/test/     JVM unit tests (next occurrence, repeating slots, goal maths, goal history,
                   trends, widget ring and palette) and the store image tests (store/)
 app/schemas/      exported Room schemas

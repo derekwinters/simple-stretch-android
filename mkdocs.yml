@@ -35,6 +35,8 @@ nav:
       - Widgets: spec/widgets.md
       - Privacy: spec/privacy.md
       - Store listing: spec/store-listing.md
+  - Design:
+      - Bottom navigation mockups: design/bottom-navigation/README.md
   - Privacy policy: privacy.md
   - Store listing text: store/listing.md
   - Play Console listing details: store/play-console.md

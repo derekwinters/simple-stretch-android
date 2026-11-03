@@ -56,6 +56,19 @@ object WidgetPalette {
         }
     }
 
+    /**
+     * HOME-006: the ring drawn inside the app, in the app theme's colours ([primary], [surface],
+     * [onSurface], [outline], ARGB), with the same roles and alphas as the dynamic widget above.
+     */
+    fun fromTheme(primary: Int, surface: Int, onSurface: Int, outline: Int, dark: Boolean): WidgetColors =
+        colors(
+            primary,
+            surface,
+            onSurface,
+            withAlpha(onSurface, if (dark) TRACK_ALPHA_DARK else TRACK_ALPHA_LIGHT),
+            outline,
+        )
+
     private fun colors(arc: Int, surface: Int, onSurface: Int, track: Int, mat: Int) = WidgetColors(
         arc = arc,
         disc = withAlpha(surface, DISC_ALPHA),

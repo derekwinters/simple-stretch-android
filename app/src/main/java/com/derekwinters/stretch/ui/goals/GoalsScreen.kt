@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -119,7 +118,6 @@ class GoalsViewModel(application: Application) : AndroidViewModel(application) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalsScreen(
-    onBack: () -> Unit,
     viewModel: GoalsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -127,7 +125,6 @@ fun GoalsScreen(
 
     GoalsContent(
         state = state,
-        onBack = onBack,
         onTap = viewModel::tap,
         onNewStretch = { creating = true },
     )
@@ -146,26 +143,19 @@ fun GoalsScreen(
 
 /**
  * GOAL-002: the goals screen drawn from its state alone. [GoalsScreen] feeds it from
- * [GoalsViewModel]; the store screenshots feed it directly (STORE-SHOT-003).
+ * [GoalsViewModel]; the store screenshots feed it directly (STORE-SHOT-003). It is the Goals tab
+ * (HOME-004), so it has no back arrow.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalsContent(
     state: GoalsState,
-    onBack: () -> Unit,
     onTap: (stretchId: Long, tap: StepperTap) -> Unit,
     onNewStretch: () -> Unit,
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Daily goals") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-            )
+            TopAppBar(title = { Text("Daily goals") })
         },
     ) { padding ->
         LazyColumn(
@@ -235,7 +225,7 @@ private fun GoalProgressText(row: GoalRow) {
 /**
  * GOAL-002: a compact − N + stepper. Colours are theme roles only (GOAL-002 invariant): with a
  * goal, `primaryContainer` / `onPrimaryContainer` (as the "New schedule" button); at 0,
- * `surfaceContainerHighest` (as the "Today's goals" card) with − disabled.
+ * `surfaceContainerHighest` with − disabled.
  */
 @Composable
 private fun GoalStepperControl(row: GoalRow, onTap: (StepperTap) -> Unit) {

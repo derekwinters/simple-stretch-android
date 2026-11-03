@@ -56,9 +56,9 @@ the skipped dates (SKIP-007); nothing is stored.
   runs to the current time for today and to midnight for past days. A day without goals in
   force has no chart. If the clocks go back during the night, time of day never runs
   backwards on the chart.
-- **TREND-009** The Trends screen is reached from a labelled "Trends" item in the home screen's
-  overflow menu (HOME-004) and from a "Trends" button on the home goals card while goals exist
-  (HOME-006).
+- **TREND-009** The Trends screen is the Trends tab of the bottom navigation bar (HOME-004): a
+  labelled item, one tap from every other top-level screen. It has no back arrow; Back returns
+  to Home. The day detail screen (TREND-007) opens above it and returns to it.
 - **TREND-010** **Accessibility:** each day's bar is its own accessible element whose content
   description gives the date and the score, done / target and "all goals met" (or "skipped",
   "no goals", "not yet"), and announces tapping as "Show day". The step chart has one content

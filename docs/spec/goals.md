@@ -16,7 +16,8 @@
   - "New stretch…" at the bottom of the list opens the stretch editor (LIB-007); the new
     stretch then appears in the list at 0.
 
-  It is reached from the home screen's top bar and its goals card (HOME-004, HOME-006).
+  It is the Goals tab of the bottom navigation bar (HOME-004), titled "Daily goals" with no
+  back arrow; while no goal is set, Home's "Set a goal" button also opens it (HOME-006).
 
   **Invariant — A tap is one GOAL-009 edit.** Each stepper tap runs exactly one `setGoal` or
   `removeGoal`, in one transaction. Repeated taps on the same day update today's row in place
@@ -24,8 +25,8 @@
 
   **Invariant — The goals screen uses only the theme's colour roles.** A stepper with a goal
   uses `primaryContainer` / `onPrimaryContainer` (as the "New schedule" button); a stepper at 0
-  uses `surfaceContainerHighest` (as the "Today's goals" card), with − in the disabled content
-  colour. The ✓ and "New stretch…" use `primary` (as "Edit goals"). There are no `Color(…)`
+  uses `surfaceContainerHighest`, with − in the disabled content colour. The ✓ and "New
+  stretch…" use `primary` (as Home's "Skip today" text button). There are no `Color(…)`
   literals, so the screen follows dynamic colour and dark mode like the rest of the app.
 - **GOAL-003** A goal's progress on a day is the number of completions of its stretch (SESS-004)
   whose time falls within that local calendar day, from midnight inclusive to the next midnight
