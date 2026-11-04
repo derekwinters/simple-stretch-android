@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.3.0](https://github.com/derekwinters/simple-stretch-android/compare/v0.2.0...v0.3.0) (2026-11-04)
+
+
+### Features
+
+* **home:** add a five-tab bottom bar and a simpler Home ([#100](https://github.com/derekwinters/simple-stretch-android/issues/100)) ([d5bf3f1](https://github.com/derekwinters/simple-stretch-android/commit/d5bf3f172eaea0e0a4e18f946c499335121a8e0b))
+* **home:** draw the goal ring's centre figure in the launcher icon's colours ([#109](https://github.com/derekwinters/simple-stretch-android/issues/109)) ([ed9951a](https://github.com/derekwinters/simple-stretch-android/commit/ed9951a2bd55cac0b49ac5b62b55cf0d500282f6)), closes [#104](https://github.com/derekwinters/simple-stretch-android/issues/104)
+* **home:** open the stretch session from a Today row ([#79](https://github.com/derekwinters/simple-stretch-android/issues/79)) ([b3c501c](https://github.com/derekwinters/simple-stretch-android/commit/b3c501cc5be8a89f04f43b291074a1191621c641)), closes [#64](https://github.com/derekwinters/simple-stretch-android/issues/64)
+* rename the launcher label to "Simple Stretch" ([#91](https://github.com/derekwinters/simple-stretch-android/issues/91)) ([513ae23](https://github.com/derekwinters/simple-stretch-android/commit/513ae23185392fe4e9e40d17174d1f5764f52d78)), closes [#84](https://github.com/derekwinters/simple-stretch-android/issues/84)
+* **store:** render the Play store icon and feature graphic ([#87](https://github.com/derekwinters/simple-stretch-android/issues/87)) ([5c81ecb](https://github.com/derekwinters/simple-stretch-android/commit/5c81ecb86c2476e52c6f708f4afca8a437fd2dca)), closes [#45](https://github.com/derekwinters/simple-stretch-android/issues/45)
+* **widget:** draw the ring's centre figure in the launcher icon's colours ([#110](https://github.com/derekwinters/simple-stretch-android/issues/110)) ([d02b7d4](https://github.com/derekwinters/simple-stretch-android/commit/d02b7d477200c420a2e1e8aba0f93fca73417603)), closes [#103](https://github.com/derekwinters/simple-stretch-android/issues/103)
+
+
+### Fixes
+
+* **home:** show the app name in the Home top bar ([#97](https://github.com/derekwinters/simple-stretch-android/issues/97)) ([2bc1f48](https://github.com/derekwinters/simple-stretch-android/commit/2bc1f48870a6b1dc8fc2c7ac72adf8e351913607)), closes [#96](https://github.com/derekwinters/simple-stretch-android/issues/96)
+* **nav:** use Material fade through and shared axis motion between screens ([#107](https://github.com/derekwinters/simple-stretch-android/issues/107)) ([4b53c3c](https://github.com/derekwinters/simple-stretch-android/commit/4b53c3c4639b940e7a0b4db74646229bb197c5f1)), closes [#102](https://github.com/derekwinters/simple-stretch-android/issues/102)
+* **scheduling:** request SCHEDULE_EXACT_ALARM instead of USE_EXACT_ALARM ([#69](https://github.com/derekwinters/simple-stretch-android/issues/69)) ([5371b1c](https://github.com/derekwinters/simple-stretch-android/commit/5371b1cad2f86b0706506753a28c2c29bfba6327)), closes [#28](https://github.com/derekwinters/simple-stretch-android/issues/28)
+
+
+### Documentation
+
+* **privacy:** say what the app itself does in the policy's opening line ([#89](https://github.com/derekwinters/simple-stretch-android/issues/89)) ([350c228](https://github.com/derekwinters/simple-stretch-android/commit/350c2280439e5ea3e4f049bdf3409212b33636b9)), closes [#86](https://github.com/derekwinters/simple-stretch-android/issues/86)
+* publish a privacy policy for the Google Play listing ([#72](https://github.com/derekwinters/simple-stretch-android/issues/72)) ([13104d3](https://github.com/derekwinters/simple-stretch-android/commit/13104d351e89e5f77bd6f55562fb662be01fe793)), closes [#34](https://github.com/derekwinters/simple-stretch-android/issues/34)
+* record the Play App Signing decision in ADR 0004 ([#76](https://github.com/derekwinters/simple-stretch-android/issues/76)) ([3ec1ae4](https://github.com/derekwinters/simple-stretch-android/commit/3ec1ae465c4ef0a9b4d5c10d1131c65ceb5251ba)), closes [#43](https://github.com/derekwinters/simple-stretch-android/issues/43)
+* **store:** settle the Play listing text, category and tags ([#85](https://github.com/derekwinters/simple-stretch-android/issues/85)) ([3398ed5](https://github.com/derekwinters/simple-stretch-android/commit/3398ed5f3a10891f4e841280903fa5e4b074c748)), closes [#44](https://github.com/derekwinters/simple-stretch-android/issues/44)
+* **store:** show the store listing images on a docs page ([#105](https://github.com/derekwinters/simple-stretch-android/issues/105)) ([71c3db3](https://github.com/derekwinters/simple-stretch-android/commit/71c3db3ef655dec03d305e77e7b665e4be949549)), closes [#99](https://github.com/derekwinters/simple-stretch-android/issues/99)
+
+
+### Refactoring
+
+* read the current time from one injected clock ([#78](https://github.com/derekwinters/simple-stretch-android/issues/78)) ([be7903d](https://github.com/derekwinters/simple-stretch-android/commit/be7903df2eda3b7f4c707980bbc06c189d992ab5)), closes [#30](https://github.com/derekwinters/simple-stretch-android/issues/30)
+
 ## [0.2.0](https://github.com/derekwinters/simple-stretch-android/compare/v0.1.0...v0.2.0) (2026-10-22)
 
 
