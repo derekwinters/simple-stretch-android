@@ -162,12 +162,12 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
 - [x] Back from every other tab returns to Home; on Home the navigation host holds no Back
       callback, so Back leaves the app (Robolectric test, HOME-004).
 - [x] No top-bar icon actions and no overflow menu on any top-level screen (HOME-004).
-- [ ] Every destination sets explicit enter, exit, pop-enter and pop-exit transitions from one
+- [x] Every destination sets explicit enter, exit, pop-enter and pop-exit transitions from one
       shared definition; a unit test checks that each fade ends before the next begins, and a
       Robolectric test with the clock paused checks that a tab switch is over well inside the
       library's 700 ms and that a full-window screen slides in from the right and back out to it
       (HOME-012 first invariant).
-- [ ] The bar is drawn once, outside the navigation host; tab screens reserve its space
+- [x] The bar is drawn once, outside the navigation host; tab screens reserve its space
       themselves, so the host never changes height. A Robolectric test with the clock paused
       checks that the bar holds still through a tab switch and slides with its tab screen when a
       full-window screen opens or closes, including one opened from outside the UI (HOME-012
