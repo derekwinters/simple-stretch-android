@@ -39,7 +39,6 @@ fun GoalRingImage(model: RingModel, modifier: Modifier = Modifier) {
         primary = scheme.primary.toArgb(),
         surface = scheme.surface.toArgb(),
         onSurface = scheme.onSurface.toArgb(),
-        outline = scheme.outline.toArgb(),
         dark = scheme.surface.luminance() < 0.5f,
     )
     val description = HomeRing.description(model)

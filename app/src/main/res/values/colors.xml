@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- The launcher icon's figure and mat, also used by the goal ring (LauncherIconColors). -->
+    <color name="launcher_icon_figure">#1361A7</color>
+    <color name="launcher_icon_mat">#818589</color>
 </resources>

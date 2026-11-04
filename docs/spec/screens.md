@@ -66,12 +66,20 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
   count "*done*/*total*" (or a check mark once every goal is met), exactly as the widget draws
   them. With no goals the ring is the widget's dotted empty track with the dimmed figure, and a
   **"Set a goal"** button beside "Stretch now" opens the Goals tab. The ring is drawn in the
-  app's theme colours (primary for arcs and figure, onSurface for text, outline for the mat),
-  and its content description says the count (e.g. "Today's goals: 4 of 8 done").
+  app's theme colours (primary for the arcs, onSurface for the text and check mark), except the
+  centre figure and its mat, which are always the launcher icon's colours
+  (`ic_launcher_foreground.xml`): the figure (body and head) `#1361A7`, and when dimmed
+  `#1361A7` at 40%; the mat `#818589` in every state. This holds in light and dark mode, with
+  dynamic colour on or off. Its content description says the count (e.g. "Today's goals: 4 of
+  8 done").
 
   **Invariant — Home's ring and the widget never disagree.** Both are built by the same
   `GoalRing.fromLog` from `GoalMath.goalRows` (WIDGET-009) and drawn by the same renderer; Home
   has no ring maths of its own.
+
+  **Invariant — The ring's centre figure and mat never take a theme or wallpaper colour.** They
+  come from one shared definition of the launcher icon's colours, in every theme, mode and
+  state.
 - **HOME-007** A "Stretch now" button under the ring opens the stretch session screen
   (SESS-001) without waiting for a reminder.
 - **HOME-008** _Retired._ It described the closable "Skip today" card, which was removed with
@@ -182,7 +190,9 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
       Robolectric test renders Home and finds the `app_name` text (HOME-004, STORE-LIST-008
       invariant).
 - [x] The ring is `GoalRing.fromLog` drawn by `GoalRingRenderer` into the Compose canvas with
-      the theme's colours; its done/total and empty state are unit tested (HOME-006 invariant).
+      the theme's colours, and the figure, dimmed figure and mat in the launcher icon's colours
+      from the shared definition (unit tested, HOME-006 invariant); its done/total and empty
+      state are unit tested (HOME-006 invariant).
 - [x] Goal progress re-queries when the date changes (the clock tick drives the day bounds)
       (HOME-006).
 - [x] "Stretch now" opens the session and "Set a goal" opens the Goals tab (Robolectric test,

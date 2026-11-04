@@ -3,6 +3,7 @@ package com.derekwinters.stretch.ui.home
 import com.derekwinters.stretch.goals.GoalRef
 import com.derekwinters.stretch.goals.StretchRef
 import com.derekwinters.stretch.widget.GoalRing
+import com.derekwinters.stretch.widget.LauncherIconColors
 import com.derekwinters.stretch.widget.RingCentre
 import com.derekwinters.stretch.widget.WidgetPalette
 import org.junit.Assert.assertEquals
@@ -63,21 +64,21 @@ class HomeRingTest {
     }
 
     // HOME-006: the theme's colours map to the ring's parts with the same roles and alphas the
-    // widget uses for dynamic colour (WIDGET-008): primary for arcs, onSurface for text, the
-    // track and the dimmed figure, outline for the mat.
+    // widget uses for dynamic colour (WIDGET-008): primary for arcs, onSurface for text and the
+    // track. The figure, dimmed figure and mat are the launcher icon's (HOME-006 invariant).
     @Test
     fun themeColoursUseTheWidgetsRoles() {
         val primary = 0xFF2E7D6B.toInt()
         val surface = 0xFFFFFBFE.toInt()
         val onSurface = 0xFF1C1B1F.toInt()
-        val outline = 0xFF79747E.toInt()
-        val light = WidgetPalette.fromTheme(primary, surface, onSurface, outline, dark = false)
+        val light = WidgetPalette.fromTheme(primary, surface, onSurface, dark = false)
         assertEquals(primary, light.arc)
         assertEquals(onSurface, light.text)
-        assertEquals(outline, light.mat)
+        assertEquals(LauncherIconColors.MAT, light.mat)
         assertEquals(WidgetPalette.withAlpha(onSurface, 0.14f), light.track)
-        assertEquals(WidgetPalette.withAlpha(onSurface, 0.40f), light.dimmedFigure)
-        val dark = WidgetPalette.fromTheme(primary, surface, onSurface, outline, dark = true)
+        assertEquals(LauncherIconColors.FIGURE, light.figure)
+        assertEquals(WidgetPalette.withAlpha(LauncherIconColors.FIGURE, 0.40f), light.dimmedFigure)
+        val dark = WidgetPalette.fromTheme(primary, surface, onSurface, dark = true)
         assertEquals(WidgetPalette.withAlpha(onSurface, 0.18f), dark.track)
     }
 }

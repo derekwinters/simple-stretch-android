@@ -4,7 +4,7 @@ import kotlin.math.roundToInt
 
 /** ARGB colours for one drawing of the widget (WIDGET-008). */
 data class WidgetColors(
-    /** Arcs and the figure. */
+    /** The arcs. */
     val arc: Int,
     /** The disc, already at 55% (WIDGET-005). */
     val disc: Int,
@@ -13,7 +13,9 @@ data class WidgetColors(
     /** The empty track. */
     val track: Int,
     val mat: Int,
-    /** The figure when dimmed: the text colour at 40% (WIDGET-006). */
+    /** The figure (body and head) when not dimmed. */
+    val figure: Int,
+    /** The figure when dimmed (WIDGET-006). */
     val dimmedFigure: Int,
 )
 
@@ -30,7 +32,7 @@ object WidgetPalette {
     private const val TRACK_ALPHA_LIGHT = 0.14f
     private const val TRACK_ALPHA_DARK = 0.18f
     private const val DIMMED_ALPHA = 0.40f
-    private const val MAT_GREY = 0xFF818589.toInt()
+    private const val MAT_GREY = LauncherIconColors.MAT
 
     /** WIDGET-008: the mockup's values, used only without dynamic colour. */
     val FIXED_LIGHT = colors(
@@ -58,15 +60,20 @@ object WidgetPalette {
 
     /**
      * HOME-006: the ring drawn inside the app, in the app theme's colours ([primary], [surface],
-     * [onSurface], [outline], ARGB), with the same roles and alphas as the dynamic widget above.
+     * [onSurface], ARGB), with the same roles and alphas as the dynamic widget above, except the
+     * figure, dimmed figure and mat, which are always the launcher icon's colours (HOME-006
+     * invariant).
      */
-    fun fromTheme(primary: Int, surface: Int, onSurface: Int, outline: Int, dark: Boolean): WidgetColors =
+    fun fromTheme(primary: Int, surface: Int, onSurface: Int, dark: Boolean): WidgetColors =
         colors(
             primary,
             surface,
             onSurface,
             withAlpha(onSurface, if (dark) TRACK_ALPHA_DARK else TRACK_ALPHA_LIGHT),
-            outline,
+            LauncherIconColors.MAT,
+        ).copy(
+            figure = LauncherIconColors.FIGURE,
+            dimmedFigure = withAlpha(LauncherIconColors.FIGURE, DIMMED_ALPHA),
         )
 
     private fun colors(arc: Int, surface: Int, onSurface: Int, track: Int, mat: Int) = WidgetColors(
@@ -75,6 +82,7 @@ object WidgetPalette {
         text = onSurface,
         track = track,
         mat = mat,
+        figure = arc,
         dimmedFigure = withAlpha(onSurface, DIMMED_ALPHA),
     )
 
