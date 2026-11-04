@@ -1,21 +1,32 @@
 package com.derekwinters.stretch.ui
 
 import android.app.Application
+import android.provider.Settings
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.DpRect
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.derekwinters.stretch.store.ShowcaseComposeTest
@@ -32,6 +43,7 @@ import com.derekwinters.stretch.widget.GoalRing
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -42,6 +54,8 @@ import java.time.LocalDate
  * Requirement IDs refer to docs/spec/screens.md (HOME-). Drives the real [StretchNavHost] and
  * bottom bar with the top-level screens' real stateless content fed from [ShowcaseFixture], and
  * a marker text for each screen opened above them, so no database or StretchApp is involved.
+ * Every screen is wrapped in a full-size box tagged [screenTag], so the motion tests (HOME-012)
+ * can follow where each screen is while the clock is paused.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [StoreShotDevice.SDK], qualifiers = StoreShotDevice.QUALIFIERS, application = Application::class)
@@ -52,57 +66,80 @@ class StretchNavHostTest : ShowcaseComposeTest() {
     private class ShowcaseTabs(private val home: HomeState) : StretchScreens {
         @Composable
         override fun Home(onOpenGoals: () -> Unit, onStretchNow: () -> Unit, onOpenSession: (String) -> Unit) =
-            HomeContent(
-                state = home,
-                // HOME-005: both banners showing, so the test can look for them on other tabs.
-                canNotify = false,
-                canExact = false,
-                clock = ShowcaseFixture.clock,
-                onOpenGoals = onOpenGoals,
-                onStretchNow = onStretchNow,
-                onOpenSession = onOpenSession,
-                onSetTodaySkipped = {},
-            )
+            Screen(TopTab.HOME.route) {
+                HomeContent(
+                    state = home,
+                    // HOME-005: both banners showing, so the test can look for them on other tabs.
+                    canNotify = false,
+                    canExact = false,
+                    clock = ShowcaseFixture.clock,
+                    onOpenGoals = onOpenGoals,
+                    onStretchNow = onStretchNow,
+                    onOpenSession = onOpenSession,
+                    onSetTodaySkipped = {},
+                )
+            }
 
         @Composable
         override fun Schedules(onEditSchedule: (Long) -> Unit, onNewSchedule: () -> Unit, onOpenSkips: () -> Unit) =
-            SchedulesContent(
-                state = ShowcaseFixture.schedules(),
-                onEditSchedule = onEditSchedule,
-                onNewSchedule = onNewSchedule,
-                onOpenSkips = onOpenSkips,
-                onSetScheduleEnabled = { _, _ -> },
+            Screen(TopTab.SCHEDULES.route) {
+                SchedulesContent(
+                    state = ShowcaseFixture.schedules(),
+                    onEditSchedule = onEditSchedule,
+                    onNewSchedule = onNewSchedule,
+                    onOpenSkips = onOpenSkips,
+                    onSetScheduleEnabled = { _, _ -> },
+                )
+            }
+
+        @Composable
+        override fun Goals() = Screen(TopTab.GOALS.route) {
+            GoalsContent(state = ShowcaseFixture.goals(), onTap = { _, _ -> }, onNewStretch = {})
+        }
+
+        @Composable
+        override fun Trends(onOpenDay: (LocalDate) -> Unit) = Screen(TopTab.TRENDS.route) {
+            TrendsContent(
+                state = ShowcaseFixture.trends(),
+                onOpenDay = onOpenDay,
+                onSetKind = {},
+                onPrevious = {},
+                onNext = {},
             )
+        }
 
         @Composable
-        override fun Goals() = GoalsContent(state = ShowcaseFixture.goals(), onTap = { _, _ -> }, onNewStretch = {})
+        override fun Settings(onOpenStretches: () -> Unit) = Screen(TopTab.SETTINGS.route) {
+            SettingsContent(onOpenStretches = onOpenStretches)
+        }
 
         @Composable
-        override fun Trends(onOpenDay: (LocalDate) -> Unit) = TrendsContent(
-            state = ShowcaseFixture.trends(),
-            onOpenDay = onOpenDay,
-            onSetKind = {},
-            onPrevious = {},
-            onNext = {},
-        )
+        override fun ScheduleEdit(onDone: () -> Unit) = Screen(Routes.SCHEDULE) { Text("Schedule editor screen") }
 
         @Composable
-        override fun Settings(onOpenStretches: () -> Unit) = SettingsContent(onOpenStretches = onOpenStretches)
+        override fun Stretches(onBack: () -> Unit) = Screen(Routes.STRETCHES) { Text("Stretch library screen") }
 
         @Composable
-        override fun ScheduleEdit(onDone: () -> Unit) = Text("Schedule editor screen")
+        override fun Skips(onBack: () -> Unit) = Screen(Routes.SKIPS) { Text("Skipped days screen") }
 
         @Composable
-        override fun Stretches(onBack: () -> Unit) = Text("Stretch library screen")
+        override fun TrendDay(onBack: () -> Unit) = Screen(Routes.TREND_DAY) { Text("Trend day screen") }
 
         @Composable
-        override fun Skips(onBack: () -> Unit) = Text("Skipped days screen")
+        override fun Session(onDone: () -> Unit) = Screen(Routes.SESSION) { Text("Session screen") }
 
         @Composable
-        override fun TrendDay(onBack: () -> Unit) = Text("Trend day screen")
+        private fun Screen(route: String, content: @Composable () -> Unit) =
+            Box(Modifier.fillMaxSize().testTag(screenTag(route))) { content() }
+    }
 
-        @Composable
-        override fun Session(onDone: () -> Unit) = Text("Session screen")
+    /**
+     * HOME-012: these tests time the navigation motion, so animations run at their own speed
+     * here, not at the store shots' duration scale of 0 (STORE-SHOT-006).
+     */
+    @Before
+    fun animationsAtNormalSpeed() {
+        Settings.Global.putFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
     }
 
     private fun show(home: HomeState = ShowcaseFixture.home()) {
@@ -126,6 +163,22 @@ class StretchNavHostTest : ShowcaseComposeTest() {
         composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
         composeRule.waitForIdle()
     }
+
+    /** Stops the clock, so a navigation started next can be looked at part-way (HOME-012). */
+    private fun pauseClock() {
+        composeRule.mainClock.autoAdvance = false
+    }
+
+    private fun advance(millis: Long) = composeRule.mainClock.advanceTimeBy(millis)
+
+    private fun bounds(tag: String): DpRect = composeRule.onNodeWithTag(tag).getUnclippedBoundsInRoot()
+
+    private fun screen(route: String): DpRect = bounds(screenTag(route))
+
+    /** Where the bar is, followed through its Home item. */
+    private fun bar(): DpRect = bounds(TopTab.testTag(TopTab.HOME))
+
+    private fun assertGone(tag: String) = composeRule.onAllNodesWithTag(tag).assertCountEquals(0)
 
     // HOME-004: every item shows its icon's label, and the label stays shown when not selected
     // (HOME-004 invariant: every bar item is labelled).
@@ -289,7 +342,113 @@ class StretchNavHostTest : ShowcaseComposeTest() {
         composeRule.onNodeWithTag(TopTab.testTag(TopTab.HOME)).assertIsSelected()
     }
 
+    // HOME-012 (first invariant): a tab switch is a fade through, over in 300 ms, not the
+    // library's 700 ms cross-fade; the outgoing tab neither moves nor changes size. HOME-012
+    // (second invariant): the bar holds still throughout.
+    @Test
+    fun tabSwitchFadesThroughWithTheBarStill() {
+        show()
+        val barBefore = bar()
+        val homeBefore = screen(Routes.HOME)
+        pauseClock()
+        composeRule.onNodeWithTag(TopTab.testTag(TopTab.TRENDS)).performClick()
+        advance(PART_WAY)
+        assertEquals(barBefore, bar())
+        assertEquals(homeBefore, screen(Routes.HOME))
+        advance(DONE)
+        assertGone(screenTag(Routes.HOME))
+        assertEquals(homeBefore, screen(Routes.TRENDS))
+        assertEquals(barBefore, bar())
+    }
+
+    // HOME-012: opening a full-window screen is shared axis X forward: the tab screen and its bar
+    // slide left together, the screen area keeps its height, and the new screen comes in from
+    // the right and covers the whole window. Back plays it in reverse, and the bar returns with
+    // its tab screen (second invariant).
+    @Test
+    fun fullWindowScreenSlidesInAndBackOutWithTheBarLeavingAndReturningWithItsTab() {
+        show()
+        val barBefore = bar()
+        val homeBefore = screen(Routes.HOME)
+        pauseClock()
+        composeRule.onNodeWithText("Stretch now").performClick()
+        advance(PART_WAY)
+        val homeOut = screen(Routes.HOME)
+        assertTrue("tab screen slides left: $homeOut", homeOut.left < homeBefore.left)
+        assertEquals(homeBefore.height, homeOut.height)
+        assertTrue("bar slides left with it: ${bar()}", bar().left < barBefore.left)
+        assertEquals(barBefore.top, bar().top)
+        assertTrue("session slides in from the right", screen(Routes.SESSION).left > 0.dp)
+        advance(DONE)
+        assertGone(screenTag(Routes.HOME))
+        assertGone(TopTab.testTag(TopTab.HOME))
+        val session = screen(Routes.SESSION)
+        assertEquals(0.dp, session.left)
+        assertEquals(homeBefore.top, session.top)
+        assertTrue("session covers the bar's space too", session.bottom >= barBefore.bottom)
+
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        advance(PART_WAY)
+        assertTrue("session slides out to the right", screen(Routes.SESSION).left > 0.dp)
+        val homeIn = screen(Routes.HOME)
+        assertTrue("tab screen comes back from the left: $homeIn", homeIn.left < homeBefore.left)
+        assertEquals(homeBefore.height, homeIn.height)
+        assertTrue("bar comes back with it: ${bar()}", bar().left < barBefore.left)
+        advance(DONE)
+        assertGone(screenTag(Routes.SESSION))
+        assertEquals(homeBefore, screen(Routes.HOME))
+        assertEquals(barBefore, bar())
+        assertEquals(Routes.HOME, route())
+    }
+
+    // HOME-012: a screen opened from outside the UI (NOTIF-002/003, WIDGET-007) uses the same
+    // forward motion, from the tab that was showing, and still lands with Home underneath.
+    @Test
+    fun screenOpenedFromOutsideUsesTheForwardMotion() {
+        var pending by mutableStateOf<String?>(null)
+        composeRule.setContent {
+            nav = rememberNavController()
+            StretchTheme(darkTheme = false, dynamicColor = false) {
+                StretchNavHost(
+                    pendingRoute = pending,
+                    onPendingRouteHandled = { pending = null },
+                    navController = nav,
+                    screens = ShowcaseTabs(ShowcaseFixture.home()),
+                )
+            }
+        }
+        composeRule.waitForIdle()
+        tap(TopTab.TRENDS)
+        val barBefore = bar()
+        val trendsBefore = screen(Routes.TRENDS)
+        pauseClock()
+        // As MainActivity sets it: on the main thread, with the change sent to the composition
+        // straight away, so the paused clock starts the navigation on its next frame.
+        composeRule.runOnUiThread {
+            pending = Routes.session()
+            Snapshot.sendApplyNotifications()
+        }
+        advance(PART_WAY)
+        val trends = screen(Routes.TRENDS)
+        val session = screen(Routes.SESSION)
+        assertTrue("tab screen slides left: $trends", trends.left < trendsBefore.left)
+        assertTrue("bar slides left with it: ${bar()}", bar().left < barBefore.left)
+        assertTrue("session slides in from the right: $session", session.left > 0.dp)
+        advance(DONE)
+        assertEquals(Routes.SESSION, route())
+        assertEquals(Routes.HOME, nav.previousBackStackEntry?.destination?.route)
+        assertGone(TopTab.testTag(TopTab.HOME))
+    }
+
     private companion object {
+        /** Part-way through a 300 ms navigation motion (HOME-012). */
+        const val PART_WAY = 100L
+
+        /** Long past HOME-012's 300 ms, yet short of the library's 700 ms cross-fade. */
+        const val DONE = 400L
+
+        fun screenTag(route: String) = "screen-$route"
+
         const val NOTIFICATIONS_BANNER = "Notifications are off, so reminders can't be shown."
         const val EXACT_ALARM_BANNER = "Exact alarms aren't allowed, so reminders may arrive a few minutes late."
     }

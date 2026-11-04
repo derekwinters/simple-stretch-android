@@ -42,7 +42,8 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
   **Trends**, **Settings**. Every item has an icon and its text label, always shown; the
   selected item is highlighted. Each top-level screen is one tap from every other. Screens
   opened from a top-level screen (the schedule editor, skipped days, my stretches, a trends day,
-  the stretch session) cover the whole window and have no bar; Back returns from them.
+  the stretch session) cover the whole window and have no bar; Back returns from them. How
+  screens and the bar move between one another is HOME-012.
 
   Back on any top-level screen other than Home returns to Home; Back on Home leaves the app.
   Switching tabs keeps each tab's own state (such as its scroll position) and never stacks one
@@ -107,6 +108,43 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
   has one: **"My stretches"**, with the subtitle "Add, rename or remove stretches", which opens
   the stretch library (LIB-006).
 
+## Navigation motion
+
+- **HOME-012** Navigation motion follows Material's patterns, 300 ms in all, with the
+  outgoing screen's fade taking the first 35% (105 ms) and the incoming screen's fade the rest
+  (195 ms), so each fade ends before the next begins:
+  - **Tab to tab** (from the bar, from Home's "Set a goal", or Back from a tab to Home): Material
+    **fade through**. The outgoing tab fades out; then the incoming tab fades in while scaling up
+    from 92% to full size. The bar does not move or fade; only its selected item changes.
+  - **Tab to a full-window screen** (the schedule editor, skipped days, my stretches, a trends
+    day, the stretch session, including one opened from a notification or the widget,
+    NOTIF-002, NOTIF-003, WIDGET-007, and one full-window screen replacing another): Material
+    **shared axis X**, forward. The tab screen and its bar slide 30 dp to the left and fade out,
+    while the new screen slides in from 30 dp to the right, fading in once the tab screen has
+    gone, and covers the whole window.
+  - **Back from a full-window screen** (Back, its back arrow, Save or Done, or the widget opening
+    Home): the same motion in reverse. The full-window screen slides right and fades out, and
+    the tab screen comes back from the left with its bar. A predictive back gesture drives the
+    screens' motion where the system supports it: the screens follow the gesture, and the bar
+    starts returning when the gesture completes and finishes with its tab screen (the known
+    exception below).
+
+  Routes, tab state saving and the HOME-004 Back rules do not change. The motion is chosen from
+  the kinds of the two screens (tab or full-window) and the direction, by one shared
+  definition used by every destination.
+
+  **Invariant — No navigation uses the library's default cross-fade, and no two screens are
+  ever shown part-transparent at the same time.** Every destination sets its own enter, exit,
+  pop-enter and pop-exit motion.
+
+  **Invariant — The bar never moves during a tab switch, and never disappears on its own:** it
+  leaves and returns only with its tab screen, and the area the screens are drawn in does not
+  change height when it does.
+
+  _Known exception, tracked as a follow-up in #108:_ while a predictive back gesture is held, the
+  tab screen shows without its bar; the bar starts returning only when the gesture completes,
+  and finishes with its tab screen.
+
 ## Build checklist
 
 - [x] Home state is derived from Room flows plus a 30-second tick that reads the app clock
@@ -130,6 +168,16 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
 - [x] Back from every other tab returns to Home; on Home the navigation host holds no Back
       callback, so Back leaves the app (Robolectric test, HOME-004).
 - [x] No top-bar icon actions and no overflow menu on any top-level screen (HOME-004).
+- [x] Every destination sets explicit enter, exit, pop-enter and pop-exit transitions from one
+      shared definition; a unit test checks that each fade ends before the next begins, and a
+      Robolectric test with the clock paused checks that a tab switch is over well inside the
+      library's 700 ms and that a full-window screen slides in from the right and back out to it
+      (HOME-012 first invariant).
+- [x] The bar is drawn once, outside the navigation host; tab screens reserve its space
+      themselves, so the host never changes height. A Robolectric test with the clock paused
+      checks that the bar holds still through a tab switch and slides with its tab screen when a
+      full-window screen opens or closes, including one opened from outside the UI (HOME-012
+      second invariant).
 - [x] The Home top bar's title is `stringResource(R.string.app_name)`, never a literal; a
       Robolectric test renders Home and finds the `app_name` text (HOME-004, STORE-LIST-008
       invariant).
