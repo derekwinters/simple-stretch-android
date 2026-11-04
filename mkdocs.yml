@@ -1,9 +1,10 @@
 # The documentation site, built with plain MkDocs and published to GitHub Pages by
 # .github/workflows/docs.yml. Every page is a Markdown file committed under docs/; nothing is
-# generated or copied at build time. The store images (store/images.md) arrive through the
-# committed symlink docs/store/images, which points at fastlane/metadata/android/en-US/images/;
-# MkDocs follows it, so no build step is involved (STORE-DOCS-001). CHANGELOG.md, CLAUDE.md and
-# .ai-sdlc/ are deliberately not part of the site.
+# generated or copied at build time. The store images page (store/images.md) links the images by
+# their fastlane paths, so github.com renders them; for the site, hooks/store_images.py rewrites
+# those links onto the committed symlink docs/store/images (pointing at
+# fastlane/metadata/android/en-US/images/), which MkDocs follows, so nothing is copied
+# (STORE-DOCS-001). CHANGELOG.md, CLAUDE.md and .ai-sdlc/ are deliberately not part of the site.
 site_name: Simple Stretch
 site_description: A small Android app that reminds you to stretch during the day, on your own schedule.
 repo_url: https://github.com/derekwinters/simple-stretch-android
@@ -12,6 +13,10 @@ docs_dir: docs
 
 theme:
   name: mkdocs
+
+# MkDocs' built-in hooks (no plugin is installed). See STORE-DOCS-001.
+hooks:
+  - hooks/store_images.py
 
 # A broken internal link, a link to a missing anchor, or a page left out of the nav fails the
 # build (strict turns these warnings into errors).
