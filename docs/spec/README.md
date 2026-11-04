@@ -12,7 +12,7 @@ tests reference these IDs. Change the spec before the code.
 | [goals.md](goals.md) | GOAL-001 … GOAL-010 | Daily goals per stretch, progress, goal history, database upgrades |
 | [sessions.md](sessions.md) | SESS-001 … SESS-005 | Stretch session screen and the completion log |
 | [trends.md](trends.md) | TREND-001 … TREND-010 | Daily score, week/month trends, streak, day detail |
-| [screens.md](screens.md) | HOME-001 … HOME-011 | Bottom navigation bar, Home, Schedules and Settings screens |
+| [screens.md](screens.md) | HOME-001 … HOME-012 | Bottom navigation bar, navigation motion, Home, Schedules and Settings screens |
 | [widgets.md](widgets.md) | WIDGET-001 … WIDGET-010 | Segmented ring home screen widget for today's goals |
 | [privacy.md](privacy.md) | PRIV-001 … PRIV-004 | No internet access, on-device data, the permission set, the privacy policy |
 | [store-listing.md](store-listing.md) | STORE-SHOT-001 … STORE-SHOT-014, STORE-ICON-001 … STORE-ICON-005, STORE-GRAPHIC-001 … STORE-GRAPHIC-007, STORE-LIST-001 … STORE-LIST-008 | Google Play phone screenshots: the shots, their frozen inputs, layout, recording (on a deliberate label) and verifying; the store icon rendered from the launcher icon and the feature graphic's text and two showcase phones; the listing text, its claims' requirement IDs, the drift check and the release's listing zip; the app's launcher label matching the store title |
