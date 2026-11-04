@@ -1,7 +1,9 @@
 # The documentation site, built with plain MkDocs and published to GitHub Pages by
 # .github/workflows/docs.yml. Every page is a Markdown file committed under docs/; nothing is
-# generated or copied at build time. CHANGELOG.md, CLAUDE.md and .ai-sdlc/ are deliberately not
-# part of the site.
+# generated or copied at build time. The store images (store/images.md) arrive through the
+# committed symlink docs/store/images, which points at fastlane/metadata/android/en-US/images/;
+# MkDocs follows it, so no build step is involved (STORE-DOCS-001). CHANGELOG.md, CLAUDE.md and
+# .ai-sdlc/ are deliberately not part of the site.
 site_name: Simple Stretch
 site_description: A small Android app that reminds you to stretch during the day, on your own schedule.
 repo_url: https://github.com/derekwinters/simple-stretch-android
@@ -41,6 +43,7 @@ nav:
   - Store listing text: store/listing.md
   - Play Console listing details: store/play-console.md
   - Store screenshot captions: store/captions.md
+  - Store images: store/images.md
   - Decisions:
       - 0001 Debug signing until a release keystore: adr/0001-debug-signing-until-release-keystore.md
       - 0002 Release signing with a stable keystore: adr/0002-release-signing-with-a-stable-keystore.md
