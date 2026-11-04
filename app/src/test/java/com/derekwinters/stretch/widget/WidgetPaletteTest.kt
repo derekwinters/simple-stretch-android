@@ -74,7 +74,7 @@ class WidgetPaletteTest {
     fun fromThemeDrawsTheFigureAndMatInTheLauncherIconColours() {
         val light = WidgetPalette.fromTheme(
             primary = 0xFF112233.toInt(), surface = 0xFFFAFAFA.toInt(),
-            onSurface = 0xFF101010.toInt(), outline = 0xFF777777.toInt(), dark = false,
+            onSurface = 0xFF101010.toInt(), dark = false,
         )
         assertEquals(WidgetColors(
             arc = 0xFF112233.toInt(),
@@ -88,7 +88,7 @@ class WidgetPaletteTest {
 
         val dark = WidgetPalette.fromTheme(
             primary = 0xFF445566.toInt(), surface = 0xFF1A1A1A.toInt(),
-            onSurface = 0xFFEEEEEE.toInt(), outline = 0xFF999999.toInt(), dark = true,
+            onSurface = 0xFFEEEEEE.toInt(), dark = true,
         )
         assertEquals(WidgetColors(
             arc = 0xFF445566.toInt(),

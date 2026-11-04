@@ -32,7 +32,7 @@ object WidgetPalette {
     private const val TRACK_ALPHA_LIGHT = 0.14f
     private const val TRACK_ALPHA_DARK = 0.18f
     private const val DIMMED_ALPHA = 0.40f
-    private const val MAT_GREY = 0xFF818589.toInt()
+    private const val MAT_GREY = LauncherIconColors.MAT
 
     /** WIDGET-008: the mockup's values, used only without dynamic colour. */
     val FIXED_LIGHT = colors(
@@ -60,15 +60,20 @@ object WidgetPalette {
 
     /**
      * HOME-006: the ring drawn inside the app, in the app theme's colours ([primary], [surface],
-     * [onSurface], [outline], ARGB), with the same roles and alphas as the dynamic widget above.
+     * [onSurface], ARGB), with the same roles and alphas as the dynamic widget above, except the
+     * figure, dimmed figure and mat, which are always the launcher icon's colours (HOME-006
+     * invariant).
      */
-    fun fromTheme(primary: Int, surface: Int, onSurface: Int, outline: Int, dark: Boolean): WidgetColors =
+    fun fromTheme(primary: Int, surface: Int, onSurface: Int, dark: Boolean): WidgetColors =
         colors(
             primary,
             surface,
             onSurface,
             withAlpha(onSurface, if (dark) TRACK_ALPHA_DARK else TRACK_ALPHA_LIGHT),
-            outline,
+            LauncherIconColors.MAT,
+        ).copy(
+            figure = LauncherIconColors.FIGURE,
+            dimmedFigure = withAlpha(LauncherIconColors.FIGURE, DIMMED_ALPHA),
         )
 
     private fun colors(arc: Int, surface: Int, onSurface: Int, track: Int, mat: Int) = WidgetColors(
