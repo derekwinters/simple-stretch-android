@@ -12,10 +12,11 @@ data class WidgetColors(
     val text: Int,
     /** The empty track. */
     val track: Int,
+    /** The mat under the figure, always the launcher icon's (WIDGET-008). */
     val mat: Int,
-    /** The figure (body and head) when not dimmed. */
+    /** The figure (body and head) when not dimmed, always the launcher icon's (WIDGET-004). */
     val figure: Int,
-    /** The figure when dimmed (WIDGET-006). */
+    /** The figure when dimmed: the launcher icon's figure colour at 40% (WIDGET-006). */
     val dimmedFigure: Int,
 )
 
@@ -24,7 +25,6 @@ data class DynamicTones(
     val primaryLight: Int, val primaryDark: Int,
     val surfaceLight: Int, val surfaceDark: Int,
     val onSurfaceLight: Int, val onSurfaceDark: Int,
-    val outlineLight: Int, val outlineDark: Int,
 )
 
 object WidgetPalette {
@@ -32,58 +32,52 @@ object WidgetPalette {
     private const val TRACK_ALPHA_LIGHT = 0.14f
     private const val TRACK_ALPHA_DARK = 0.18f
     private const val DIMMED_ALPHA = 0.40f
-    private const val MAT_GREY = LauncherIconColors.MAT
 
     /** WIDGET-008: the mockup's values, used only without dynamic colour. */
     val FIXED_LIGHT = colors(
         arc = 0xFF1361A7.toInt(), surface = 0xFFFFFFFF.toInt(), onSurface = 0xFF1C1B1F.toInt(),
-        track = withAlpha(0xFF000000.toInt(), TRACK_ALPHA_LIGHT), mat = MAT_GREY,
+        track = withAlpha(0xFF000000.toInt(), TRACK_ALPHA_LIGHT),
     )
     val FIXED_DARK = colors(
         arc = 0xFF3D86D1.toInt(), surface = 0xFF121212.toInt(), onSurface = 0xFFF5F5F5.toInt(),
-        track = withAlpha(0xFFFFFFFF.toInt(), TRACK_ALPHA_DARK), mat = MAT_GREY,
+        track = withAlpha(0xFFFFFFFF.toInt(), TRACK_ALPHA_DARK),
     )
 
     /**
      * WIDGET-008 invariant: the one place that chooses between dynamic and fixed colours. [tones]
-     * is read only when [dynamicAvailable].
+     * is read only when [dynamicAvailable]. Either way the figure, dimmed figure and mat are the
+     * launcher icon's colours (WIDGET-004, WIDGET-006).
      */
     fun select(dynamicAvailable: Boolean, dark: Boolean, tones: () -> DynamicTones): WidgetColors {
         if (!dynamicAvailable) return if (dark) FIXED_DARK else FIXED_LIGHT
         val t = tones()
         return if (dark) {
-            colors(t.primaryDark, t.surfaceDark, t.onSurfaceDark, withAlpha(t.onSurfaceDark, TRACK_ALPHA_DARK), t.outlineDark)
+            colors(t.primaryDark, t.surfaceDark, t.onSurfaceDark, withAlpha(t.onSurfaceDark, TRACK_ALPHA_DARK))
         } else {
-            colors(t.primaryLight, t.surfaceLight, t.onSurfaceLight, withAlpha(t.onSurfaceLight, TRACK_ALPHA_LIGHT), t.outlineLight)
+            colors(t.primaryLight, t.surfaceLight, t.onSurfaceLight, withAlpha(t.onSurfaceLight, TRACK_ALPHA_LIGHT))
         }
     }
 
     /**
      * HOME-006: the ring drawn inside the app, in the app theme's colours ([primary], [surface],
-     * [onSurface], ARGB), with the same roles and alphas as the dynamic widget above, except the
-     * figure, dimmed figure and mat, which are always the launcher icon's colours (HOME-006
-     * invariant).
+     * [onSurface], ARGB), with the same roles and alphas as the dynamic widget above, and the
+     * same launcher icon colours for the figure, dimmed figure and mat (HOME-006 invariant).
      */
     fun fromTheme(primary: Int, surface: Int, onSurface: Int, dark: Boolean): WidgetColors =
-        colors(
-            primary,
-            surface,
-            onSurface,
-            withAlpha(onSurface, if (dark) TRACK_ALPHA_DARK else TRACK_ALPHA_LIGHT),
-            LauncherIconColors.MAT,
-        ).copy(
-            figure = LauncherIconColors.FIGURE,
-            dimmedFigure = withAlpha(LauncherIconColors.FIGURE, DIMMED_ALPHA),
-        )
+        colors(primary, surface, onSurface, withAlpha(onSurface, if (dark) TRACK_ALPHA_DARK else TRACK_ALPHA_LIGHT))
 
-    private fun colors(arc: Int, surface: Int, onSurface: Int, track: Int, mat: Int) = WidgetColors(
+    /**
+     * Every palette goes through here, so the figure, dimmed figure and mat always come from the
+     * one shared definition, [LauncherIconColors] (WIDGET-008 and HOME-006 invariants).
+     */
+    private fun colors(arc: Int, surface: Int, onSurface: Int, track: Int) = WidgetColors(
         arc = arc,
         disc = withAlpha(surface, DISC_ALPHA),
         text = onSurface,
         track = track,
-        mat = mat,
-        figure = arc,
-        dimmedFigure = withAlpha(onSurface, DIMMED_ALPHA),
+        mat = LauncherIconColors.MAT,
+        figure = LauncherIconColors.FIGURE,
+        dimmedFigure = withAlpha(LauncherIconColors.FIGURE, DIMMED_ALPHA),
     )
 
     /** [color] with its alpha replaced by [fraction] of full opacity. */
