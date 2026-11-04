@@ -112,7 +112,7 @@ object GoalRingRenderer {
     private fun drawFigure(canvas: Canvas, cx: Float, cy: Float, k: Float, colors: WidgetColors, dimmed: Boolean) {
         fun x(u: Float) = cx + (u - FIGURE_CENTRE_X) * k
         fun y(u: Float) = cy + (u - FIGURE_CENTRE_Y) * k
-        val figureColor = if (dimmed) colors.dimmedFigure else colors.arc
+        val figureColor = if (dimmed) colors.dimmedFigure else colors.figure
 
         // Mat: keeps its colour when the figure is dimmed (WIDGET-006).
         canvas.drawLine(x(32f), y(74f), x(76f), y(74f), line(colors.mat, 5f * k))

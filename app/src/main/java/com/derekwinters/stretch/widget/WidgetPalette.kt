@@ -4,7 +4,7 @@ import kotlin.math.roundToInt
 
 /** ARGB colours for one drawing of the widget (WIDGET-008). */
 data class WidgetColors(
-    /** Arcs and the figure. */
+    /** The arcs. */
     val arc: Int,
     /** The disc, already at 55% (WIDGET-005). */
     val disc: Int,
@@ -13,7 +13,9 @@ data class WidgetColors(
     /** The empty track. */
     val track: Int,
     val mat: Int,
-    /** The figure when dimmed: the text colour at 40% (WIDGET-006). */
+    /** The figure (body and head) when not dimmed. */
+    val figure: Int,
+    /** The figure when dimmed (WIDGET-006). */
     val dimmedFigure: Int,
 )
 
@@ -75,6 +77,7 @@ object WidgetPalette {
         text = onSurface,
         track = track,
         mat = mat,
+        figure = arc,
         dimmedFigure = withAlpha(onSurface, DIMMED_ALPHA),
     )
 

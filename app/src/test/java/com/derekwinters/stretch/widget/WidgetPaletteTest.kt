@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
 
-/** Requirement IDs refer to docs/spec/widgets.md. */
+/** Requirement IDs refer to docs/spec/widgets.md, and HOME- IDs to docs/spec/screens.md. */
 class WidgetPaletteTest {
 
     private val tones = DynamicTones(
@@ -52,6 +52,7 @@ class WidgetPaletteTest {
             text = 0xFF101010.toInt(),
             track = 0x24101010,
             mat = 0xFF777777.toInt(),
+            figure = 0xFF112233.toInt(),
             dimmedFigure = 0x66101010,
         ), light)
 
@@ -62,7 +63,41 @@ class WidgetPaletteTest {
             text = 0xFFEEEEEE.toInt(),
             track = 0x2EEEEEEE,
             mat = 0xFF999999.toInt(),
+            figure = 0xFF445566.toInt(),
             dimmedFigure = 0x66EEEEEE,
+        ), dark)
+    }
+
+    // HOME-006 and its invariant: Home's figure, dimmed figure and mat are the launcher icon's
+    // colours, never a theme or wallpaper colour, in light and dark; the rest keeps the theme.
+    @Test
+    fun fromThemeDrawsTheFigureAndMatInTheLauncherIconColours() {
+        val light = WidgetPalette.fromTheme(
+            primary = 0xFF112233.toInt(), surface = 0xFFFAFAFA.toInt(),
+            onSurface = 0xFF101010.toInt(), outline = 0xFF777777.toInt(), dark = false,
+        )
+        assertEquals(WidgetColors(
+            arc = 0xFF112233.toInt(),
+            disc = 0x8CFAFAFA.toInt(),
+            text = 0xFF101010.toInt(),
+            track = 0x24101010,
+            mat = 0xFF818589.toInt(),
+            figure = 0xFF1361A7.toInt(),
+            dimmedFigure = 0x661361A7, // #1361A7 at 40%
+        ), light)
+
+        val dark = WidgetPalette.fromTheme(
+            primary = 0xFF445566.toInt(), surface = 0xFF1A1A1A.toInt(),
+            onSurface = 0xFFEEEEEE.toInt(), outline = 0xFF999999.toInt(), dark = true,
+        )
+        assertEquals(WidgetColors(
+            arc = 0xFF445566.toInt(),
+            disc = 0x8C1A1A1A.toInt(),
+            text = 0xFFEEEEEE.toInt(),
+            track = 0x2EEEEEEE,
+            mat = 0xFF818589.toInt(),
+            figure = 0xFF1361A7.toInt(),
+            dimmedFigure = 0x661361A7,
         ), dark)
     }
 }
