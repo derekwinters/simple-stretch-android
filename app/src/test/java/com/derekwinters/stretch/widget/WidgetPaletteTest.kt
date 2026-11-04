@@ -11,7 +11,6 @@ class WidgetPaletteTest {
         primaryLight = 0xFF112233.toInt(), primaryDark = 0xFF445566.toInt(),
         surfaceLight = 0xFFFAFAFA.toInt(), surfaceDark = 0xFF1A1A1A.toInt(),
         onSurfaceLight = 0xFF101010.toInt(), onSurfaceDark = 0xFFEEEEEE.toInt(),
-        outlineLight = 0xFF777777.toInt(), outlineDark = 0xFF999999.toInt(),
     )
 
     // WIDGET-008: the fixed values are the mockup's.

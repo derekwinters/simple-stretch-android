@@ -92,8 +92,6 @@ object WidgetUpdater {
         surfaceDark = context.getColor(android.R.color.system_neutral1_900),
         onSurfaceLight = context.getColor(android.R.color.system_neutral1_900),
         onSurfaceDark = context.getColor(android.R.color.system_neutral1_100),
-        outlineLight = context.getColor(android.R.color.system_neutral2_500),
-        outlineDark = context.getColor(android.R.color.system_neutral2_400),
     )
 
     private fun describe(context: Context, centre: RingCentre): String = when (centre) {
