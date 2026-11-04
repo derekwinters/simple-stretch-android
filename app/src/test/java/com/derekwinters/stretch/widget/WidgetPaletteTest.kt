@@ -23,7 +23,8 @@ class WidgetPaletteTest {
         assertEquals(0xFFF5F5F5.toInt(), dark.text)
         assertEquals(0x2EFFFFFF, dark.track) // white at 18%
         assertEquals(0xFF818589.toInt(), dark.mat)
-        assertEquals(0x66F5F5F5, dark.dimmedFigure) // text at 40%
+        assertEquals(0xFF1361A7.toInt(), dark.figure) // WIDGET-004: the icon blue, not the arc
+        assertEquals(0x661361A7, dark.dimmedFigure) // WIDGET-006: #1361A7 at 40%
 
         val light = WidgetPalette.FIXED_LIGHT
         assertEquals(0xFF1361A7.toInt(), light.arc)
@@ -31,7 +32,8 @@ class WidgetPaletteTest {
         assertEquals(0xFF1C1B1F.toInt(), light.text)
         assertEquals(0x24000000, light.track) // black at 14%
         assertEquals(0xFF818589.toInt(), light.mat)
-        assertEquals(0x661C1B1F, light.dimmedFigure)
+        assertEquals(0xFF1361A7.toInt(), light.figure)
+        assertEquals(0x661361A7, light.dimmedFigure)
     }
 
     // WIDGET-008 invariant: fixed colours only without dynamic colour; dynamic tones are not
@@ -42,7 +44,8 @@ class WidgetPaletteTest {
         assertSame(WidgetPalette.FIXED_DARK, WidgetPalette.select(dynamicAvailable = false, dark = true) { error("read") })
     }
 
-    // WIDGET-008: with dynamic colour every part comes from the dynamic roles.
+    // WIDGET-008: with dynamic colour every part but the centre icon comes from the dynamic
+    // roles; the figure, dimmed figure and mat are the launcher icon's (WIDGET-004, WIDGET-006).
     @Test
     fun dynamicRoles() {
         val light = WidgetPalette.select(dynamicAvailable = true, dark = false) { tones }
@@ -51,9 +54,9 @@ class WidgetPaletteTest {
             disc = 0x8CFAFAFA.toInt(),
             text = 0xFF101010.toInt(),
             track = 0x24101010,
-            mat = 0xFF777777.toInt(),
-            figure = 0xFF112233.toInt(),
-            dimmedFigure = 0x66101010,
+            mat = 0xFF818589.toInt(),
+            figure = 0xFF1361A7.toInt(),
+            dimmedFigure = 0x661361A7,
         ), light)
 
         val dark = WidgetPalette.select(dynamicAvailable = true, dark = true) { tones }
@@ -62,10 +65,30 @@ class WidgetPaletteTest {
             disc = 0x8C1A1A1A.toInt(),
             text = 0xFFEEEEEE.toInt(),
             track = 0x2EEEEEEE,
-            mat = 0xFF999999.toInt(),
-            figure = 0xFF445566.toInt(),
-            dimmedFigure = 0x66EEEEEE,
+            mat = 0xFF818589.toInt(),
+            figure = 0xFF1361A7.toInt(),
+            dimmedFigure = 0x661361A7,
         ), dark)
+    }
+
+    // WIDGET-004, WIDGET-006, WIDGET-008 and its invariant: in all four combinations of dynamic
+    // colour and mode, the figure, dimmed figure and mat come from the one shared definition,
+    // LauncherIconColors (kept equal to ic_launcher_foreground.xml's colours by
+    // LauncherIconColorsTest), and equal Home's (HOME-006).
+    @Test
+    fun widgetFigureAndMatAreTheLauncherIconColoursInEveryCombination() {
+        for (dynamic in listOf(false, true)) for (dark in listOf(false, true)) {
+            val c = WidgetPalette.select(dynamicAvailable = dynamic, dark = dark) { tones }
+            val where = "dynamic=$dynamic dark=$dark"
+            assertEquals(where, LauncherIconColors.FIGURE, c.figure)
+            assertEquals(where, 0xFF1361A7.toInt(), c.figure)
+            assertEquals(where, WidgetPalette.withAlpha(LauncherIconColors.FIGURE, 0.40f), c.dimmedFigure)
+            assertEquals(where, 0x661361A7, c.dimmedFigure)
+            assertEquals(where, LauncherIconColors.MAT, c.mat)
+            assertEquals(where, 0xFF818589.toInt(), c.mat)
+            val home = WidgetPalette.fromTheme(c.arc, 0xFF000000.toInt(), c.text, dark)
+            assertEquals(where, Triple(home.figure, home.dimmedFigure, home.mat), Triple(c.figure, c.dimmedFigure, c.mat))
+        }
     }
 
     // HOME-006 and its invariant: Home's figure, dimmed figure and mat are the launcher icon's
