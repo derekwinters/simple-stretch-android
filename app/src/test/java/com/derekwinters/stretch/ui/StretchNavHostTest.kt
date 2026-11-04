@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assert
@@ -421,11 +422,18 @@ class StretchNavHostTest : ShowcaseComposeTest() {
         val barBefore = bar()
         val trendsBefore = screen(Routes.TRENDS)
         pauseClock()
-        pending = Routes.session()
+        // As MainActivity sets it: on the main thread, with the change sent to the composition
+        // straight away, so the paused clock starts the navigation on its next frame.
+        composeRule.runOnUiThread {
+            pending = Routes.session()
+            Snapshot.sendApplyNotifications()
+        }
         advance(PART_WAY)
-        assertTrue("tab screen slides left", screen(Routes.TRENDS).left < trendsBefore.left)
-        assertTrue("bar slides left with it", bar().left < barBefore.left)
-        assertTrue("session slides in from the right", screen(Routes.SESSION).left > 0.dp)
+        val trends = screen(Routes.TRENDS)
+        val session = screen(Routes.SESSION)
+        assertTrue("tab screen slides left: $trends", trends.left < trendsBefore.left)
+        assertTrue("bar slides left with it: ${bar()}", bar().left < barBefore.left)
+        assertTrue("session slides in from the right: $session", session.left > 0.dp)
         advance(DONE)
         assertEquals(Routes.SESSION, route())
         assertEquals(Routes.HOME, nav.previousBackStackEntry?.destination?.route)
