@@ -19,8 +19,8 @@ same ring, built and drawn by the same code in the app's theme colours (HOME-006
 - **WIDGET-003** Each arc fills clockwise from its start by that goal's progress / count
   (GOAL-003), capped at full: 4 of 3 is a full arc. The fill is continuous (2 of 3 is two
   thirds of the arc), and in-progress and met arcs use the same colour.
-- **WIDGET-004** The centre shows the launcher icon's side-bend figure on its mat and, under
-  it, today's count as "*done*/*total*": *total* is the sum of the current goals' counts and
+- **WIDGET-004** The centre shows the launcher icon's side-bend figure on its mat, in the
+  icon's own colours (WIDGET-008), and, under it, today's count as "*done*/*total*": *total* is the sum of the current goals' counts and
   *done* the sum of each goal's progress capped at its count (so 4 of 3 adds 3). Once every
   goal is met, the count is replaced by a plain check mark in the text colour, with no circle
   or badge.
@@ -31,10 +31,10 @@ same ring, built and drawn by the same code in the app's theme colours (HOME-006
     show only their track; the count reads "0/*total*".
   - **No goals set**: the ring is a dotted track (round dots in the track colour, no arcs),
     the figure is dimmed and centred, and there is no count and no check mark.
-  - Otherwise the figure is drawn in the arc colour.
+  - Otherwise the figure is drawn in the icon blue `#1361A7` (WIDGET-008).
 
-  "Dimmed" means the figure (body and head) is drawn in the text colour at 40% opacity; the mat
-  keeps its colour.
+  "Dimmed" means the figure (body and head) is drawn in the icon blue `#1361A7` at 40% opacity,
+  in both light and dark mode; the mat keeps `#818589`.
 - **WIDGET-007** Tapping the widget opens the app on its home screen (HOME-001), with Home
   selected in the bottom bar (HOME-004): any screen open above home, and any other tab, is
   closed.
@@ -47,25 +47,29 @@ same ring, built and drawn by the same code in the app's theme colours (HOME-006
 
   | Part | Role | Light | Dark |
   | --- | --- | --- | --- |
-  | Arcs and figure | primary | `system_accent1_600` | `system_accent1_200` |
+  | Arcs | primary | `system_accent1_600` | `system_accent1_200` |
   | Disc (at 55%) | surface | `system_neutral1_10` | `system_neutral1_900` |
   | Text and check mark | onSurface | `system_neutral1_900` | `system_neutral1_100` |
   | Empty track | onSurface at 14% (light) / 18% (dark) | | |
-  | Mat | outline | `system_neutral2_500` | `system_neutral2_400` |
 
   Without dynamic colour it uses the mockup's fixed values:
 
   | Part | Light | Dark |
   | --- | --- | --- |
-  | Arcs and figure | `#1361A7` | `#3D86D1` |
+  | Arcs | `#1361A7` | `#3D86D1` |
   | Disc (at 55%) | white | `#121212` |
   | Text and check mark | `#1C1B1F` | `#F5F5F5` |
   | Empty track | black at 14% | white at 18% |
-  | Mat | `#818589` | `#818589` |
 
-  **Invariant — The fixed mockup colours are used only when dynamic colour is unavailable.**
-  The choice between dynamic and fixed is made in one place, by the same Android-version test
-  as the app's theme; no part of the widget mixes the two.
+  The centre figure and its mat are always the launcher icon's colours
+  (`ic_launcher_foreground.xml`), with dynamic colour on or off and in light and dark mode: the
+  figure (body and head) `#1361A7` (dimmed, `#1361A7` at 40%, WIDGET-006) and the mat `#818589`.
+
+  **Invariant — The fixed mockup colours are used only when dynamic colour is unavailable, and
+  the centre icon always uses the launcher icon's colours.** The choice between dynamic and
+  fixed is made in one place, by the same Android-version test as the app's theme. Apart from
+  the figure and its mat, which take the launcher icon's colours from one shared definition
+  whatever that choice, no part of the widget mixes the two.
 
   Both the light and the dark drawing are produced at every redraw and the launcher shows the
   one for the current mode, so switching between light and dark needs no redraw. A change of
@@ -107,6 +111,10 @@ same ring, built and drawn by the same code in the app's theme colours (HOME-006
       change (WIDGET-010).
 - [x] `WidgetPalette.select` returns the fixed mockup values only when dynamic colour is
       unavailable, and its fixed values match WIDGET-008 (unit tested).
+- [x] The figure, dimmed figure and mat are the launcher icon's colours from the shared
+      definition, with dynamic colour on and off and in light and dark mode, and that
+      definition matches `ic_launcher_foreground.xml` (unit tested, WIDGET-004, WIDGET-006,
+      WIDGET-008).
 - [x] The renderer draws round arc ends inside each arc's share, so the visible gap is 8°
       (WIDGET-002).
 - [x] `StretchRepository` requests a redraw after `logCompletions`, `setGoal`, `removeGoal`,
