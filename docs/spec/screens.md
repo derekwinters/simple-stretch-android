@@ -125,7 +125,9 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
   - **Back from a full-window screen** (Back, its back arrow, Save or Done, or the widget opening
     Home): the same motion in reverse. The full-window screen slides right and fades out, and
     the tab screen comes back from the left with its bar. A predictive back gesture drives the
-    screens' motion where the system supports it.
+    screens' motion where the system supports it: the screens follow the gesture, and the bar
+    starts returning when the gesture completes and finishes with its tab screen (the known
+    exception below).
 
   Routes, tab state saving and the HOME-004 Back rules do not change. The motion is chosen from
   the kinds of the two screens (tab or full-window) and the direction, by one shared
@@ -138,6 +140,10 @@ not fix icons, colours, type, spacing or the figure drawing, which follow the ap
   **Invariant — The bar never moves during a tab switch, and never disappears on its own:** it
   leaves and returns only with its tab screen, and the area the screens are drawn in does not
   change height when it does.
+
+  _Known exception, tracked as a follow-up in #108:_ while a predictive back gesture is held, the
+  tab screen shows without its bar; the bar starts returning only when the gesture completes,
+  and finishes with its tab screen.
 
 ## Build checklist
 
