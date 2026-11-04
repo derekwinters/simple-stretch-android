@@ -9,7 +9,11 @@ name: docs
 # replaces the whole contents of gh-pages each time. This workflow owns that branch.
 #
 # The site is built only from what is committed: every page is a Markdown file under docs/, and
-# neither job edits, generates, copies or reorders any of them. CHANGELOG.md, CLAUDE.md and
+# neither job edits, generates, copies or reorders any of them. The store images page links the
+# images by their fastlane paths; the MkDocs hook in hooks/store_images.py rewrites those links
+# onto the committed symlink docs/store/images (pointing at fastlane/metadata/android/en-US/
+# images/), which MkDocs follows, still without a copy step. A change under that folder or
+# hooks/ therefore triggers this workflow too (STORE-DOCS-001). CHANGELOG.md, CLAUDE.md and
 # .ai-sdlc/ are not part of the site.
 #
 # Publishing is not triggered by "release published": release-please creates releases with the
@@ -27,6 +31,8 @@ on:
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - '.github/workflows/docs.yml'
+      - 'fastlane/metadata/android/en-US/images/**'
+      - 'hooks/**'
   pull_request:
     paths:
       - 'docs/**'
@@ -34,6 +40,8 @@ on:
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - '.github/workflows/docs.yml'
+      - 'fastlane/metadata/android/en-US/images/**'
+      - 'hooks/**'
   workflow_dispatch:
 
 permissions:

@@ -17,7 +17,8 @@ shots, and reviewed the same way (STORE-ICON-001 to STORE-ICON-005, STORE-GRAPHI
 STORE-GRAPHIC-007). The text is hand-written, one claim
 per line, and each claim names the requirements it rests on, so the listing can never promise
 what the specification does not say (STORE-LIST-001 to STORE-LIST-007). The listing's title is
-also the app's name on the phone (STORE-LIST-008).
+also the app's name on the phone (STORE-LIST-008). The docs show all the listing's images on one page,
+straight from the committed files (STORE-DOCS-001).
 
 ## The shots
 
@@ -324,6 +325,31 @@ rewrites or records listing text or screenshots.
   **Invariant — Every place in the app that shows its name reads `app_name`; no screen writes
   the name as a literal.**
 
+## Shown in the docs
+
+- **STORE-DOCS-001** The documentation has a "Store images" page in the site's nav,
+  `docs/store/images.md`, that shows the listing's seven images inline: the five phone
+  screenshots of STORE-SHOT-007 in listing order, the store icon (STORE-ICON-001) and the
+  feature graphic (STORE-GRAPHIC-001). It shows them both on github.com and on the MkDocs site:
+  - The page links each image by its real path relative to the page,
+    `../../fastlane/metadata/android/en-US/images/...`, so github.com's Markdown view renders the
+    committed files (GitHub does not resolve a path through a directory symlink).
+  - For the site, the directory symlink `docs/store/images`, which points at
+    `fastlane/metadata/android/en-US/images/`, puts the files inside `docs_dir`. The MkDocs hook
+    `hooks/store_images.py` (registered under `hooks:` in `mkdocs.yml`; hooks are built into
+    MkDocs, so no plugin is installed) rewrites that prefix to `images/` in this page's Markdown
+    only, before it is rendered. MkDocs then follows the symlink and writes the image files
+    themselves into the built site. No build step copies or generates anything.
+  - An image the page names that does not exist fails `mkdocs build --strict`.
+  - The docs workflow (`docs.yml`) also runs on a change under
+    `fastlane/metadata/android/en-US/images/` or `hooks/`, so a re-recording republishes the
+    site.
+
+  **Invariant — The docs show the committed fastlane files themselves, never a hand-made copy.**
+  The page names only the fastlane paths, and the site reaches them only through the symlink,
+  so the fastlane folder stays the single source of truth (STORE-SHOT-007) and a re-recording
+  updates the page on both with no extra step.
+
 ## Build checklist
 
 - [x] One screenshot test per shot, each naming its STORE-SHOT ID (STORE-SHOT-001 to
@@ -397,3 +423,9 @@ rewrites or records listing text or screenshots.
       the `app_name` text there (STORE-LIST-008 second invariant, HOME-004).
 - [x] Store listing reviewed: the draft text in `docs/store/listing.md` claims only what the
       cited requirements say (STORE-LIST-003, STORE-LIST-004).
+- [x] `docs/store/images.md` is in the `mkdocs.yml` nav and links the five shots, `icon.png`
+      and `featureGraphic.png` by their `../../fastlane/...` paths; `hooks/store_images.py`
+      rewrites them onto the `docs/store/images` symlink for that page only, with a unit test;
+      `mkdocs build --strict` puts all seven files in the built site and fails on a missing
+      one; `docs.yml` runs on `fastlane/metadata/android/en-US/images/**` and `hooks/**`
+      (STORE-DOCS-001 and its invariant).
